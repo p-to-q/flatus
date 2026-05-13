@@ -33,6 +33,12 @@ die()  { printf "\n"; c_red "✗ "; echo "$*"; exit 1; }
 ok()   { c_green "✓ "; echo "$*"; }
 step() { c_dim "·  "; echo "$*"; }
 
+# Wrap the whole script body in a function and only call it at the bottom.
+# That way `curl ... | bash` cannot start running commands until the entire
+# payload has been downloaded and parsed — a partial stream just fails to
+# define `main` and exits without side effects.
+main() {
+
 # Preflight ------------------------------------------------------------------
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
@@ -131,3 +137,7 @@ echo "    $(c_dim '$') open /Applications/flatus.app"
 echo
 echo "  a small icon will appear in your menubar. left-click to fart."
 echo
+
+}  # end main()
+
+main "$@"
