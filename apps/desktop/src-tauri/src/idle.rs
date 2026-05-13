@@ -14,6 +14,7 @@
 //! Other platforms return `None` — the caller treats that as "no signal, fall
 //! back to the personality's baseline rate".
 
+#[cfg(target_os = "macos")]
 use std::process::Command;
 
 /// Seconds since the user last touched the keyboard or mouse, or `None` if
