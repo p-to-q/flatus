@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Acoustics receipts
+    url: https://github.com/p-to-q/flatus/blob/main/docs/ACOUSTICS.md
+    about: Before opening an issue about the physics, please read this.
+  - name: Engineering doctrine
+    url: https://github.com/p-to-q/flatus/blob/main/docs/ENGINEERING.md
+    about: Before opening an issue about style or structure, please read this.

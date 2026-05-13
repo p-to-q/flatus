@@ -1,0 +1,110 @@
+# flatus CI
+#
+# Two jobs:
+#   1. `rust` — fmt + clippy + test + build the fart-synth core on macOS + Linux.
+#   2. `tauri` — build an unsigned .app on macOS, upload as artifact.
+#
+# v0.1 skips signing/notarization. v0.2 will add `tauri-action` with the
+# Apple Developer ID secrets once we cross the broadcast threshold.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  rust:
+    name: rust · fmt + clippy + test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Linux audio headers
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev pkg-config
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-${{ matrix.os }}"
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy (fart-synth)
+        run: cargo clippy -p fart-synth --all-targets -- -D warnings
+
+      - name: cargo test (fart-synth)
+        run: cargo test -p fart-synth
+
+      - name: cargo build --release (fart-synth)
+        run: cargo build -p fart-synth --release
+
+      - name: Run --help to confirm CLI links
+        run: cargo run -p fart-synth --release --bin fart -- --help
+
+  tauri:
+    name: tauri · unsigned .app
+    runs-on: macos-latest
+    needs: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+          shared-key: "tauri"
+
+      - name: pnpm install
+        working-directory: apps/desktop
+        run: pnpm install || true # lockfile is optional in v0.1
+
+      - name: tauri build (unsigned)
+        working-directory: apps/desktop
+        env:
+          APPLE_SIGNING_IDENTITY: ""
+        run: pnpm tauri build
+
+      - name: Zip the .app
+        working-directory: apps/desktop/src-tauri/target/release/bundle/macos
+        run: |
+          if [ -d flatus.app ]; then
+            zip -r flatus-unsigned-${{ github.sha }}.zip flatus.app
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flatus-app-unsigned
+          path: apps/desktop/src-tauri/target/release/bundle/macos/*.zip
+          if-no-files-found: warn

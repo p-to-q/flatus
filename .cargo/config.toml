@@ -1,0 +1,25 @@
+# Workspace-level cargo config.
+#
+# Lints are listed here rather than in each crate's Cargo.toml so that
+# `cargo clippy --all-targets -- -D warnings` and the IDE see the same rules.
+
+[build]
+# Faster incremental rebuilds on the laptop.
+incremental = true
+
+[target.'cfg(all())']
+# Clippy lints. The few we explicitly allow are documented inline.
+rustflags = [
+    # core clippy groups
+    "-Wclippy::pedantic",
+    # but we don't want the noise from pedantic that doesn't earn its keep here:
+    "-Aclippy::module_name_repetitions",     # `fart_synth::FartParams` is clearer than abbreviated
+    "-Aclippy::cast_precision_loss",         # we cast usize→f32 for sample math, on purpose
+    "-Aclippy::cast_sign_loss",              # ditto for signed PCM conversions
+    "-Aclippy::cast_possible_truncation",    # ditto
+    "-Aclippy::cast_possible_wrap",          # PRNG state arithmetic intentionally wraps
+    "-Aclippy::similar_names",               # `b0..b6` in pink noise are textbook
+    "-Aclippy::missing_errors_doc",          # `Result` is self-documenting in `bin/`
+    "-Aclippy::too_many_lines",              # graph::render is one cohesive function
+    "-Aclippy::missing_panics_doc",          # `unwrap` is forbidden outside tests / bin
+]

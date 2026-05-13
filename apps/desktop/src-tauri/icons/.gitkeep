@@ -1,0 +1,7 @@
+# Drop a 1024×1024 PNG named `icon.png` here before running `pnpm tauri build`.
+# Tauri also wants 32×32 / 128×128 / [email protected]; the easiest path is:
+#
+#     pnpm tauri icon path/to/source.png
+#
+# Until then the placeholder embedded PNG in `src/main.rs::default_icon()` keeps
+# `tauri dev` running.

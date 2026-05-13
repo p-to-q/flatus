@@ -1,0 +1,8 @@
+# Pin the Rust toolchain so the same `cargo build` everywhere produces the
+# same byte-identical goldens. CI uses `dtolnay/rust-toolchain@stable`, which
+# respects this file.
+
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

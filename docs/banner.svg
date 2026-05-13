@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-label="flatus — a small apparatus for moving air. Spectrogram of one event: energy concentrated from 80 to 400 Hz, six grains across one second.">
+  <defs>
+    <linearGradient id="energy" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#ce552a" stop-opacity="0.0"/>
+      <stop offset="30%" stop-color="#ce552a" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#ce552a" stop-opacity="0.8"/>
+      <stop offset="80%" stop-color="#ce552a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ce552a" stop-opacity="0.0"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fafafa"/>
+      <stop offset="100%" stop-color="#f0f0f0"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 40" fill="none" stroke="#e4e4e4" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="280" fill="url(#bg)"/>
+  <rect width="1200" height="280" fill="url(#grid)"/>
+
+  <!-- axis labels: frequency (left) -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="11" fill="#707070">
+    <text x="14" y="30" >2 kHz</text>
+    <line x1="50" y1="26" x2="60" y2="26" stroke="#bbb" stroke-width="0.5"/>
+    <text x="14" y="90" >800</text>
+    <line x1="50" y1="86" x2="60" y2="86" stroke="#bbb" stroke-width="0.5"/>
+    <text x="14" y="150">400</text>
+    <line x1="50" y1="146" x2="60" y2="146" stroke="#bbb" stroke-width="0.5"/>
+    <text x="14" y="210">200</text>
+    <line x1="50" y1="206" x2="60" y2="206" stroke="#bbb" stroke-width="0.5"/>
+    <text x="14" y="252">60 Hz</text>
+    <line x1="50" y1="248" x2="60" y2="248" stroke="#bbb" stroke-width="0.5"/>
+  </g>
+
+  <!-- axis labels: time (bottom) -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" fill="#707070">
+    <text x="70"   y="268">0</text>
+    <text x="370"  y="268">0.25</text>
+    <text x="670"  y="268">0.5</text>
+    <text x="970"  y="268">0.75</text>
+    <text x="1130" y="268">1.0 s</text>
+  </g>
+
+  <!-- bandpass corridor: ~80–400 Hz, the cone-excursion sweet spot -->
+  <rect x="70" y="146" width="1110" height="100" fill="#ce552a" fill-opacity="0.05"/>
+  <line x1="70" y1="146" x2="1180" y2="146" stroke="#ce552a" stroke-opacity="0.25" stroke-dasharray="3 4"/>
+  <line x1="70" y1="246" x2="1180" y2="246" stroke="#ce552a" stroke-opacity="0.25" stroke-dasharray="3 4"/>
+
+  <!-- six grains across the event, each a small spectral blob centred around 180–220 Hz -->
+  <g>
+    <!-- grain 1: t=0.05s, narrow, low -->
+    <ellipse cx="130" cy="218" rx="28" ry="36" fill="url(#energy)" opacity="0.9"/>
+    <!-- grain 2: t=0.18s, wider, slight rise -->
+    <ellipse cx="278" cy="206" rx="40" ry="48" fill="url(#energy)" opacity="0.95"/>
+    <!-- grain 3: t=0.35s, full strength, peak of envelope -->
+    <ellipse cx="468" cy="194" rx="54" ry="62" fill="url(#energy)" opacity="1.0"/>
+    <!-- grain 4: t=0.52s, still strong, descending pitch -->
+    <ellipse cx="660" cy="210" rx="46" ry="58" fill="url(#energy)" opacity="0.95"/>
+    <!-- grain 5: t=0.70s, narrow tail -->
+    <ellipse cx="824" cy="222" rx="34" ry="42" fill="url(#energy)" opacity="0.8"/>
+    <!-- grain 6: t=0.86s, soft tail -->
+    <ellipse cx="976" cy="228" rx="22" ry="32" fill="url(#energy)" opacity="0.55"/>
+  </g>
+
+  <!-- HPF / LPF lines -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="9" fill="#999">
+    <line x1="70" y1="36" x2="1180" y2="36" stroke="#ce552a" stroke-opacity="0.3" stroke-dasharray="2 6"/>
+    <text x="1188" y="40" fill="#ce552a" fill-opacity="0.7">LPF 2 kHz</text>
+    <line x1="70" y1="252" x2="1180" y2="252" stroke="#ce552a" stroke-opacity="0.3" stroke-dasharray="2 6"/>
+    <text x="1188" y="256" fill="#ce552a" fill-opacity="0.7">HPF 60 Hz</text>
+  </g>
+
+  <!-- title block -->
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace">
+    <text x="1180" y="32" text-anchor="end" font-size="14" fill="#1a1a1a" font-weight="500" letter-spacing="-0.3">flatus</text>
+    <text x="1180" y="48" text-anchor="end" font-size="9.5" fill="#707070" font-style="italic">a small apparatus for moving air</text>
+    <text x="1180" y="62" text-anchor="end" font-size="8.5" fill="#999">[p → q]</text>
+  </g>
+
+  <!-- inner border -->
+  <rect x="70" y="20" width="1110" height="230" fill="none" stroke="#cccccc" stroke-width="0.5"/>
+</svg>

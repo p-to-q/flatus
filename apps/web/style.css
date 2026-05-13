@@ -1,0 +1,138 @@
+/* flatus.ptoq.io — landing page.
+ * Voice: OpenWhip-tier; layout: ptoq.io-tier (monospaced, hairline rules, plenty of air). */
+
+:root {
+  --bg: #fafafa;
+  --fg: #1a1a1a;
+  --muted: #707070;
+  --accent: #ce552a;
+  --rule: #e4e4e4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161616;
+    --fg: #f4f4f4;
+    --muted: #999;
+    --accent: #ff8c5a;
+    --rule: #2a2a2a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+main {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.brand {
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  margin: 0 0 1rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+section {
+  border-top: 1px solid var(--rule);
+  padding: 1.5rem 0;
+}
+
+section:last-of-type { border-bottom: 1px solid var(--rule); }
+
+.banner {
+  border-top: none;
+  padding: 0.5rem 0 1.5rem;
+}
+
+.banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.prose p {
+  margin: 0 0 1rem;
+}
+.prose p:last-child { margin-bottom: 0; }
+
+.cli pre {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+}
+
+.cli code {
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+.cli .comment { color: var(--muted); }
+
+.links ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links li {
+  margin: 0.25rem 0;
+}
+
+.links a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.links a:hover {
+  border-bottom-color: var(--accent);
+}
+
+.status p {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+  margin-top: 2.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+footer p { margin: 0.25rem 0; }
+.copyright { font-size: 0.75rem; }

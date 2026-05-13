@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "comment": "Golden fixtures. One canonical WAV per personality. Regenerate with `cargo run --bin fart -- --personality <name> --seed <seed> --render fixtures/golden/<name>.wav` and update the sha256 field. CI compares the freshly-rendered bytes against these hashes.",
+  "sample_rate_hz": 48000,
+  "output_gain_dbfs": -6.0,
+  "channels": 1,
+  "bits_per_sample": 16,
+  "fixtures": [
+    {
+      "personality": "polite-cough",
+      "seed": 1,
+      "pressure": 0.4,
+      "file": "polite-cough.wav",
+      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+    },
+    {
+      "personality": "default",
+      "seed": 2,
+      "pressure": 0.6,
+      "file": "default.wav",
+      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+    },
+    {
+      "personality": "biblical",
+      "seed": 3,
+      "pressure": 0.8,
+      "file": "biblical.wav",
+      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+    },
+    {
+      "personality": "silent-but-deadly",
+      "seed": 4,
+      "pressure": 0.7,
+      "file": "silent-but-deadly.wav",
+      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+    }
+  ]
+}

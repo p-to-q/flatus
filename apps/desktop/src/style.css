@@ -1,0 +1,121 @@
+/* flatus settings popover. Minimal; no framework. */
+
+:root {
+  --bg: #fafafa;
+  --fg: #1a1a1a;
+  --muted: #707070;
+  --accent: #ce552a;
+  --border: #e4e4e4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a;
+    --fg: #f4f4f4;
+    --muted: #999999;
+    --accent: #ff8c5a;
+    --border: #2a2a2a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "SF Mono", Menlo, monospace;
+}
+
+main {
+  padding: 1rem 1.25rem;
+  max-width: 320px;
+}
+
+header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.row label {
+  flex: 0 0 5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.row select, .row input[type="number"] {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.2rem 0.4rem;
+  font: inherit;
+}
+
+.row input[type="range"] {
+  flex: 1;
+}
+
+#volume-readout {
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-width: 3em;
+  text-align: right;
+}
+
+.actions {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+footer {
+  margin-top: 1.25rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+footer code {
+  font-size: 0.85em;
+  letter-spacing: 0.5px;
+}
