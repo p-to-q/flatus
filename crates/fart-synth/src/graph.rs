@@ -84,11 +84,11 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
 
             // Source: noise / saw mix. The noise itself is now a
             // pink/brown blend per `brown_weight`.
-            let white_p = rng.next_f32() * 2.0 - 1.0;
-            let white_b = rng.next_f32() * 2.0 - 1.0;
-            let p = pink.next(white_p);
-            let b = brown.next(white_b);
-            let n = (1.0 - brown_weight) * p + brown_weight * b;
+            let white_pink = rng.next_f32() * 2.0 - 1.0;
+            let white_brown = rng.next_f32() * 2.0 - 1.0;
+            let pink_sample = pink.next(white_pink);
+            let brown_sample = brown.next(white_brown);
+            let n = (1.0 - brown_weight) * pink_sample + brown_weight * brown_sample;
             saw_phase += saw_inc;
             if saw_phase >= 1.0 {
                 saw_phase -= 1.0;
@@ -118,17 +118,18 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     let pop_count = ((pop_density_per_sec * event_secs) as usize).min(48);
     for _ in 0..pop_count {
         let start = (rng.next_f32() * n_samples as f32) as usize;
-        let length_samples = (sr * (0.008 + rng.next_f32() * 0.007)) as usize; // 8–15 ms
-        // Centre 1.2× – 2.4× the personality's pitch; biblical (~110 Hz)
-        // gets pops at 130–270 Hz, polite-cough (~220 Hz) gets pops at
-        // 265–530 Hz. Always inside or close to each band's tolerance.
+        // 8-15 ms Gaussian window.
+        let length_samples = (sr * (0.008 + rng.next_f32() * 0.007)) as usize;
+        // Centre 1.2x-2.4x the personality's pitch; biblical (~110 Hz) gets
+        // pops at 130-270 Hz, polite-cough (~220 Hz) gets pops at 265-530 Hz.
+        // Always inside or close to each band's tolerance.
         let centre_hz = pop_centre_base * (1.2 + rng.next_f32() * 1.2);
         let phase_inc = centre_hz / sr;
         let mut phase = rng.next_f32();
         let usable = length_samples.min(n_samples.saturating_sub(start));
         for i in 0..usable {
             let t = i as f32 / length_samples.max(1) as f32;
-            // Gaussian window centred at t=0.5; σ² ≈ 1/18 of duration.
+            // Gaussian window centred at t=0.5; sigma^2 ~= 1/18 of duration.
             let env = libm::expf(-(t - 0.5) * (t - 0.5) * 18.0);
             phase += phase_inc;
             if phase >= 1.0 {
