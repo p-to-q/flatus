@@ -45,6 +45,7 @@ impl Default for RenderConfig {
 }
 
 /// Render one fart event into a fresh `Vec<f32>`.
+#[must_use]
 pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     let params = params.clone().clamp();
     let sr = cfg.sample_rate_hz as f32;
@@ -105,7 +106,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     // creates even-harmonic content.
     let drive = 1.0 + 3.0 * params.crackle;
     let bias = 0.05 * params.crackle;
-    for s in buf.iter_mut() {
+    for s in &mut buf {
         *s = (drive * *s + bias).tanh();
     }
 
@@ -127,7 +128,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     // 6) Safety HPF and LPF on every render. These are non-negotiable.
     let mut hpf = Biquad::highpass(sr, HPF_HZ, 0.707);
     let mut lpf = Biquad::lowpass(sr, LPF_HZ, 0.707);
-    for s in buf.iter_mut() {
+    for s in &mut buf {
         *s = lpf.process(hpf.process(*s));
     }
 
@@ -136,7 +137,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     let cap = dbfs_to_linear(cfg.output_gain_dbfs);
     if peak > 1e-6 {
         let norm = 0.95 / peak;
-        for s in buf.iter_mut() {
+        for s in &mut buf {
             *s = (norm * *s).tanh() * cap;
         }
     }
@@ -162,6 +163,7 @@ pub struct Biquad {
 
 impl Biquad {
     /// Constant-skirt-gain bandpass (peak gain = Q at the centre).
+    #[must_use]
     pub fn bandpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
         let sin_w = omega.sin();
@@ -188,6 +190,7 @@ impl Biquad {
         }
     }
 
+    #[must_use]
     pub fn highpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
         let sin_w = omega.sin();
@@ -214,6 +217,7 @@ impl Biquad {
         }
     }
 
+    #[must_use]
     pub fn lowpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
         let sin_w = omega.sin();
@@ -268,15 +272,16 @@ pub struct PinkNoise {
 
 impl PinkNoise {
     pub fn next(&mut self, white: f32) -> f32 {
-        self.b0 = 0.99886 * self.b0 + white * 0.0555179;
-        self.b1 = 0.99332 * self.b1 + white * 0.0750759;
-        self.b2 = 0.96900 * self.b2 + white * 0.1538520;
-        self.b3 = 0.86650 * self.b3 + white * 0.3104856;
-        self.b4 = 0.55000 * self.b4 + white * 0.5329522;
-        self.b5 = -0.7616 * self.b5 - white * 0.0168980;
+        // Voss–McCartney pink noise filter; coefficients are reference DSP constants.
+        self.b0 = 0.998_86 * self.b0 + white * 0.055_517_9;
+        self.b1 = 0.993_32 * self.b1 + white * 0.075_075_9;
+        self.b2 = 0.969_00 * self.b2 + white * 0.153_852;
+        self.b3 = 0.866_50 * self.b3 + white * 0.310_485_6;
+        self.b4 = 0.550_00 * self.b4 + white * 0.532_952_2;
+        self.b5 = -0.7616 * self.b5 - white * 0.016_898_0;
         let pink =
             self.b0 + self.b1 + self.b2 + self.b3 + self.b4 + self.b5 + self.b6 + white * 0.5362;
-        self.b6 = white * 0.115926;
+        self.b6 = white * 0.115_926;
         pink * 0.11 // rescale to ~ [−1, 1]
     }
 }
@@ -287,8 +292,10 @@ mod tests {
 
     #[test]
     fn render_returns_correct_length() {
-        let mut p = FartParams::default();
-        p.duration_ms = 500;
+        let p = FartParams {
+            duration_ms: 500,
+            ..FartParams::default()
+        };
         let buf = render(&p, &RenderConfig::default());
         assert_eq!(buf.len(), (48_000.0 * 0.5) as usize);
     }
@@ -300,7 +307,7 @@ mod tests {
         let cap = dbfs_to_linear(safety::MAX_OUTPUT_DBFS);
         let peak = buf.iter().fold(0.0_f32, |a, s| a.max(s.abs()));
         // Allow tiny floating-point slop above the cap.
-        assert!(peak <= cap + 1e-3, "peak {} exceeded cap {}", peak, cap);
+        assert!(peak <= cap + 1e-3, "peak {peak} exceeded cap {cap}");
     }
 
     #[test]

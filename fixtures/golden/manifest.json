@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "comment": "Golden fixtures. One canonical WAV per personality. Regenerate with `cargo run --bin fart -- --personality <name> --seed <seed> --render fixtures/golden/<name>.wav` and update the sha256 field. CI compares the freshly-rendered bytes against these hashes.",
+  "comment": "Golden fixtures. One canonical WAV per personality. Regenerate with `cargo run --bin generate-goldens`. The integration test at `tests/golden.rs` enforces that future builds re-render byte-identically.",
   "sample_rate_hz": 48000,
   "output_gain_dbfs": -6.0,
   "channels": 1,
@@ -11,28 +11,28 @@
       "seed": 1,
       "pressure": 0.4,
       "file": "polite-cough.wav",
-      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+      "sha256": "3cd752a70902d7b6c04ee3fb63207e6a2ecbe7fd9e2e7b18a6f17819a63d6629"
     },
     {
       "personality": "default",
       "seed": 2,
       "pressure": 0.6,
       "file": "default.wav",
-      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+      "sha256": "ff5dcfb4be8d23f47ba44531583db3cc3e76c63b638ac1d0397b10444fab68b5"
     },
     {
       "personality": "biblical",
       "seed": 3,
       "pressure": 0.8,
       "file": "biblical.wav",
-      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+      "sha256": "aab94a385774a8fd1af354025a0e3331401db3ad9ef57474b1534e91b707d803"
     },
     {
       "personality": "silent-but-deadly",
       "seed": 4,
       "pressure": 0.7,
       "file": "silent-but-deadly.wav",
-      "sha256": "TODO_GENERATED_ON_FIRST_RUN"
+      "sha256": "202277855762d0a73bb1a90cba505b7ad32097ee5b30b927356e461380e760cc"
     }
   ]
 }

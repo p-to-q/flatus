@@ -45,6 +45,7 @@ pub struct FartParams {
 
 impl FartParams {
     /// Clamp every axis into its valid range. Cheap; call after any draw or edit.
+    #[must_use]
     pub fn clamp(mut self) -> Self {
         self.pressure = self.pressure.clamp(0.0, 1.0);
         self.wetness = self.wetness.clamp(0.0, 1.0);

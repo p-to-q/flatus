@@ -105,6 +105,7 @@ pub const PERSONALITIES: &[Personality] = &[
 ];
 
 /// Look up a personality by name. Returns `None` for unknown names.
+#[must_use]
 pub fn lookup_personality(name: &str) -> Option<&'static Personality> {
     PERSONALITIES.iter().find(|p| p.name == name)
 }
@@ -134,7 +135,7 @@ pub fn sample_params(p: &Personality, rng: &mut Mulberry32, pressure: f32) -> Fa
     // We hand a fresh seed downstream so the renderer's RNG state is independent of
     // the sampling RNG state — same `FartParams` → same waveform regardless of how the
     // params were drawn.
-    let render_seed = rng.next_u32() as u64;
+    let render_seed = u64::from(rng.next_u32());
 
     FartParams {
         pressure,

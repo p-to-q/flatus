@@ -83,7 +83,6 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "apps/desktop/src-tauri -> target"
           shared-key: "tauri"
 
       - name: pnpm install
@@ -97,7 +96,7 @@ jobs:
         run: pnpm tauri build
 
       - name: Zip the .app
-        working-directory: apps/desktop/src-tauri/target/release/bundle/macos
+        working-directory: target/release/bundle/macos
         run: |
           if [ -d flatus.app ]; then
             zip -r flatus-unsigned-${{ github.sha }}.zip flatus.app
@@ -106,5 +105,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: flatus-app-unsigned
-          path: apps/desktop/src-tauri/target/release/bundle/macos/*.zip
+          path: target/release/bundle/macos/*.zip
           if-no-files-found: warn

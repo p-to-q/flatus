@@ -36,9 +36,15 @@ pub const MIN_COOLDOWN_MS: u32 = 60_000;
 
 /// Convert dBFS to linear gain (multiplier on the `f32` sample bus).
 #[inline]
+#[must_use]
 pub fn dbfs_to_linear(db: f32) -> f32 {
     10.0_f32.powf(db / 20.0)
 }
+
+// Compile-time guards on the safety constants — stronger than unit tests because the
+// build itself fails if the bands or timings ever drift into nonsense.
+const _: () = assert!(HPF_HZ < LPF_HZ);
+const _: () = assert!(MAX_SESSION_MS < MIN_COOLDOWN_MS);
 
 #[cfg(test)]
 mod tests {
@@ -53,11 +59,5 @@ mod tests {
     fn cap_below_unity() {
         assert!(dbfs_to_linear(MAX_OUTPUT_DBFS) < 1.0);
         assert!(dbfs_to_linear(HEADPHONE_DBFS) < dbfs_to_linear(MAX_OUTPUT_DBFS));
-    }
-
-    #[test]
-    fn sane_band_ordering() {
-        assert!(HPF_HZ < LPF_HZ);
-        assert!(MAX_SESSION_MS < MIN_COOLDOWN_MS);
     }
 }

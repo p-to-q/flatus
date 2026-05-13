@@ -63,8 +63,8 @@ struct Acc {
 
 impl Acc {
     fn push(&mut self, x: f32) {
-        self.sum += x as f64;
-        self.sum_sq += (x as f64) * (x as f64);
+        self.sum += f64::from(x);
+        self.sum_sq += f64::from(x) * f64::from(x);
         self.n += 1;
     }
 
