@@ -34,7 +34,7 @@
 
     <!-- bloom for the grains -->
     <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feGaussianBlur stdDeviation="10" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -123,13 +123,6 @@
   </g>
   <g font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace">
     <text x="74" y="166" font-size="11" fill="#ffffff" fill-opacity="0.55" letter-spacing="2" text-transform="uppercase">A SMALL APPARATUS FOR MOVING AIR</text>
-  </g>
-
-  <!-- [p → q] motif, integrated -->
-  <g font-family="ui-serif, 'New York', 'Times New Roman', serif" font-size="22" fill="#ce552a">
-    <text x="70" y="64" letter-spacing="2">[ p</text>
-    <text x="118" y="64" fill="#f5a26b" font-size="22">→</text>
-    <text x="142" y="64" letter-spacing="2">q ]</text>
   </g>
 
   <!-- noise overlay, very low alpha so it reads as paper texture not visual noise -->

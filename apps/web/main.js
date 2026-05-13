@@ -32,6 +32,14 @@ const SPECIMEN_DEFAULT_SEED = {
 };
 const DEFAULT_PRESSURE = 0.6;
 
+// A web session is several render events with short silent gaps between, so
+// the structure (and intervals) is audible instead of a single sub-second
+// blink. The CLI still renders one event per invocation; this is purely a
+// playback ergonomic for the in-browser preview.
+const SESSION_EVENTS = 3;
+const SESSION_GAP_MS = 280;
+const SAMPLE_RATE = 48000;
+
 // --- Page lookups --------------------------------------------------------------
 
 const $ = (sel) => document.querySelector(sel);
@@ -355,6 +363,50 @@ function fakeAudioBufferFromSamples(samples, sampleRate) {
   };
 }
 
+// Concatenate `count` single-event renders (seed, seed+1, ..., seed+count-1)
+// into a single 16-bit mono PCM WAV with `gapMs` of silence between events.
+// Mirrors what flatus actually does over time on the desktop: a small cluster
+// of distinct events with audible spacing.
+function renderSession(personality, seedBase, pressure, headphones, count, gapMs) {
+  const events = [];
+  for (let i = 0; i < count; i++) {
+    const bytes = renderWav(personality, seedBase + i, pressure, headphones);
+    if (!bytes || bytes.length < 44) continue;
+    events.push(bytes.slice(44));
+  }
+  if (events.length === 0) return new Uint8Array(0);
+
+  const gapBytes = Math.floor((gapMs / 1000) * SAMPLE_RATE) * 2;
+  const eventsBytes = events.reduce((s, e) => s + e.byteLength, 0);
+  const dataSize = eventsBytes + gapBytes * (events.length - 1);
+  const out = new Uint8Array(44 + dataSize);
+  const dv = new DataView(out.buffer);
+  // RIFF header
+  out[0] = 0x52; out[1] = 0x49; out[2] = 0x46; out[3] = 0x46; // RIFF
+  dv.setUint32(4, dataSize + 36, true);
+  out[8] = 0x57; out[9] = 0x41; out[10] = 0x56; out[11] = 0x45; // WAVE
+  // fmt chunk
+  out[12] = 0x66; out[13] = 0x6d; out[14] = 0x74; out[15] = 0x20; // "fmt "
+  dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true);        // PCM
+  dv.setUint16(22, 1, true);        // mono
+  dv.setUint32(24, SAMPLE_RATE, true);
+  dv.setUint32(28, SAMPLE_RATE * 2, true);
+  dv.setUint16(32, 2, true);        // block align
+  dv.setUint16(34, 16, true);       // bits per sample
+  // data chunk
+  out[36] = 0x64; out[37] = 0x61; out[38] = 0x74; out[39] = 0x61; // "data"
+  dv.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < events.length; i++) {
+    out.set(events[i], offset);
+    offset += events[i].byteLength;
+    if (i < events.length - 1) offset += gapBytes; // zeros already
+  }
+  return out;
+}
+
 // --- Render & play -------------------------------------------------------------
 
 async function renderAndPlay({ autoPlay = true } = {}) {
@@ -364,11 +416,11 @@ async function renderAndPlay({ autoPlay = true } = {}) {
   }
   const { personality, seed, pressure, headphones } = currentInputs();
   setRenderEnabled(false);
-  setStatus(`rendering ${personality}…`);
+  setStatus(`rendering ${personality} session…`);
   const t0 = performance.now();
   let bytes;
   try {
-    bytes = renderWav(personality, seed, pressure, headphones);
+    bytes = renderSession(personality, seed, pressure, headphones, SESSION_EVENTS, SESSION_GAP_MS);
   } catch (err) {
     console.error(err);
     setStatus(`render failed: ${err?.message || err}`);
@@ -418,7 +470,7 @@ async function renderAndPlay({ autoPlay = true } = {}) {
   downloadWav.download = `flatus-${personality}-${seed}.wav`;
 
   setStatus(
-    `${personality} · seed ${seed} · ${(buffer.duration).toFixed(2)}s · ${fmtBytes(bytes.length)} · synth ${elapsed.toFixed(0)} ms`,
+    `${personality} · seed ${seed}+${SESSION_EVENTS - 1} · ${SESSION_EVENTS} events · ${(buffer.duration).toFixed(2)}s · ${fmtBytes(bytes.length)} · synth ${elapsed.toFixed(0)} ms`,
   );
   setRenderEnabled(true);
 }
@@ -654,17 +706,17 @@ async function boot() {
   try {
     const { personality, seed, pressure, headphones } = currentInputs();
     const t0 = performance.now();
-    const bytes = renderWav(personality, seed, pressure, headphones);
+    const bytes = renderSession(personality, seed, pressure, headphones, SESSION_EVENTS, SESSION_GAP_MS);
     const elapsed = performance.now() - t0;
     if (bytes && bytes.length > 0) {
       const samples = decodeWavSamplesSync(bytes);
-      drawWaveform(fakeAudioBufferFromSamples(samples, 48000));
+      drawWaveform(fakeAudioBufferFromSamples(samples, SAMPLE_RATE));
       const url = bytesToBlobUrl(bytes);
       downloadWav.hidden = false;
       downloadWav.href = url;
-      downloadWav.download = `flatus-${personality}-${seed}.wav`;
+      downloadWav.download = `flatus-${personality}-${seed}-session.wav`;
       setStatus(
-        `previewed ${personality} · seed ${seed} · ${(samples.length / 48000).toFixed(2)}s · ${fmtBytes(bytes.length)} · synth ${elapsed.toFixed(0)} ms · press to play`,
+        `previewed ${personality} · seed ${seed}+${SESSION_EVENTS - 1} · ${SESSION_EVENTS} events · ${(samples.length / SAMPLE_RATE).toFixed(2)}s · ${fmtBytes(bytes.length)} · press to play`,
       );
     } else {
       setStatus("ready · press render");
