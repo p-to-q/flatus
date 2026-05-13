@@ -430,6 +430,59 @@ body::after {
   margin: 1.25rem 0 0;
 }
 
+.install-lede {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0 0 1rem;
+}
+.install-lede strong { color: var(--ink); font-weight: 600; }
+.install-lede em { color: var(--accent); font-style: italic; }
+.install-lede code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--paper-2);
+  padding: 0.05em 0.35em;
+  border-radius: 3px;
+  color: var(--ink);
+}
+
+/* Primary install path — show the copy button by default (not on hover) so
+ * first-timers see the affordance immediately, and frame the block with an
+ * oxblood left rail to mark it as the recommended one-liner. */
+.install-oneliner {
+  border-left: 3px solid var(--accent);
+  padding-left: 1.5rem;
+}
+.install-oneliner .codeblock-copy { opacity: 1; }
+
+.install-manual {
+  margin-top: 1.5rem;
+  border-top: 1px dashed var(--rule);
+  padding-top: 1rem;
+}
+.install-manual > summary {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+  padding: 0.25rem 0;
+}
+.install-manual > summary::-webkit-details-marker { display: none; }
+.install-manual > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s ease;
+  color: var(--accent);
+}
+.install-manual[open] > summary::before { content: "▾ "; }
+.install-manual > summary:hover { color: var(--ink-2); }
+.install-manual .steps { margin-top: 1rem; }
+
 /* ---------- section heads ---------- */
 
 .section-head { margin-bottom: 1.5rem; }

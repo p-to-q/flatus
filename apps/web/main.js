@@ -673,6 +673,29 @@ function wireCliCopy() {
   });
 }
 
+// Same shape as wireCliCopy: copy a single command line into the clipboard
+// and flip the button label for 1.4s so the user knows it landed.
+function wireInstallCopy() {
+  const btn = document.getElementById("install-oneliner-copy");
+  const code = document.getElementById("install-oneliner-code");
+  if (!btn || !code) return;
+  btn.addEventListener("click", async () => {
+    // Strip the leading `$ ` prompt so the clipboard payload is paste-ready.
+    const text = code.innerText.replace(/^\$\s?/, "").trim();
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.dataset.state = "copied";
+      btn.textContent = "copied";
+      setTimeout(() => {
+        btn.removeAttribute("data-state");
+        btn.textContent = "copy";
+      }, 1400);
+    } catch {
+      btn.textContent = "press ⌘C";
+    }
+  });
+}
+
 function wireDownloadCta() {
   const detected = detectArch();
   applyArchToCta(detected);
@@ -761,6 +784,7 @@ async function boot() {
 
   wireDownloadCta();
   wireCliCopy();
+  wireInstallCopy();
   wireScrollReveals();
 
   // Banner is a giant button — click anywhere on the spectrogram and we

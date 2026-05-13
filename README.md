@@ -37,7 +37,15 @@ For an A/B with the pre-realism cut, the v0.3 archive sits alongside, byte-ident
 
 ## Install
 
-### Option A — pre-built `.dmg` (macOS Apple Silicon, recommended)
+### Option A — one-liner installer (macOS Apple Silicon, recommended)
+
+```sh
+curl -fsSL https://flatus.vercel.app/install.sh | bash
+```
+
+Resolves the latest pre-release on GitHub, downloads the DMG, copies `flatus.app` into `/Applications`, and clears the macOS browser-quarantine xattr — all in one go. The script is short; read it first if you'd rather not pipe a remote URL to bash: [`apps/web/install.sh`](apps/web/install.sh).
+
+### Option A′ — pre-built `.dmg` by hand
 
 Grab the **unsigned** `flatus_*.dmg` from the [latest pre-release](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
 
@@ -74,7 +82,18 @@ The compiled bundle lives at `target/release/bundle/macos/flatus.app` (workspace
 
 ## First launch
 
-The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine. Clear the flag once and you're done:
+The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine.
+
+**One-liner (recommended).** Paste this into Terminal — it downloads the latest pre-release DMG, installs `flatus.app` into `/Applications`, and clears the quarantine xattr in one shot:
+
+```sh
+curl -fsSL https://flatus.vercel.app/install.sh | bash
+```
+
+The script is short and worth a look before piping it to bash: [`apps/web/install.sh`](apps/web/install.sh).
+
+<details>
+<summary><strong>Or do it by hand</strong></summary>
 
 1. Drag `flatus.app` into `/Applications` as usual.
 2. In Terminal, strip the quarantine xattr from the installed app:
@@ -84,7 +103,8 @@ The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequo
    ```
 3. Double-click `flatus.app`. Next launches don't need step 2.
 
-If you prefer a UI-only path: open **System Settings → Privacy & Security**, scroll to the bottom, and click **Open Anyway** next to the "flatus.app was blocked" notice. Then re-open the app and confirm.
+UI-only path: open **System Settings → Privacy & Security**, scroll to the bottom, and click **Open Anyway** next to the "flatus.app was blocked" notice. Re-open the app and confirm.
+</details>
 
 After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray icon in your menubar.
 
