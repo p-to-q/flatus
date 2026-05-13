@@ -39,7 +39,7 @@ For an A/B with the pre-realism cut, the v0.3 archive sits at [`flatus.vercel.ap
 
 ### Option A — pre-built `.dmg` (macOS Apple Silicon, recommended)
 
-Grab the **unsigned** `flatus_*.dmg` from the [latest release](https://github.com/p-to-q/flatus/releases/latest). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
+Grab the **unsigned** `flatus_*.dmg` from the [latest pre-release](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
 
 Prefer to skip the DMG step? The same release also ships a `flatus-*.app.zip` — unzip and drag the `.app` into `/Applications/` yourself.
 
@@ -145,7 +145,7 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Status
 
-**v0.1.0** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
+**v0.1.0-pre.3** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3).
 
 ## Docs
 
