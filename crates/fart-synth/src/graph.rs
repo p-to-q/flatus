@@ -73,7 +73,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
                 t / 0.05
             } else {
                 let d = (t - 0.05) / 0.95;
-                (1.0 - d).max(0.0).powf(1.5)
+                libm::powf((1.0 - d).max(0.0), 1.5)
             };
 
             // Source: noise / saw mix.
@@ -97,7 +97,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
         let depth = 0.6 * params.tremor;
         for (i, s) in buf.iter_mut().enumerate() {
             let t = i as f32 / sr;
-            let lfo = 1.0 - depth + depth * (2.0 * PI * tremor_hz * t).sin().abs();
+            let lfo = 1.0 - depth + depth * libm::sinf(2.0 * PI * tremor_hz * t).abs();
             *s *= lfo;
         }
     }
@@ -107,7 +107,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     let drive = 1.0 + 3.0 * params.crackle;
     let bias = 0.05 * params.crackle;
     for s in &mut buf {
-        *s = (drive * *s + bias).tanh();
+        *s = libm::tanhf(drive * *s + bias);
     }
 
     // 5) Wetness via single comb-feedback delay (~80 ms). Cheap, surprisingly
@@ -138,7 +138,7 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     if peak > 1e-6 {
         let norm = 0.95 / peak;
         for s in &mut buf {
-            *s = (norm * *s).tanh() * cap;
+            *s = libm::tanhf(norm * *s) * cap;
         }
     }
 
@@ -166,8 +166,8 @@ impl Biquad {
     #[must_use]
     pub fn bandpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
-        let sin_w = omega.sin();
-        let cos_w = omega.cos();
+        let sin_w = libm::sinf(omega);
+        let cos_w = libm::cosf(omega);
         let alpha = sin_w / (2.0 * q.max(0.1));
 
         let a0 = 1.0 + alpha;
@@ -193,8 +193,8 @@ impl Biquad {
     #[must_use]
     pub fn highpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
-        let sin_w = omega.sin();
-        let cos_w = omega.cos();
+        let sin_w = libm::sinf(omega);
+        let cos_w = libm::cosf(omega);
         let alpha = sin_w / (2.0 * q.max(0.1));
 
         let a0 = 1.0 + alpha;
@@ -220,8 +220,8 @@ impl Biquad {
     #[must_use]
     pub fn lowpass(sample_rate: f32, fc: f32, q: f32) -> Self {
         let omega = 2.0 * PI * fc / sample_rate;
-        let sin_w = omega.sin();
-        let cos_w = omega.cos();
+        let sin_w = libm::sinf(omega);
+        let cos_w = libm::cosf(omega);
         let alpha = sin_w / (2.0 * q.max(0.1));
 
         let a0 = 1.0 + alpha;

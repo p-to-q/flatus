@@ -46,9 +46,9 @@ impl Mulberry32 {
         // Avoid taking log of zero.
         let u1 = (self.next_f32() + 1.0e-9).min(1.0 - 1.0e-9);
         let u2 = self.next_f32();
-        let r = (-2.0 * u1.ln()).sqrt();
+        let r = libm::sqrtf(-2.0 * libm::logf(u1));
         let theta = 2.0 * std::f32::consts::PI * u2;
-        r * theta.cos()
+        r * libm::cosf(theta)
     }
 
     /// Gaussian sample with mean and standard deviation.

@@ -38,7 +38,7 @@ pub const MIN_COOLDOWN_MS: u32 = 60_000;
 #[inline]
 #[must_use]
 pub fn dbfs_to_linear(db: f32) -> f32 {
-    10.0_f32.powf(db / 20.0)
+    libm::powf(10.0, db / 20.0)
 }
 
 // Compile-time guards on the safety constants — stronger than unit tests because the
