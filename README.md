@@ -148,7 +148,9 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 - [`README.md`](README.md) — you are here
 - [`PLAN.md`](PLAN.md) — the internal plan (philosophy, architecture, milestones)
 - [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) — the citation-backed plausibility writeup
+- [`docs/REALISM.md`](docs/REALISM.md) — v0.4 research: why v0.3 sounds rendered + which knobs we're turning to close the gap
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — conventions
+- [`docs/marks/`](docs/marks/) — brand kit (wordmark, signature, monogram, OG card)
 
 ## License
 
