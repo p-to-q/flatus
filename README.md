@@ -8,37 +8,87 @@ A small thing that lives in your menubar and occasionally farts.
 
 It's also, by acoustic accident, the same waveform Apple uses in watchOS to push water out of the Apple Watch speaker. See [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) if you want receipts.
 
+<p align="center">
+  <img src="docs/screenshots/spectrogram-biblical.png" alt="spectrogram of biblical.wav — energy concentrated below 2 kHz, six grains across 1.8 seconds, dashed HPF 60 Hz and LPF 2 kHz rails" width="100%" />
+  <br/>
+  <em><sub>real spectrogram of <code>biblical.wav</code> — one of the four pinned golden fixtures. seed=3, pressure=0.8.</sub></em>
+</p>
+
 ## Install
 
-```sh
-cargo install --path crates/fart-synth   # from this repo
-# (once published to crates.io)
-# cargo install flatus
-```
+### Option A — pre-built `.app` (macOS Apple Silicon)
 
-(Yes, `cargo install`. Yes, it's a fart machine. Yes, it's written in Rust. We did not plan this.)
+Grab the **unsigned** `.app` from the [latest release](https://github.com/p-to-q/flatus/releases/latest). It's a ZIP — unzip and drag `flatus.app` into `/Applications/`. Then see [First launch](#first-launch).
 
-## Use
+### Option B — from source (any platform, CLI only on non-macOS)
+
+You need: `git`, `rustc` ≥ 1.78 (via [rustup](https://rustup.rs/)), and `cargo`. On Linux also install `libasound2-dev` so `cpal` can find ALSA.
 
 ```sh
-fart                            # one shot, from the terminal
-fart --personality biblical
-fart --seed 42                  # reproducible
-fart --render out.wav           # don't play; write a WAV
-fart --list-personalities
-
-# menubar companion (Tauri):
-cd apps/desktop && pnpm install && pnpm tauri dev
+git clone https://github.com/p-to-q/flatus
+cd flatus
+cargo install --path crates/fart-synth
 ```
 
-**Tray click → fart.** Right-click (or ⌘-click) → settings.
+This installs **two binaries** into `~/.cargo/bin/`:
+- `fart` — the CLI you actually run
+- `generate-goldens` — regenerates the deterministic golden fixtures (you almost never need this)
+
+> Note: `cargo install flatus` does **not** work — the crate isn't on crates.io yet. The `--path crates/fart-synth` form is the only way today.
+
+### Option C — build the menubar app from source (macOS only)
+
+Adds: `node` ≥ 20, `pnpm` ≥ 9, Xcode Command Line Tools (`xcode-select --install`).
+
+```sh
+cd apps/desktop
+pnpm install
+pnpm tauri build
+open ../../target/release/bundle/macos/flatus.app
+```
+
+The compiled bundle lives at `target/release/bundle/macos/flatus.app` (workspace root, not under `apps/desktop/`).
+
+## First launch
+
+The `.app` is **unsigned** (no Apple Developer cert in v0.1), so macOS Gatekeeper blocks the first launch with "flatus.app can't be opened because Apple cannot check it for malicious software." The bypass takes one extra click:
+
+1. **Right-click** (or Control-click) `flatus.app` → **Open**.
+2. macOS shows a new dialog with an **Open** button enabled. Click it.
+3. Next launches don't need this — macOS remembers the choice.
+
+After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray icon in your menubar.
+
+- **Left-click the tray** → fart now.
+- **Right-click** (or ⌘-click) → settings (volume, personality, output, quiet hours).
+- **Quit** from the right-click menu.
+
+## Use (CLI)
+
+```sh
+fart                                # one-shot through your default output device
+fart --personality biblical         # pick a voice
+fart --seed 42                      # reproducible — same seed always renders the same fart
+fart --render out.wav               # silent: just write a 16-bit mono 48 kHz WAV
+fart --headphones                   # tighter −18 dBFS cap for headphones
+fart --list-personalities           # show the four canonical voices
+fart --help
+```
 
 ## Personalities
+
+<p align="center">
+  <img src="docs/screenshots/waveforms-all.png" alt="waveform comparison of the four personalities — polite-cough (77 ms), default (571 ms), biblical (1817 ms), silent-but-deadly (670 ms), all on a shared time axis" width="100%" />
+  <br/>
+  <em><sub>same shared scale for all four personalities; durations are real.</sub></em>
+</p>
 
 - `polite-cough` — short, dry, plausibly deniable
 - `default` — the canon
 - `biblical` — slow, low, devastating
 - `silent-but-deadly` — exactly what it says
+
+Add a fifth by appending one row to [`crates/fart-synth/src/personalities.rs`](crates/fart-synth/src/personalities.rs). _The directory listing is the bestiary._
 
 ## Roadmap
 
@@ -52,7 +102,7 @@ cd apps/desktop && pnpm install && pnpm tauri dev
 
 ## Status
 
-v0.1.0 — **unsigned**, macOS only, Apple Silicon. First launch on macOS needs a Gatekeeper bypass (right-click → Open). The CLI works on Linux too in theory but is not tested there. See [`CHANGELOG.md`](CHANGELOG.md).
+**v0.1.0-pre.2** — unsigned, macOS Apple Silicon for the menubar app; the `fart-synth` core and `fart` CLI also build and test green on Linux. First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
 
 ## Docs
 

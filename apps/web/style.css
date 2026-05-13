@@ -101,6 +101,18 @@ section:last-of-type { border-bottom: 1px solid var(--rule); }
 
 .cli .comment { color: var(--muted); }
 
+.cli .caption {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0 0 0.5rem;
+}
+.cli .caption.note {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.cli .caption code { color: var(--accent); }
+
 .links ul {
   margin: 0;
   padding: 0;
