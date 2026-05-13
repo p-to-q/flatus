@@ -91,8 +91,10 @@ jobs:
 
       - name: tauri build (unsigned)
         working-directory: apps/desktop
-        env:
-          APPLE_SIGNING_IDENTITY: ""
+        # No APPLE_SIGNING_IDENTITY env: an empty string makes Tauri call
+        # `codesign --sign ""`, which fails with "item not found in keychain".
+        # tauri.conf.json `bundle.macOS.signingIdentity: null` already means
+        # "skip codesign"; leaving the env unset lets that take effect.
         run: pnpm tauri build
 
       - name: Zip the .app
