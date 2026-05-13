@@ -1,0 +1,53 @@
+name: Pages
+
+# Deploy apps/web/ to https://p-to-q.github.io/flatus/.
+#
+# This is a static deploy — the site is hand-authored HTML + CSS + JS plus a
+# vendored wasm-bindgen bundle (apps/web/wasm/). No build step. CI just lifts
+# the directory into the Pages artifact and ships it.
+#
+# Pages must be enabled in Settings → Pages → Source = GitHub Actions for
+# the first run to attach to a real environment. After that, every push to
+# main that touches apps/web/ or the workflow itself redeploys.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
