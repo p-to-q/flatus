@@ -562,7 +562,14 @@ function buildSpecimenGrid() {
 
 // --- Download CTA --------------------------------------------------------------
 
-const RELEASE_BASE = "https://github.com/p-to-q/flatus/releases/latest";
+// Pinned to the current pre-release. `releases/latest` is unusable here because
+// GitHub only resolves it to non-prerelease tags, and every flatus release so
+// far is marked prerelease — so /latest 302s to the releases list instead of
+// a download. Bump this string when cutting a new tag.
+const LATEST_TAG = "v0.1.0-pre.3";
+const RELEASE_BASE = `https://github.com/p-to-q/flatus/releases/tag/${LATEST_TAG}`;
+const DMG_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus_0.1.0_aarch64.dmg`;
+const APP_ZIP_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus-${LATEST_TAG}-aarch64.app.zip`;
 
 function detectArch() {
   const ua = navigator.userAgent || "";
@@ -595,8 +602,9 @@ function detectArch() {
 function applyArchToCta(detected) {
   if (detected.os === "macos") {
     const archLabel = detected.arch === "x86_64" ? "Intel" : "Apple Silicon";
-    ctaMeta.textContent = `for macOS · ${archLabel} · v0.1.0 · unsigned`;
-    ctaHint.textContent = `Detected ${archLabel}. v0.1.0 is unsigned — Gatekeeper needs one right-click → Open the first time.`;
+    ctaMeta.textContent = `for macOS · ${archLabel} · ${LATEST_TAG} · unsigned`;
+    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — Gatekeeper needs one right-click → Open the first time.`;
+    ctaBtn.href = detected.arch === "x86_64" ? RELEASE_BASE : DMG_URL;
     ctaBtn.dataset.state = "ready";
   } else if (detected.os === "linux") {
     ctaMeta.textContent = `Linux · build from source`;
