@@ -603,7 +603,7 @@ function applyArchToCta(detected) {
   if (detected.os === "macos") {
     const archLabel = detected.arch === "x86_64" ? "Intel" : "Apple Silicon";
     ctaMeta.textContent = `for macOS · ${archLabel} · ${LATEST_TAG} · unsigned`;
-    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — Gatekeeper needs one right-click → Open the first time.`;
+    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — clear the browser-quarantine xattr once with the command below before first launch.`;
     ctaBtn.href = detected.arch === "x86_64" ? RELEASE_BASE : DMG_URL;
     ctaBtn.dataset.state = "ready";
   } else if (detected.os === "linux") {

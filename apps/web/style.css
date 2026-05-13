@@ -71,8 +71,34 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(1200px 600px at 80% -10%, rgba(239, 126, 87, 0.10), transparent 60%),
-    radial-gradient(900px 600px at 0% 110%, rgba(140, 47, 30, 0.06), transparent 60%);
+    radial-gradient(900px 600px at 0% 110%, rgba(140, 47, 30, 0.06), transparent 60%),
+    radial-gradient(1400px 900px at 50% 50%, transparent 55%, rgba(38, 28, 18, 0.07) 100%);
   z-index: 0;
+}
+
+/* Paper grain — SVG turbulence tiled & multiplied into the warm paper color.
+ * The texture is fixed to the viewport so it reads as the page substrate
+ * itself rather than something painted onto the scroll content. Cards, code
+ * blocks, and the canvas have their own backgrounds and naturally mask the
+ * grain — letting it show through margins is the point. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='280' height='280' filter='url(%23n)'/></svg>");
+  background-size: 280px 280px;
+  background-repeat: repeat;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  body::after {
+    opacity: 0.09;
+    mix-blend-mode: screen;
+  }
 }
 
 .page {
@@ -923,6 +949,13 @@ body::before {
   font-size: 1.1rem;
   color: var(--ink);
   margin: 0.5rem 0 0;
+}
+.qed::after {
+  content: " \220E"; /* halmos / tombstone ∎ — classical Q.E.D. companion */
+  font-style: normal;
+  margin-left: 0.35em;
+  color: var(--accent);
+  vertical-align: -0.04em;
 }
 .copy {
   font-family: var(--font-mono);

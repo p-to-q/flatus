@@ -72,13 +72,14 @@
     <section class="install" id="install" hidden>
       <h2 class="caption">First launch</h2>
       <ol class="steps">
-        <li><span class="step-n">1</span><span class="step-b">Your download is starting. The file is a ZIP — unzip it.</span></li>
+        <li><span class="step-n">1</span><span class="step-b">Your download is starting. Open the <code>.dmg</code> (or unzip the <code>.app.zip</code>).</span></li>
         <li><span class="step-n">2</span><span class="step-b">Drag <code>flatus.app</code> into <code>/Applications</code>.</span></li>
-        <li><span class="step-n">3</span><span class="step-b"><strong>Right-click</strong> <code>flatus.app</code> → <strong>Open</strong>. Gatekeeper will warn it's unsigned (we're working on it); click <strong>Open</strong> again.</span></li>
-        <li><span class="step-n">4</span><span class="step-b">A small icon appears in your menubar. Left-click it to fart.</span></li>
+        <li><span class="step-n">3</span><span class="step-b">Open <strong>Terminal</strong> and run <code>xattr -cr /Applications/flatus.app</code> — this clears the browser-quarantine xattr that triggers a misleading <em>"app is damaged"</em> error on macOS 15+.</span></li>
+        <li><span class="step-n">4</span><span class="step-b">Double-click <code>flatus.app</code>. A small icon appears in your menubar.</span></li>
       </ol>
       <p class="install-foot">
-        Right-click → settings (volume, personality, output, quiet hours). Quit from the same menu.
+        Prefer no Terminal? Open <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong> after the first blocked attempt. Either path is one-shot.
+        Once running, right-click the tray icon for settings (volume, personality, output, quiet hours). Quit from the same menu.
       </p>
     </section>
 

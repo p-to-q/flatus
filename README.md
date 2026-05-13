@@ -74,11 +74,17 @@ The compiled bundle lives at `target/release/bundle/macos/flatus.app` (workspace
 
 ## First launch
 
-The `.app` is **unsigned** (no Apple Developer cert in v0.1), so macOS Gatekeeper blocks the first launch with "flatus.app can't be opened because Apple cannot check it for malicious software." The bypass takes one extra click:
+The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine. Clear the flag once and you're done:
 
-1. **Right-click** (or Control-click) `flatus.app` → **Open**.
-2. macOS shows a new dialog with an **Open** button enabled. Click it.
-3. Next launches don't need this — macOS remembers the choice.
+1. Drag `flatus.app` into `/Applications` as usual.
+2. In Terminal, strip the quarantine xattr from the installed app:
+
+   ```sh
+   xattr -cr /Applications/flatus.app
+   ```
+3. Double-click `flatus.app`. Next launches don't need step 2.
+
+If you prefer a UI-only path: open **System Settings → Privacy & Security**, scroll to the bottom, and click **Open Anyway** next to the "flatus.app was blocked" notice. Then re-open the app and confirm.
 
 After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray icon in your menubar.
 
@@ -145,7 +151,7 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Status
 
-**v0.1.0-pre.3** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3).
+**v0.1.0-pre.3** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS 15+ needs a one-shot `xattr -cr /Applications/flatus.app` to clear the browser-quarantine xattr (see [First launch](#first-launch)). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3).
 
 ## Docs
 
