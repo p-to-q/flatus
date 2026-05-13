@@ -13,6 +13,7 @@ pub struct Mulberry32 {
 impl Mulberry32 {
     /// Seed from any `u64`. Low 32 bits and high 32 bits are XOR-folded so seeds
     /// that differ only in their upper bits still produce distinct streams.
+    #[must_use]
     pub fn new(seed: u64) -> Self {
         let s = (seed as u32) ^ ((seed >> 32) as u32);
         // Avoid the degenerate zero state.
@@ -25,7 +26,7 @@ impl Mulberry32 {
         self.state = self.state.wrapping_add(0x6D2B_79F5);
         let mut t = self.state;
         t = (t ^ (t >> 15)).wrapping_mul(t | 1);
-        t ^= t.wrapping_add((t ^ (t >> 7)).wrapping_mul(t | 61));
+        t ^= t.wrapping_add((t ^ (t >> 7)).wrapping_mul(t | 0x3D));
         t ^ (t >> 14)
     }
 
@@ -45,9 +46,9 @@ impl Mulberry32 {
         // Avoid taking log of zero.
         let u1 = (self.next_f32() + 1.0e-9).min(1.0 - 1.0e-9);
         let u2 = self.next_f32();
-        let r = (-2.0 * u1.ln()).sqrt();
+        let r = libm::sqrtf(-2.0 * libm::logf(u1));
         let theta = 2.0 * std::f32::consts::PI * u2;
-        r * theta.cos()
+        r * libm::cosf(theta)
     }
 
     /// Gaussian sample with mean and standard deviation.
@@ -74,7 +75,7 @@ mod tests {
         let mut r = Mulberry32::new(7);
         for _ in 0..10_000 {
             let v = r.next_f32();
-            assert!(v >= 0.0 && v < 1.0);
+            assert!((0.0..1.0).contains(&v));
         }
     }
 
@@ -92,7 +93,7 @@ mod tests {
         let mean = sum / n as f32;
         let var = sum_sq / n as f32 - mean * mean;
         // Loose tolerances; just checking the generator is sane.
-        assert!(mean.abs() < 0.1, "mean drifted: {}", mean);
-        assert!((var - 1.0).abs() < 0.1, "variance drifted: {}", var);
+        assert!(mean.abs() < 0.1, "mean drifted: {mean}");
+        assert!((var - 1.0).abs() < 0.1, "variance drifted: {var}");
     }
 }

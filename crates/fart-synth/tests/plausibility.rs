@@ -27,7 +27,7 @@ fn band_energy(samples: &[f32], sample_rate_hz: f32, centre_hz: f32) -> f32 {
     let mut sum_sq = 0.0_f64;
     for &s in samples {
         let y = bpf_b.process(bpf_a.process(s));
-        sum_sq += (y as f64) * (y as f64);
+        sum_sq += f64::from(y) * f64::from(y);
     }
     (sum_sq / samples.len().max(1) as f64).sqrt() as f32
 }
@@ -67,21 +67,15 @@ fn each_personality_concentrates_energy_in_the_claimed_band() {
         // lower bound that still fails if anyone accidentally lets HF leak.
         assert!(
             ratio >= 6.0,
-            "personality `{}` has in-band/above-band ratio {:.2} (in={:.4e}, above={:.4e}). \
-             The synth should keep most energy in 80–400 Hz — see docs/ACOUSTICS.md §2.",
-            name,
-            ratio,
-            in_band,
-            above_band
+            "personality `{name}` has in-band/above-band ratio {ratio:.2} (in={in_band:.4e}, above={above_band:.4e}). \
+             The synth should keep most energy in 80–400 Hz — see docs/ACOUSTICS.md §2."
         );
 
         // Sanity: the rendered signal is not silent.
         let peak = samples.iter().fold(0.0_f32, |a, s| a.max(s.abs()));
         assert!(
             peak > 0.01,
-            "personality `{}` rendered nearly silent (peak={})",
-            name,
-            peak
+            "personality `{name}` rendered nearly silent (peak={peak})"
         );
     }
 }

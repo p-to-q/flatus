@@ -26,3 +26,8 @@ cpal = "0.15"
 anyhow = "1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Pure-Rust libm: stdlib's f32::tanh/sin/cos/powf/sqrt/ln defer to the platform
+# libm, which gives different LSBs on macOS vs glibc. The determinism contract
+# (`tests/golden`) requires bit-exact rendering across both, so every
+# transcendental in the synth crate routes through this crate instead.
+libm = "0.2"

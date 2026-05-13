@@ -46,11 +46,6 @@
       "signingIdentity": null,
       "providerShortName": null,
       "exceptionDomain": null
-    },
-    "infoPlist": {
-      "LSUIElement": true,
-      "NSHumanReadableCopyright": "© 2026 Wooden Computer Co., Ltd. Apache-2.0.",
-      "CFBundleShortVersionString": "0.1.0"
     }
   }
 }

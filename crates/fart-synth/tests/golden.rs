@@ -15,7 +15,6 @@ use serde::Deserialize;
 
 use fart_synth::personalities::{lookup_personality, sample_params};
 use fart_synth::prng::Mulberry32;
-use fart_synth::safety;
 use fart_synth::wav::{sha256_hex, write_wav};
 use fart_synth::{render, RenderConfig};
 
@@ -24,7 +23,6 @@ struct Fixture {
     personality: String,
     seed: u64,
     pressure: f32,
-    file: String,
     sha256: String,
 }
 

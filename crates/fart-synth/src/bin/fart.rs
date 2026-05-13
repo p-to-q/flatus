@@ -57,7 +57,7 @@ struct Cli {
     #[arg(long)]
     render: Option<PathBuf>,
 
-    /// Print the sampled FartParams to stderr.
+    /// Print the sampled `FartParams` to stderr.
     #[arg(long)]
     print_state: bool,
 
@@ -95,8 +95,8 @@ fn main() -> Result<()> {
 
     if cli.print_state {
         eprintln!("personality: {}", personality.name);
-        eprintln!("seed:        {}", seed);
-        eprintln!("params:      {:#?}", params);
+        eprintln!("seed:        {seed}");
+        eprintln!("params:      {params:#?}");
     }
 
     let cfg = RenderConfig {
@@ -130,8 +130,7 @@ fn time_seed() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos() as u64)
-        .unwrap_or(0xdead_beef_dead_beef)
+        .map_or(0xdead_beef_dead_beef, |d| d.as_nanos() as u64)
 }
 
 /// Play `samples` through the default output device. Blocks until playback completes.
@@ -170,7 +169,7 @@ fn play(samples: &[f32], sample_rate_hz: u32) -> Result<()> {
         SampleFormat::F32 => device.build_output_stream(
             &config,
             move |out: &mut [f32], _| {
-                feed_mono_to_interleaved(&mono, &mut cursor, device_channels, out)
+                feed_mono_to_interleaved(&mono, &mut cursor, device_channels, out);
             },
             err_fn,
             None,
@@ -183,7 +182,7 @@ fn play(samples: &[f32], sample_rate_hz: u32) -> Result<()> {
                     let mut tmp = vec![0.0_f32; out.len()];
                     feed_mono_to_interleaved(&mono, &mut cursor, device_channels, &mut tmp);
                     for (o, s) in out.iter_mut().zip(tmp.iter()) {
-                        *o = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+                        *o = (s.clamp(-1.0, 1.0) * f32::from(i16::MAX)) as i16;
                     }
                 },
                 err_fn,
@@ -198,7 +197,7 @@ fn play(samples: &[f32], sample_rate_hz: u32) -> Result<()> {
                     let mut tmp = vec![0.0_f32; out.len()];
                     feed_mono_to_interleaved(&mono, &mut cursor, device_channels, &mut tmp);
                     for (o, s) in out.iter_mut().zip(tmp.iter()) {
-                        let v = (s.clamp(-1.0, 1.0) * 0.5 + 0.5) * u16::MAX as f32;
+                        let v = (s.clamp(-1.0, 1.0) * 0.5 + 0.5) * f32::from(u16::MAX);
                         *o = v as u16;
                     }
                 },
@@ -206,7 +205,7 @@ fn play(samples: &[f32], sample_rate_hz: u32) -> Result<()> {
                 None,
             )
         }
-        other => return Err(anyhow!("unsupported sample format: {:?}", other)),
+        other => return Err(anyhow!("unsupported sample format: {other:?}")),
     }
     .context("could not build output stream")?;
 
@@ -242,7 +241,7 @@ fn resample_linear(samples: &[f32], from_hz: u32, to_hz: u32) -> Vec<f32> {
     if from_hz == to_hz {
         return samples.to_vec();
     }
-    let ratio = from_hz as f64 / to_hz as f64;
+    let ratio = f64::from(from_hz) / f64::from(to_hz);
     let out_len = ((samples.len() as f64) / ratio) as usize;
     let mut out = Vec::with_capacity(out_len);
     for i in 0..out_len {

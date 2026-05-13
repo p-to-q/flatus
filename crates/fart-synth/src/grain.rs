@@ -77,7 +77,7 @@ pub fn plan(
         let start = nominal_start
             .saturating_sub(jitter_range / 2)
             .saturating_add(jitter)
-            .min(n_samples.saturating_sub(length).max(0));
+            .min(n_samples.saturating_sub(length));
 
         // Pitch arc — sweep the centre frequency across the whole event.
         let arc_offset = params.pitch_arc * 60.0 * (t - 0.5);
@@ -124,16 +124,20 @@ mod tests {
 
     #[test]
     fn one_grain_when_patter_low() {
-        let mut p = FartParams::default();
-        p.patter = 0.0;
+        let p = FartParams {
+            patter: 0.0,
+            ..FartParams::default()
+        };
         let grains = plan(&p, 48_000, 48_000.0, &mut Mulberry32::new(0));
         assert_eq!(grains.len(), 1);
     }
 
     #[test]
     fn many_grains_when_patter_high() {
-        let mut p = FartParams::default();
-        p.patter = 0.9;
+        let p = FartParams {
+            patter: 0.9,
+            ..FartParams::default()
+        };
         let grains = plan(&p, 48_000, 48_000.0, &mut Mulberry32::new(0));
         assert!(grains.len() >= 4);
     }

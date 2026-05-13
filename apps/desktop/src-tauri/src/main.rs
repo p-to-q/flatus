@@ -312,14 +312,10 @@ fn main() {
             let menu = Menu::with_items(app, &[&item_fart, &item_settings, &item_quit])?;
 
             let _tray = TrayIconBuilder::with_id("main")
-                .icon(
-                    app.default_window_icon()
-                        .cloned()
-                        .unwrap_or_else(default_icon),
-                )
+                .icon(tauri::include_image!("icons/icon.png"))
                 .icon_as_template(true)
                 .menu(&menu)
-                .menu_on_left_click(false)
+                .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "fart_now" => {
                         let state: tauri::State<AppState> = app.state();
@@ -371,14 +367,4 @@ fn toggle_settings(app: &AppHandle) {
             let _ = w.set_focus();
         }
     }
-}
-
-/// Placeholder icon used if the bundled `default_window_icon` is missing during dev.
-/// Production builds use `icons/icon.png` from `tauri.conf.json`.
-///
-/// 16×16 fully transparent RGBA — invisible in the menubar but valid. Replace by
-/// dropping a real `icon.png` into `icons/` (see `icons/.gitkeep`).
-fn default_icon() -> tauri::image::Image<'static> {
-    static RGBA: [u8; 16 * 16 * 4] = [0; 16 * 16 * 4];
-    tauri::image::Image::new(&RGBA, 16, 16)
 }

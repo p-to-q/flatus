@@ -46,6 +46,7 @@ pub struct Pressure {
 }
 
 impl Pressure {
+    #[must_use]
     pub fn new(personality: &Personality, seed: u64) -> Self {
         Self {
             level: 0.0,
@@ -77,7 +78,9 @@ impl Pressure {
         } else {
             1.0
         };
-        let decay_per_sec = 0.005;
+        // Decay must stay well below `base_per_sec` (typically ~3e-4 for 1/hr personalities)
+        // or pressure can never accumulate to threshold under active gain.
+        let decay_per_sec = 0.0001;
         self.level += base_per_sec * bonus * dt_secs - decay_per_sec * dt_secs;
         self.level = self.level.max(0.0);
 

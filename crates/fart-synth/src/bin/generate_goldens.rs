@@ -73,12 +73,12 @@ fn main() -> Result<()> {
     let mut fixtures = Vec::new();
     for &(name, seed, pressure) in CANON {
         let personality =
-            lookup_personality(name).with_context(|| format!("unknown personality `{}`", name))?;
+            lookup_personality(name).with_context(|| format!("unknown personality `{name}`"))?;
         let mut rng = Mulberry32::new(seed);
         let params = sample_params(personality, &mut rng, pressure);
         let samples = render(&params, &cfg);
 
-        let file_name = format!("{}.wav", name);
+        let file_name = format!("{name}.wav");
         let path = golden_dir.join(&file_name);
         write_wav(&path, &samples, cfg.sample_rate_hz)
             .with_context(|| format!("writing {}", path.display()))?;
@@ -86,10 +86,7 @@ fn main() -> Result<()> {
         let bytes = fs::read(&path).with_context(|| format!("reading {}", path.display()))?;
         let hash = sha256_hex(&bytes);
 
-        println!(
-            "{:20} seed={:>2} pressure={:.1}  →  {}  ({})",
-            name, seed, pressure, file_name, hash
-        );
+        println!("{name:20} seed={seed:>2} pressure={pressure:.1}  →  {file_name}  ({hash})");
 
         fixtures.push(Fixture {
             personality: name.to_string(),
