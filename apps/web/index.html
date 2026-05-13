@@ -21,15 +21,34 @@
 
     <header class="masthead">
       <a class="brand" href="https://www.ptoq.io/" aria-label="A [p → q] project"><span aria-hidden="true">[ p → q ]</span></a>
-      <span class="catalog">spec 01 · flatus 0.1.0</span>
+      <span class="catalog"><span class="live-dot" id="live-dot" aria-hidden="true"></span><span id="live-label">booting</span> · spec 01 · flatus 0.1.0</span>
     </header>
 
     <section class="hero">
       <h1 class="wordmark">flatus</h1>
       <p class="tagline">a small apparatus for moving air.</p>
-      <figure class="banner" aria-label="Spectrogram of one fart event — energy concentrated 80 to 400 Hz, six grains across one second, bounded by a 60 Hz high-pass and a 2 kHz low-pass.">
-        <img src="./banner.svg" alt="" />
-      </figure>
+      <button type="button" class="banner banner-button" id="banner-trigger" aria-label="Click to synthesize a random voice and play it">
+        <picture>
+          <source srcset="./banner.png" type="image/png" />
+          <img class="banner-base" src="./banner.png" alt="Spectrogram of one fart event — energy concentrated 80 to 400 Hz, six grains across one second, bounded by a 60 Hz high-pass and a 2 kHz low-pass." />
+        </picture>
+        <svg class="banner-overlay" id="banner-overlay" viewBox="0 0 1200 320" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="overlay-stroke" x1="0" y1="0.5" x2="1" y2="0.5">
+              <stop offset="0" stop-color="#fff3d6" stop-opacity="0" />
+              <stop offset="0.15" stop-color="#fff3d6" stop-opacity="0.9" />
+              <stop offset="0.85" stop-color="#fff3d6" stop-opacity="0.9" />
+              <stop offset="1" stop-color="#fff3d6" stop-opacity="0" />
+            </linearGradient>
+            <filter id="overlay-glow" x="-10%" y="-50%" width="120%" height="200%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+          </defs>
+          <path id="overlay-wave" d="" fill="none" stroke="url(#overlay-stroke)" stroke-width="2" filter="url(#overlay-glow)" opacity="0" />
+          <path id="overlay-wave-core" d="" fill="none" stroke="#fff3d6" stroke-width="1" opacity="0" />
+        </svg>
+        <span class="banner-hint" aria-hidden="true">click to play</span>
+      </button>
       <p class="elevator">
         A desktop companion that lives in your menubar and occasionally farts.
         It is also, by acoustic accident, the same waveform Apple ships in

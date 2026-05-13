@@ -52,6 +52,11 @@ const ctaBtn = $("#download-cta");
 const ctaMeta = $("#cta-meta");
 const ctaHint = $("#cta-hint");
 const installSection = $("#install");
+const liveDot = $("#live-dot");
+const liveLabel = $("#live-label");
+const bannerTrigger = $("#banner-trigger");
+const overlayWave = $("#overlay-wave");
+const overlayWaveCore = $("#overlay-wave-core");
 
 // --- State ---------------------------------------------------------------------
 
@@ -110,6 +115,86 @@ function currentInputs() {
 
 // --- Waveform rendering --------------------------------------------------------
 
+// Shared "scope" palette — pulled once per draw so the page can switch from
+// light to dark mode without reloading. Matches the banner's gradient + warm
+// grain colours so the waveform sits visually inside the same instrument.
+function scopePalette() {
+  const css = getComputedStyle(document.documentElement);
+  const get = (n, fb) => (css.getPropertyValue(n).trim() || fb);
+  return {
+    bgTop: "#15161b",
+    bgMid: "#1c1d24",
+    bgBot: "#0f1014",
+    grid: "rgba(239, 126, 87, 0.10)",
+    band: "rgba(239, 126, 87, 0.08)",
+    cap: "rgba(239, 126, 87, 0.40)",
+    glow: get("--warm", "#ef7e57"),
+    core: "#fff3d6",
+    muted: get("--muted", "#8d836d"),
+  };
+}
+
+function paintScopeBackground(ctx, cssW, cssH) {
+  const c = scopePalette();
+  // vertical gradient like the banner
+  const grad = ctx.createLinearGradient(0, 0, 0, cssH);
+  grad.addColorStop(0, c.bgTop);
+  grad.addColorStop(0.55, c.bgMid);
+  grad.addColorStop(1, c.bgBot);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, cssW, cssH);
+
+  // bandpass corridor wash — warm orange centre band
+  const band = ctx.createLinearGradient(0, 0, 0, cssH);
+  band.addColorStop(0, "rgba(239, 126, 87, 0)");
+  band.addColorStop(0.5, c.band);
+  band.addColorStop(1, "rgba(239, 126, 87, 0)");
+  ctx.fillStyle = band;
+  ctx.fillRect(0, cssH * 0.2, cssW, cssH * 0.6);
+
+  // centre rule
+  ctx.strokeStyle = c.grid;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, cssH / 2);
+  ctx.lineTo(cssW, cssH / 2);
+  ctx.stroke();
+
+  return c;
+}
+
+function strokeWaveformPath(ctx, peaks, cssW, cssH) {
+  const cy = cssH / 2;
+  ctx.beginPath();
+  for (let x = 0; x < peaks.length; x++) {
+    const { min, max } = peaks[x];
+    const y1 = cy - max * cy;
+    const y2 = cy - min * cy;
+    if (x === 0) ctx.moveTo(x + 0.5, y1);
+    ctx.lineTo(x + 0.5, y1);
+    ctx.lineTo(x + 0.5, y2);
+  }
+  ctx.stroke();
+}
+
+function computePeaks(samples, cssW) {
+  const samplesPerPixel = Math.max(1, Math.floor(samples.length / cssW));
+  const peaks = new Array(cssW);
+  for (let x = 0; x < cssW; x++) {
+    let min = 1;
+    let max = -1;
+    const start = x * samplesPerPixel;
+    const end = Math.min(start + samplesPerPixel, samples.length);
+    for (let i = start; i < end; i++) {
+      const v = samples[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    peaks[x] = { min, max };
+  }
+  return peaks;
+}
+
 function drawWaveform(audioBuffer) {
   const canvas = waveformCanvas;
   const dpr = window.devicePixelRatio || 1;
@@ -120,53 +205,13 @@ function drawWaveform(audioBuffer) {
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
 
-  const styles = getComputedStyle(document.documentElement);
-  const ink = styles.getPropertyValue("--ink-2").trim() || "#3a3128";
-  const accent = styles.getPropertyValue("--accent").trim() || "#8c2f1e";
-  const rule = styles.getPropertyValue("--rule").trim() || "#d9cfb7";
-  const paper2 = styles.getPropertyValue("--paper-2").trim() || "#efe7d2";
+  const c = paintScopeBackground(ctx, cssW, cssH);
 
-  ctx.fillStyle = paper2;
-  ctx.fillRect(0, 0, cssW, cssH);
-
-  // centre line + ±1 reference lines
-  ctx.strokeStyle = rule;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, cssH / 2);
-  ctx.lineTo(cssW, cssH / 2);
-  ctx.stroke();
-
-  // Compute peaks per pixel.
-  const data = audioBuffer.getChannelData(0);
-  const samplesPerPixel = Math.max(1, Math.floor(data.length / cssW));
-  ctx.strokeStyle = ink;
-  ctx.lineWidth = 1.5;
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  for (let x = 0; x < cssW; x++) {
-    let min = 1;
-    let max = -1;
-    const start = x * samplesPerPixel;
-    const end = Math.min(start + samplesPerPixel, data.length);
-    for (let i = start; i < end; i++) {
-      const v = data[i];
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
-    const y1 = (1 - max) * (cssH / 2);
-    const y2 = (1 - min) * (cssH / 2);
-    if (x === 0) ctx.moveTo(x + 0.5, y1);
-    ctx.lineTo(x + 0.5, y1);
-    ctx.lineTo(x + 0.5, y2);
-  }
-  ctx.stroke();
-
-  // Cap reference at the configured dBFS (drawn as faint dashed lines).
+  // dBFS cap reference lines — drawn first so the waveform glow can overlap.
   const capLinear = currentInputs().headphones ? Math.pow(10, -18 / 20) : Math.pow(10, -6 / 20);
   ctx.setLineDash([4, 4]);
-  ctx.strokeStyle = accent;
-  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = c.cap;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(0, (1 - capLinear) * (cssH / 2));
   ctx.lineTo(cssW, (1 - capLinear) * (cssH / 2));
@@ -174,7 +219,23 @@ function drawWaveform(audioBuffer) {
   ctx.lineTo(cssW, (1 + capLinear) * (cssH / 2));
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.globalAlpha = 1;
+
+  const peaks = computePeaks(audioBuffer.getChannelData(0), cssW);
+
+  // Two-pass glow: a wide, blurred, warm pass for the bloom; then a thin
+  // bright pass for the readable line on top. Mirrors the banner's grain
+  // bloom + bright core, but as a waveform.
+  ctx.lineJoin = "round";
+  ctx.shadowColor = c.glow;
+  ctx.shadowBlur = 16;
+  ctx.strokeStyle = c.glow;
+  ctx.lineWidth = 1.6;
+  strokeWaveformPath(ctx, peaks, cssW, cssH);
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = c.core;
+  ctx.lineWidth = 0.9;
+  strokeWaveformPath(ctx, peaks, cssW, cssH);
 }
 
 function clearWaveformBlank() {
@@ -186,14 +247,86 @@ function clearWaveformBlank() {
   canvas.height = Math.floor(cssH * dpr);
   const ctx = canvas.getContext("2d");
   ctx.scale(dpr, dpr);
-  const styles = getComputedStyle(document.documentElement);
-  ctx.fillStyle = styles.getPropertyValue("--paper-2").trim() || "#efe7d2";
-  ctx.fillRect(0, 0, cssW, cssH);
-  ctx.fillStyle = styles.getPropertyValue("--muted").trim() || "#8d836d";
+  const c = paintScopeBackground(ctx, cssW, cssH);
+  ctx.fillStyle = c.muted;
   ctx.font = `12px "Berkeley Mono", ui-monospace, monospace`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("press render to synthesize", cssW / 2, cssH / 2);
+  ctx.fillText("loading wasm…", cssW / 2, cssH / 2);
+}
+
+// Build an SVG path string from the waveform's per-pixel peaks. Used to draw
+// the live overlay on top of the static PNG banner. Coordinates are in the
+// SVG's viewBox space (1200×320), so the path scales with the banner.
+function peaksToSvgPath(peaks, viewW, viewH) {
+  const cy = viewH / 2;
+  const step = viewW / peaks.length;
+  let d = "";
+  // First pass: top envelope (max values), left to right.
+  for (let x = 0; x < peaks.length; x++) {
+    const y = cy - peaks[x].max * cy * 0.85;
+    d += (x === 0 ? "M" : "L") + (x * step).toFixed(2) + " " + y.toFixed(2) + " ";
+  }
+  // Second pass: bottom envelope (min values), right to left.
+  for (let x = peaks.length - 1; x >= 0; x--) {
+    const y = cy - peaks[x].min * cy * 0.85;
+    d += "L" + (x * step).toFixed(2) + " " + y.toFixed(2) + " ";
+  }
+  d += "Z";
+  return d;
+}
+
+function paintBannerOverlay(samples) {
+  if (!overlayWave || !overlayWaveCore) return;
+  // 200 columns is plenty for a 1200-wide viewBox at typical render sizes.
+  const peaks = computePeaks(samples, 200);
+  const d = peaksToSvgPath(peaks, 1200, 320);
+  overlayWave.setAttribute("d", d);
+  overlayWaveCore.setAttribute("d", d);
+  // Fade in, then fade out after the audio's natural length plus a small tail.
+  overlayWave.animate(
+    [
+      { opacity: 0 },
+      { opacity: 0.55 },
+      { opacity: 0 },
+    ],
+    { duration: 1400, easing: "cubic-bezier(0.2, 0.6, 0.2, 1)" },
+  );
+  overlayWaveCore.animate(
+    [
+      { opacity: 0 },
+      { opacity: 0.9 },
+      { opacity: 0 },
+    ],
+    { duration: 1400, easing: "cubic-bezier(0.2, 0.6, 0.2, 1)" },
+  );
+}
+
+// Smaller waveform variant for specimen cards — same scope palette, simpler
+// composition (single warm pass, no cap lines), drawn into the card's
+// dedicated canvas.
+function drawSpecimenWaveform(canvas, samples) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const c = paintScopeBackground(ctx, cssW, cssH);
+
+  const peaks = computePeaks(samples, cssW);
+  ctx.lineJoin = "round";
+  ctx.shadowColor = c.glow;
+  ctx.shadowBlur = 10;
+  ctx.strokeStyle = c.glow;
+  ctx.lineWidth = 1.2;
+  strokeWaveformPath(ctx, peaks, cssW, cssH);
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = c.core;
+  ctx.lineWidth = 0.7;
+  strokeWaveformPath(ctx, peaks, cssW, cssH);
 }
 
 // Decode the 16-bit mono PCM samples out of a WAV byte array without going
@@ -264,6 +397,9 @@ async function renderAndPlay({ autoPlay = true } = {}) {
   }
 
   drawWaveform(buffer);
+  // Mirror the waveform onto the banner overlay so the hero comes alive when
+  // a render runs — a soft warm pulse that fades back into the spectrogram.
+  paintBannerOverlay(buffer.getChannelData(0));
 
   if (autoPlay) {
     if (lastPlaybackSource) {
@@ -317,23 +453,27 @@ function buildSpecimenGrid() {
   specimenGrid.innerHTML = "";
   for (const name of personalities) {
     const desc = PERSONALITY_DESCRIPTIONS[name] || "—";
+    const seed = SPECIMEN_DEFAULT_SEED[name] ?? 7;
     const li = document.createElement("li");
     li.className = "specimen";
     li.tabIndex = 0;
     li.setAttribute("role", "button");
     li.setAttribute("aria-label", `Load ${name} into the instrument and play`);
     li.innerHTML = `
-      <div class="name">${name}</div>
+      <div class="specimen-head">
+        <div class="name">${name}</div>
+        <div class="play">▸ play</div>
+      </div>
+      <canvas class="specimen-wave" width="560" height="120" aria-hidden="true"></canvas>
       <div class="desc">${desc}</div>
-      <div class="play">▸ play</div>
+      <div class="specimen-meta"><span>seed ${seed}</span><span>pressure 0.60</span></div>
     `;
     const trigger = () => {
       setActivePersonality(name);
-      seedInput.value = SPECIMEN_DEFAULT_SEED[name] ?? 7;
+      seedInput.value = seed;
       pressureSlider.value = DEFAULT_PRESSURE;
       pressureReadout.value = DEFAULT_PRESSURE.toFixed(2);
       renderAndPlay();
-      // Scroll to the instrument so the user sees the rendered waveform.
       document.getElementById("instrument").scrollIntoView({ behavior: "smooth", block: "start" });
     };
     li.addEventListener("click", trigger);
@@ -344,6 +484,20 @@ function buildSpecimenGrid() {
       }
     });
     specimenGrid.appendChild(li);
+
+    // Render this personality once and draw the thumbnail into the canvas.
+    try {
+      const bytes = renderWav(name, seed, DEFAULT_PRESSURE, false);
+      if (bytes && bytes.length > 0) {
+        const samples = decodeWavSamplesSync(bytes);
+        // requestAnimationFrame so the canvas has a layout size before we read it.
+        requestAnimationFrame(() => {
+          drawSpecimenWaveform(li.querySelector(".specimen-wave"), samples);
+        });
+      }
+    } catch (err) {
+      console.warn(`specimen render failed for ${name}`, err);
+    }
   }
 }
 
@@ -487,6 +641,28 @@ async function boot() {
   }
 
   wireDownloadCta();
+
+  // Banner is a giant button — click anywhere on the spectrogram and we
+  // randomise the inputs and play. Nice surprise interaction; the page
+  // suddenly produces a real fart when the visitor pokes the picture.
+  if (bannerTrigger) {
+    bannerTrigger.addEventListener("click", () => {
+      if (!wasmReady) return;
+      const pick = personalities[Math.floor(Math.random() * personalities.length)] || "default";
+      const randomSeed = Math.floor(Math.random() * 1e8);
+      setActivePersonality(pick);
+      seedInput.value = randomSeed;
+      pressureSlider.value = DEFAULT_PRESSURE;
+      pressureReadout.value = DEFAULT_PRESSURE.toFixed(2);
+      renderAndPlay();
+    });
+  }
+
+  // Live-dot: green warm pulse while wasm is loading, steady when ready.
+  if (liveDot && liveLabel) {
+    liveDot.classList.add("ready");
+    liveLabel.textContent = "live";
+  }
 }
 
 boot();
