@@ -368,4 +368,3 @@ fn toggle_settings(app: &AppHandle) {
         }
     }
 }
-
