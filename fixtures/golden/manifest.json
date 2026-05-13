@@ -11,28 +11,28 @@
       "seed": 1,
       "pressure": 0.4,
       "file": "polite-cough.wav",
-      "sha256": "5851ef6cb5c580e0b34b44b15bd5a7841b10aef7489f3c9ddea239979c9787b1"
+      "sha256": "3203a4a30bf1cda0b0d3a64848274403009bc41cea7074fa795aa7a383ae1e99"
     },
     {
       "personality": "default",
       "seed": 2,
       "pressure": 0.6,
       "file": "default.wav",
-      "sha256": "9e6369ce968721e6926eca3dc6964b1e1cc657490015d2c00c84213c3746fccb"
+      "sha256": "1fede9b2e79d830dd179d7aeeb758512c5388d6836287c2a6a683d048e7dd8a8"
     },
     {
       "personality": "biblical",
       "seed": 3,
       "pressure": 0.8,
       "file": "biblical.wav",
-      "sha256": "0b7f213ea367aba4e696dedcb39ac407fa9836c967b08d91ef22f71d3836ed31"
+      "sha256": "078f53384138ed3ce5f010079aae660784f076065f18971114471985c1cbd592"
     },
     {
       "personality": "silent-but-deadly",
       "seed": 4,
       "pressure": 0.7,
       "file": "silent-but-deadly.wav",
-      "sha256": "26ab4084f0314f67e9ee6701b09da3dfd317af8d19e481a5a4ebe5cb38252915"
+      "sha256": "1ccbea96e9e09fa7bfcdabb2ed28ab00729981adcb20b1d5041fd3a7216f42ab"
     }
   ]
 }

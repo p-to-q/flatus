@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="flatus — spectrogram of one event, energy concentrated 80–400 Hz, six grains across one second" width="100%" />
+  <img src="docs/banner.png" alt="flatus — spectrogram of one event, energy concentrated 80–400 Hz, six grains across one second, bounded by a 60 Hz high-pass and a 2 kHz low-pass" width="100%" />
 </p>
 
 # flatus
@@ -7,6 +7,25 @@
 A small thing that lives in your menubar and occasionally farts.
 
 It's also, by acoustic accident, the same waveform Apple uses in watchOS to push water out of the Apple Watch speaker. See [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) if you want receipts.
+
+→ **[Try it in your browser](https://flatus.vercel.app/)** — the landing page runs the same Rust synthesis core, compiled to WebAssembly. Same inputs, byte-identical WAV.
+
+<p align="center">
+  <a href="https://flatus.vercel.app/">
+    <img src="docs/screenshots/web-hero.png" alt="flatus landing page — italic display-serif wordmark, spectrogram banner with warm glow grains, prominent download button, and the Instrument panel for in-browser synthesis" width="100%" />
+  </a>
+  <br/>
+  <em><sub>the landing page synthesizes live in your browser via a 62 KB wasm bundle.</sub></em>
+</p>
+
+## Listen
+
+Four canonical voices, rendered by the deterministic `generate-goldens` binary. Click to play in your browser (or right-click → save):
+
+- ▸ [polite-cough.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/polite-cough.wav) · _short, dry, plausibly deniable_ · 7.4 KB
+- ▸ [default.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/default.wav) · _the canon. wet enough, not so wet_ · 55 KB
+- ▸ [biblical.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/biblical.wav) · _slow, low, devastating_ · 174 KB
+- ▸ [silent-but-deadly.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/silent-but-deadly.wav) · _exactly what it says_ · 64 KB
 
 <p align="center">
   <img src="docs/screenshots/spectrogram-biblical.png" alt="spectrogram of biblical.wav — energy concentrated below 2 kHz, six grains across 1.8 seconds, dashed HPF 60 Hz and LPF 2 kHz rails" width="100%" />
@@ -63,6 +82,12 @@ After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray 
 - **Right-click** (or ⌘-click) → settings (volume, personality, output, quiet hours).
 - **Quit** from the right-click menu.
 
+<p align="center">
+  <img src="docs/screenshots/desktop-popover.png" alt="flatus menubar settings popover — title, italic tagline, personality select (default), 100% volume slider, output headphones, quiet hours, and a prominent 'fart now' button" width="340" />
+  <br/>
+  <em><sub>the settings popover. right-click the menubar icon to open.</sub></em>
+</p>
+
 ## Use (CLI)
 
 ```sh
@@ -70,8 +95,9 @@ fart                                # one-shot through your default output devic
 fart --personality biblical         # pick a voice
 fart --seed 42                      # reproducible — same seed always renders the same fart
 fart --render out.wav               # silent: just write a 16-bit mono 48 kHz WAV
+fart --demo /tmp/flatus-demo        # render all four voices into a folder; print summary
 fart --headphones                   # tighter −18 dBFS cap for headphones
-fart --list-personalities           # show the four canonical voices
+fart --list-personalities           # show the four canonical voices with descriptions
 fart --help
 ```
 
@@ -90,9 +116,22 @@ fart --help
 
 Add a fifth by appending one row to [`crates/fart-synth/src/personalities.rs`](crates/fart-synth/src/personalities.rs). _The directory listing is the bestiary._
 
+## In the browser
+
+The [landing page](https://flatus.vercel.app/) compiles `crates/fart-synth` to `wasm32-unknown-unknown` and exposes one function: `renderWav(personality, seed, pressure, headphones) → Uint8Array`. The bundle is **62 KB of WASM** plus 10 KB of JS glue. No reimplementation, no parity drift — the bytes the page plays are the bytes the CLI would write.
+
+Build the bundle locally:
+
+```sh
+cargo build -p fart-synth --target wasm32-unknown-unknown --lib --release
+wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
+    target/wasm32-unknown-unknown/release/fart_synth.wasm
+```
+
 ## Roadmap
 
 - [x] First release
+- [x] Live synth in the browser
 - [ ] Cease-and-desist from Apple's lawyers (re: US 9,451,354 et seq.)
 - [ ] Speaker manufacturer warranty claims department
 - [ ] IRB approval for the cleaning-efficacy study
@@ -102,7 +141,7 @@ Add a fifth by appending one row to [`crates/fart-synth/src/personalities.rs`](c
 
 ## Status
 
-**v0.1.0-pre.2** — unsigned, macOS Apple Silicon for the menubar app; the `fart-synth` core and `fart` CLI also build and test green on Linux. First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
+**v0.1.0** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
 
 ## Docs
 

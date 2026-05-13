@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- flatus / monogram
+     Square mark for tiny contexts: social avatars, GitHub Org icon, app
+     store badge corner, favicon at 64+ px. Italic "f" + 3 grains echo the
+     menubar tray template. 240×240 canvas, transparent. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="flatus monogram — italic f with three grains">
+  <defs>
+    <radialGradient id="gm" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#fff3d6" stop-opacity="0.98"/>
+      <stop offset="22%"  stop-color="#f5a26b" stop-opacity="0.88"/>
+      <stop offset="55%"  stop-color="#ce552a" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#7a2812" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bloomM" x="-60%" y="-80%" width="220%" height="260%">
+      <feGaussianBlur stdDeviation="2"  result="m1"/>
+      <feGaussianBlur stdDeviation="6"  in="SourceGraphic" result="m2"/>
+      <feGaussianBlur stdDeviation="14" in="SourceGraphic" result="m3"/>
+      <feMerge>
+        <feMergeNode in="m3"/>
+        <feMergeNode in="m2"/>
+        <feMergeNode in="m1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="240" height="240" rx="44" fill="#f7f1e3"/>
+  <text x="60" y="172"
+        font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', Cambria, Georgia, serif"
+        font-size="190" font-style="italic" font-weight="400"
+        fill="#1a1612" letter-spacing="-2">f</text>
+  <g filter="url(#bloomM)">
+    <ellipse cx="130" cy="200" rx="9"  ry="13" fill="url(#gm)" opacity="0.85"/>
+    <ellipse cx="156" cy="200" rx="13" ry="17" fill="url(#gm)" opacity="0.95"/>
+    <ellipse cx="186" cy="200" rx="9"  ry="13" fill="url(#gm)" opacity="0.70"/>
+  </g>
+</svg>

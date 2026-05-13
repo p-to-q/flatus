@@ -11,6 +11,9 @@ description = "Synthesis core for flatus — a small apparatus for moving air."
 [lib]
 name = "fart_synth"
 path = "src/lib.rs"
+# rlib keeps `cargo test` and the binaries linking the crate as usual; cdylib is
+# only emitted for wasm32 builds (the native target produces a .dylib we ignore).
+crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "fart"
@@ -22,7 +25,6 @@ path = "src/bin/generate_goldens.rs"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
-cpal = "0.15"
 anyhow = "1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -31,3 +33,13 @@ serde_json = "1"
 # (`tests/golden`) requires bit-exact rendering across both, so every
 # transcendental in the synth crate routes through this crate instead.
 libm = "0.2"
+
+# cpal is only used by the `fart` binary for live playback. It does not build
+# for wasm32; gating it here lets us produce a wasm32-unknown-unknown library
+# build for the in-browser synth (apps/web/) without forking the crate.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cpal = "0.15"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"

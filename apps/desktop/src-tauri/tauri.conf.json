@@ -29,23 +29,30 @@
     },
     "trayIcon": {
       "id": "main",
-      "iconPath": "icons/icon.png",
+      "iconPath": "icons/tray-template.png",
       "iconAsTemplate": true,
       "menuOnLeftClick": false
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["app"],
+    "targets": ["app", "dmg"],
     "icon": ["icons/icon.png"],
     "category": "Utility",
     "shortDescription": "A small apparatus for moving air.",
     "longDescription": "flatus — a desktop companion that vibrates a laptop speaker near its resonance, in the manner of a fart.",
+    "resources": ["../resources/*"],
     "macOS": {
       "minimumSystemVersion": "12.0",
       "signingIdentity": null,
       "providerShortName": null,
-      "exceptionDomain": null
+      "exceptionDomain": null,
+      "dmg": {
+        "background": "../resources/dmg-background.png",
+        "windowSize": { "width": 540, "height": 380 },
+        "appPosition": { "x": 150, "y": 220 },
+        "applicationFolderPosition": { "x": 390, "y": 220 }
+      }
     }
   }
 }

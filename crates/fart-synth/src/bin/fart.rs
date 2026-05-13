@@ -57,6 +57,12 @@ struct Cli {
     #[arg(long)]
     render: Option<PathBuf>,
 
+    /// Render all four personalities into the given directory at a fixed seed
+    /// and print a short summary. Useful for `samples/` and for hearing the
+    /// whole bestiary without a shell loop.
+    #[arg(long, value_name = "DIR")]
+    demo: Option<PathBuf>,
+
     /// Print the sampled `FartParams` to stderr.
     #[arg(long)]
     print_state: bool,
@@ -66,17 +72,40 @@ struct Cli {
     list_personalities: bool,
 }
 
+/// One-line marketing description per personality. Mirrored in apps/web/main.js
+/// and README; kept here so `--list-personalities` is a useful CLI affordance.
+const DESCRIPTIONS: &[(&str, &str)] = &[
+    ("polite-cough", "short, dry, plausibly deniable"),
+    ("default", "the canon. wet enough, not so wet"),
+    ("biblical", "slow, low, devastating"),
+    ("silent-but-deadly", "exactly what it says"),
+];
+
+fn description_for(name: &str) -> &'static str {
+    DESCRIPTIONS
+        .iter()
+        .find_map(|(n, d)| (*n == name).then_some(*d))
+        .unwrap_or("—")
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
     if cli.list_personalities {
         for p in PERSONALITIES {
             println!(
-                "{:18} base_rate={}/hr  refractory={}s",
-                p.name, p.base_rate_per_hour, p.refractory_secs
+                "{:18} {:36}  base_rate={}/hr  refractory={}s",
+                p.name,
+                description_for(p.name),
+                p.base_rate_per_hour,
+                p.refractory_secs
             );
         }
         return Ok(());
+    }
+
+    if let Some(dir) = cli.demo {
+        return run_demo(&dir, cli.headphones);
     }
 
     let personality = lookup_personality(&cli.personality).ok_or_else(|| {
@@ -123,6 +152,53 @@ fn main() -> Result<()> {
     }
 
     play(&samples, cfg.sample_rate_hz)
+}
+
+/// Render every canonical personality to `<dir>/{name}.wav` at a fixed seed and
+/// pressure. Prints one summary line per file. Used by `fart --demo`.
+fn run_demo(dir: &std::path::Path, headphones: bool) -> Result<()> {
+    use std::fs;
+
+    fs::create_dir_all(dir).with_context(|| format!("creating {}", dir.display()))?;
+
+    let cfg = RenderConfig {
+        sample_rate_hz: safety::SAMPLE_RATE_HZ,
+        output_gain_dbfs: if headphones {
+            safety::HEADPHONE_DBFS
+        } else {
+            safety::MAX_OUTPUT_DBFS
+        },
+    };
+
+    println!(
+        "rendered {} personalities → {}",
+        PERSONALITIES.len(),
+        dir.display()
+    );
+    let seed: u64 = 42;
+    let pressure: f32 = 0.6;
+    for p in PERSONALITIES {
+        let mut rng = Mulberry32::new(seed);
+        let params = sample_params(p, &mut rng, pressure);
+        let samples = render(&params, &cfg);
+        let path = dir.join(format!("{}.wav", p.name));
+        write_wav(&path, &samples, cfg.sample_rate_hz)
+            .with_context(|| format!("writing wav to {}", path.display()))?;
+        let bytes = std::fs::metadata(&path).map_or(0, |m| m.len());
+        let secs = samples.len() as f32 / cfg.sample_rate_hz as f32;
+        println!(
+            "  {:18} {:6.2}s  {:>6.1} KB  {}",
+            p.name,
+            secs,
+            bytes as f32 / 1024.0,
+            path.display()
+        );
+    }
+    eprintln!(
+        "seed={seed}, pressure={pressure}, cap={} dBFS",
+        cfg.output_gain_dbfs
+    );
+    Ok(())
 }
 
 /// OS-derived seed; not cryptographically strong, but plenty for "every fart different."
