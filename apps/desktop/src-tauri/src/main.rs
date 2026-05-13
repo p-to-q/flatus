@@ -9,6 +9,8 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod idle;
+
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -228,6 +230,11 @@ fn seed_now() -> u64 {
 
 // -------------------- Pressure background loop --------------------
 
+/// "Active" = HID input within this many seconds. Long enough that brief
+/// reading pauses don't toggle the bonus; short enough that walking away
+/// cools the pressure rate quickly.
+const ACTIVE_THRESHOLD_SECS: u64 = 60;
+
 fn spawn_pressure_loop(app: AppHandle) {
     let state = app.state::<AppState>().inner().clone();
     thread::spawn(move || {
@@ -251,11 +258,11 @@ fn spawn_pressure_loop(app: AppHandle) {
                 continue;
             };
 
-            // For v0.1 we don't actually wire up macOS-level activity detection. We
-            // pretend the user is mildly active during business hours and idle
-            // otherwise; v0.2 will replace this with a real `IOHIDIdleTime` poll.
+            // Real macOS activity detection via `IOHIDSystem`'s `HIDIdleTime`
+            // (see `idle.rs`). Platforms without an implementation report
+            // `None`, which falls back to the baseline rate (inactive).
             let activity = ActivitySignal {
-                user_is_active: business_hours(),
+                user_is_active: idle::user_idle_secs().is_some_and(|s| s < ACTIVE_THRESHOLD_SECS),
             };
 
             let result = state.pressure.lock().tick(dt, activity, personality);
@@ -271,17 +278,6 @@ fn spawn_pressure_loop(app: AppHandle) {
             }
         }
     });
-}
-
-fn business_hours() -> bool {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let hour = ((secs / 3600) % 24) as u32;
-    // UTC; close enough for v0.1.
-    (8..=22).contains(&hour)
 }
 
 // -------------------- Tray + setup --------------------
