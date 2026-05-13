@@ -37,9 +37,11 @@ For an A/B with the pre-realism cut, the v0.3 archive sits at [`flatus.vercel.ap
 
 ## Install
 
-### Option A — pre-built `.app` (macOS Apple Silicon)
+### Option A — pre-built `.dmg` (macOS Apple Silicon, recommended)
 
-Grab the **unsigned** `.app` from the [latest release](https://github.com/p-to-q/flatus/releases/latest). It's a ZIP — unzip and drag `flatus.app` into `/Applications/`. Then see [First launch](#first-launch).
+Grab the **unsigned** `flatus_*.dmg` from the [latest release](https://github.com/p-to-q/flatus/releases/latest). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
+
+Prefer to skip the DMG step? The same release also ships a `flatus-*.app.zip` — unzip and drag the `.app` into `/Applications/` yourself.
 
 ### Option B — from source (any platform, CLI only on non-macOS)
 

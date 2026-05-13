@@ -1,0 +1,84 @@
+# flatus release pipeline
+#
+# Triggered on tag pushes (v*). Builds the macOS .app + .dmg, zips the .app,
+# and attaches both to the GitHub Release for that tag.
+#
+# softprops/action-gh-release@v2 creates the Release automatically if the tag
+# has no pre-existing release. If a maintainer manually `gh release create`s
+# the tag before pushing, the action upserts assets onto the existing release.
+#
+# The standalone ci.yml on push/PR continues to verify builds; it does not
+# upload to releases. This split keeps per-push cost flat — only tags pay the
+# release-asset cost.
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "tag to release (only used when run manually)"
+        required: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-macos-dmg:
+    name: macOS · .app + .dmg
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/desktop/pnpm-lock.yaml
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: tauri-macos-release
+
+      - name: pnpm install
+        working-directory: apps/desktop
+        run: pnpm install
+
+      - name: tauri build (app + dmg)
+        working-directory: apps/desktop
+        # bundle.targets in tauri.conf.json is already ["app", "dmg"] so the
+        # default invocation produces both artifacts. signingIdentity is null
+        # → unsigned (v0.1 posture).
+        run: pnpm tauri build
+
+      - name: Zip the .app for parity with the dmg
+        working-directory: target/release/bundle/macos
+        run: |
+          if [ -d flatus.app ]; then
+            zip -r "flatus-${{ github.ref_name }}-aarch64.app.zip" flatus.app
+          fi
+
+      - name: List built artifacts
+        run: |
+          ls -la target/release/bundle/dmg/   || true
+          ls -la target/release/bundle/macos/ || true
+
+      - name: Attach .dmg + .app.zip to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/release/bundle/dmg/flatus_*.dmg
+            target/release/bundle/macos/*.zip
+          fail_on_unmatched_files: true
+          prerelease: ${{ contains(github.ref_name, '-pre.') }}
+          generate_release_notes: true

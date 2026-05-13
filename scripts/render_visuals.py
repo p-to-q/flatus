@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
-"""Render the README visuals in the banner's visual language.
+"""Render the README visuals + brand marks in the paper visual language.
 
-Inputs: the four canonical golden WAVs at fixtures/golden/{name}.wav.
+Inputs:
+  fixtures/golden/{name}.wav for the four canonical voices.
+
 Outputs (overwrites):
-  docs/screenshots/waveforms-all.svg + .png
-  docs/screenshots/spectrogram-biblical.svg + .png
+  docs/screenshots/waveforms-all.{svg}
+  docs/screenshots/spectrogram-biblical.{svg}
+  docs/marks/wordmark.{svg}
+  docs/marks/signature.{svg}
+  docs/marks/monogram.{svg}
+  docs/marks/og-card.{svg}
 
-Visual language (mirrors apps/web/banner.svg):
-  - vertical dark gradient backdrop  #15161b → #1c1d24 → #0f1014
-  - warm grain palette: #ce552a (rail), #ef7e57 (glow), #fff3d6 (core)
-  - feTurbulence paper grain overlay at 4% alpha
-  - feGaussianBlur bloom on the data layers
-  - personality labels in Charter / Iowan / system serif italic with wide tracking
-  - small caps mono for axis labels + the [ p → q ] / spec frame
+Visual language (mirrors apps/web/style.css light palette):
+  - warm paper canvas        #f7f1e3 → #efe7d2 (subtle vertical wash)
+  - ink                      #1a1612 (primary), #3a3128 (muted)
+  - oxblood accent           #8c2f1e (data rail), #c2533a (glow), #7a2812 (deep)
+  - fingerprint paper grain  two-octave fractal noise, ink overlay
+  - soft bloom on data layers
+  - personality labels in Charter / Iowan italic
+  - small-caps mono frame: [ p → q ] · spec 01 · flatus 0.1.0
 
 Run from the repo root:
   python3 scripts/render_visuals.py
-  resvg --width 1600 docs/screenshots/waveforms-all.svg docs/screenshots/waveforms-all.png
-  resvg --width 1600 docs/screenshots/spectrogram-biblical.svg docs/screenshots/spectrogram-biblical.png
+  bash scripts/render_all_visuals.sh    # rasterises every SVG via headless Chrome
 """
 
 from __future__ import annotations
@@ -30,52 +36,75 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
 FIX = REPO / "fixtures" / "golden"
-OUT = REPO / "docs" / "screenshots"
+OUT_SCR = REPO / "docs" / "screenshots"
+OUT_MARKS = REPO / "docs" / "marks"
 
 PERSONALITIES = ["polite-cough", "default", "biblical", "silent-but-deadly"]
 
-# ---------- shared SVG fragments ------------------------------------------------
+# ---------- palette (must match apps/web/style.css light mode) ------------------
 
-DEFS = """\
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="#15161b"/>
-      <stop offset="55%" stop-color="#1c1d24"/>
-      <stop offset="100%" stop-color="#0f1014"/>
-    </linearGradient>
-    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="#ce552a" stop-opacity="0.0"/>
-      <stop offset="50%" stop-color="#ce552a" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#ce552a" stop-opacity="0.0"/>
-    </linearGradient>
-    <filter id="bloom" x="-10%" y="-50%" width="120%" height="200%">
-      <feGaussianBlur stdDeviation="3.5"/>
-    </filter>
-    <filter id="bloom-strong" x="-10%" y="-50%" width="120%" height="200%">
-      <feGaussianBlur stdDeviation="6"/>
-    </filter>
-    <filter id="grain" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
-      <feColorMatrix values="0 0 0 0 1
-                              0 0 0 0 1
-                              0 0 0 0 1
-                              0 0 0 0.04 0"/>
-    </filter>
-    <radialGradient id="vignette" cx="50%" cy="50%" r="65%">
-      <stop offset="0%" stop-color="#000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000" stop-opacity="0.40"/>
-    </radialGradient>
-  </defs>"""
+PAPER = "#f7f1e3"
+PAPER_2 = "#efe7d2"
+INK = "#1a1612"
+INK_2 = "#3a3128"
+INK_MUTED = "#6b5e4f"  # for axis numerals
+OXBLOOD = "#8c2f1e"  # primary data rail
+GLOW = "#c2533a"  # warm wash / inner halo
+DEEP = "#7a2812"  # low-intensity heatmap cells
+EMBER = "#d97a4a"  # high-intensity heatmap cells
 
-# Charter / Iowan / system serif. Setting the family directly lets resvg pick
-# whichever is on the host (Charter is the macOS default; Linux falls back to
-# Iowan / Source Serif / Cambria / Georgia).
+# Family stacks. Charter is macOS default; Linux falls back to the chain.
 DISPLAY = (
     "Charter, 'Iowan Old Style', 'Source Serif Pro', "
     "'Apple Garamond', Cambria, Georgia, serif"
 )
-# SF Mono / Berkeley / JetBrains Mono, in priority order.
 MONO = "'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace"
+
+# ---------- shared SVG fragments ------------------------------------------------
+
+# Paper canvas + fingerprint grain (dark ink overlay) + soft bloom.
+# The fingerprint is a two-octave fractal-noise filter whose result is composited
+# with low-alpha ink colour, producing the dotted, slightly biological paper
+# texture the user asked for. Bloom is softer than the dark-canvas version so it
+# reads as "warm halo" not "glow against black".
+DEFS = """\
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#f7f1e3"/>
+      <stop offset="100%" stop-color="#efe7d2"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#8c2f1e" stop-opacity="0.0"/>
+      <stop offset="50%"  stop-color="#8c2f1e" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#8c2f1e" stop-opacity="0.0"/>
+    </linearGradient>
+    <filter id="bloom" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="2.6"/>
+    </filter>
+    <filter id="bloom-strong" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+    <filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="fine"/>
+      <feColorMatrix in="fine" values="0 0 0 0 0.10
+                                       0 0 0 0 0.085
+                                       0 0 0 0 0.07
+                                       0 0 0 0.18 0" result="fineLit"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" seed="13" result="coarse"/>
+      <feColorMatrix in="coarse" values="0 0 0 0 0.10
+                                         0 0 0 0 0.085
+                                         0 0 0 0 0.07
+                                         0 0 0 0.08 0" result="coarseLit"/>
+      <feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
+      <stop offset="60%" stop-color="#1a1612" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#1a1612" stop-opacity="0.10"/>
+    </radialGradient>
+  </defs>"""
+
+
+# ---------- helpers -------------------------------------------------------------
 
 
 def read_wav(path: Path) -> tuple[int, np.ndarray]:
@@ -128,14 +157,11 @@ def peaks_to_envelope_path(
 
 
 def render_waveforms_all() -> None:
-    """Stacked four-lane waveform comparison. Each lane carries its own envelope
-    on the same shared time axis."""
-    sr, _ = read_wav(FIX / "default.wav")
+    """Stacked four-lane waveform comparison on warm paper canvas."""
     samples_all: dict[str, tuple[int, np.ndarray]] = {
         name: read_wav(FIX / f"{name}.wav") for name in PERSONALITIES
     }
     max_dur_s = max(arr.shape[0] / s for s, arr in samples_all.values())
-    # Round up to a friendly tick (0.5s granularity).
     axis_end_s = math.ceil(max_dur_s * 2) / 2
 
     W, H = 1600, 600
@@ -152,20 +178,23 @@ def render_waveforms_all() -> None:
     )
     svg.append(DEFS)
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
+    svg.append(
+        f'<rect width="{W}" height="{H}" filter="url(#fingerprint)" opacity="0.55"/>'
+    )
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#band)"/>')
 
     # frame header
     svg.append(
         f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="#ef7e57" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
+        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="#8d836d" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
     )
     svg.append(
         f'<text x="{margin_l}" y="70" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="22" fill="#f0e7d3" letter-spacing="0.5">'
+        f'font-size="22" fill="{INK}" letter-spacing="0.5">'
         f'four canonical voices, shared time axis</text>'
     )
 
@@ -174,7 +203,6 @@ def render_waveforms_all() -> None:
         s_sr, samples = samples_all[name]
         n = samples.shape[0]
         dur_s = n / s_sr
-        # Each lane's right-most x is at (dur / axis_end_s) of the plot width.
         lane_y_center = margin_t + lane_h * (i + 0.5)
         x0 = margin_l
         x1 = margin_l + plot_w * (dur_s / axis_end_s)
@@ -186,34 +214,36 @@ def render_waveforms_all() -> None:
         svg.append(
             f'<line x1="{margin_l}" y1="{lane_y_center:.2f}" '
             f'x2="{W - margin_r}" y2="{lane_y_center:.2f}" '
-            f'stroke="rgba(239, 126, 87, 0.10)" stroke-width="1"/>'
+            f'stroke="{OXBLOOD}" stroke-opacity="0.12" stroke-width="1"/>'
         )
-        # glow + bright-core two-pass envelope, like the apps/web waveform
+        # glow wash + bright-core two-pass envelope. On paper canvas we lead
+        # with the deep oxblood fill (gives the body weight), then a softer
+        # glow stroke, then the dark ink stroke as the sharp signal edge.
         svg.append(
-            f'<path d="{d}" fill="#ef7e57" fill-opacity="0.55" '
+            f'<path d="{d}" fill="{OXBLOOD}" fill-opacity="0.32" '
             f'filter="url(#bloom-strong)"/>'
         )
         svg.append(
-            f'<path d="{d}" fill="none" stroke="#ef7e57" stroke-width="0.9" '
-            f'filter="url(#bloom)" opacity="0.9"/>'
+            f'<path d="{d}" fill="none" stroke="{GLOW}" stroke-width="1.1" '
+            f'filter="url(#bloom)" opacity="0.85"/>'
         )
         svg.append(
-            f'<path d="{d}" fill="none" stroke="#fff3d6" stroke-width="0.55" '
-            f'opacity="0.95"/>'
+            f'<path d="{d}" fill="none" stroke="{INK}" stroke-width="0.6" '
+            f'opacity="0.92"/>'
         )
 
-        # label — display serif italic, wide tracking
+        # label — display serif italic, wide tracking, ink
         label_y = lane_y_center - lane_h * 0.32
         svg.append(
             f'<text x="{margin_l}" y="{label_y:.2f}" font-family="{DISPLAY}" '
-            f'font-style="italic" font-size="26" fill="#f0e7d3" '
+            f'font-style="italic" font-size="26" fill="{INK}" '
             f'letter-spacing="0.6">{name}</text>'
         )
         # mono duration label, right-aligned, wide tracking
         ms = int(round(dur_s * 1000))
         svg.append(
             f'<text x="{W - margin_r}" y="{label_y:.2f}" font-family="{MONO}" '
-            f'font-size="12" fill="#8d836d" letter-spacing="2" '
+            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
             f'text-anchor="end" text-transform="uppercase">{ms} MS</text>'
         )
 
@@ -224,27 +254,25 @@ def render_waveforms_all() -> None:
         x = margin_l + plot_w * (t / axis_end_s)
         svg.append(
             f'<line x1="{x:.2f}" y1="{H - margin_b}" x2="{x:.2f}" '
-            f'y2="{H - margin_b + 6}" stroke="rgba(239, 126, 87, 0.30)" '
+            f'y2="{H - margin_b + 6}" stroke="{OXBLOOD}" stroke-opacity="0.45" '
             f'stroke-width="1"/>'
         )
         svg.append(
             f'<text x="{x:.2f}" y="{H - margin_b + 24}" font-family="{MONO}" '
-            f'font-size="12" fill="#8d836d" letter-spacing="2" '
+            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
     svg.append(
         f'<text x="{W/2:.2f}" y="{H - 22}" font-family="{MONO}" '
-        f'font-size="12" fill="#8d836d" letter-spacing="4" '
+        f'font-size="12" fill="{INK_MUTED}" letter-spacing="4" '
         f'text-anchor="middle" text-transform="uppercase">seconds · shared scale</text>'
     )
 
-    # paper grain on top, low alpha
-    svg.append(f'<rect width="{W}" height="{H}" fill="#000" filter="url(#grain)"/>')
-    # vignette
+    # vignette (very light on paper — just corner darkening to ground the figure)
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#vignette)"/>')
     svg.append("</svg>")
 
-    out = OUT / "waveforms-all.svg"
+    out = OUT_SCR / "waveforms-all.svg"
     out.write_text("\n".join(svg))
     print(f"wrote {out}")
 
@@ -253,12 +281,10 @@ def render_waveforms_all() -> None:
 
 
 def render_spectrogram_biblical() -> None:
-    """STFT-based spectrogram of biblical.wav with a warm grain heatmap and a
-    bloomed copy on top for the banner-style glow."""
+    """STFT-based spectrogram of biblical.wav, paper canvas + warm heatmap."""
     sr, samples = read_wav(FIX / "biblical.wav")
     dur_s = samples.shape[0] / sr
 
-    # STFT params: 1024-pt window, 50% hop. Hann window.
     nfft = 1024
     hop = 256
     win = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(nfft) / nfft)
@@ -270,36 +296,29 @@ def render_spectrogram_biblical() -> None:
         writeable=False,
     ).copy()
     frames *= win
-    spec = np.abs(np.fft.rfft(frames, axis=1))  # (frames, nfft/2 + 1)
+    spec = np.abs(np.fft.rfft(frames, axis=1))
 
-    # Convert to dB, clip floor.
     eps = 1e-8
     db = 20.0 * np.log10(spec + eps)
     db_max = float(db.max())
-    db -= db_max  # peak normalize → 0 dB top
+    db -= db_max
     db_floor = -55.0
     db = np.clip(db, db_floor, 0.0)
-    # 0 = brightest, db_floor = transparent. Map to opacity [0, 1].
     intensity = (db - db_floor) / (-db_floor)
 
-    # We only care about 50 Hz–2.5 kHz for visual band — that's where flatus
-    # lives. Log-frequency Y.
     f_lo, f_hi = 50.0, 2500.0
     freqs = np.fft.rfftfreq(nfft, 1.0 / sr)
     f_mask = (freqs >= f_lo) & (freqs <= f_hi)
     intensity = intensity[:, f_mask]
     band_freqs = freqs[f_mask]
-    # Resample y axis logarithmically to 110 bins.
     y_bins = 110
     log_lo, log_hi = math.log(f_lo), math.log(f_hi)
     log_centres = np.linspace(log_lo, log_hi, y_bins)
     src_logs = np.log(band_freqs + 1e-9)
-    # Nearest neighbour on log-freq axis.
     src_idx = np.searchsorted(src_logs, log_centres)
     src_idx = np.clip(src_idx, 0, intensity.shape[1] - 1)
     intensity = intensity[:, src_idx]
 
-    # Resample x axis to 320 columns for cell count.
     x_cols = 320
     t_idx = np.linspace(0, intensity.shape[0] - 1, x_cols).astype(int)
     intensity = intensity[t_idx, :]
@@ -319,45 +338,46 @@ def render_spectrogram_biblical() -> None:
     )
     svg.append(DEFS)
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#bg)"/>')
+    svg.append(
+        f'<rect width="{W}" height="{H}" filter="url(#fingerprint)" opacity="0.55"/>'
+    )
 
     # frame header
     svg.append(
         f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="#ef7e57" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
+        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="#8d836d" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
     )
     svg.append(
         f'<text x="{margin_l}" y="74" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="30" fill="#f0e7d3" letter-spacing="0.7">biblical.wav</text>'
+        f'font-size="30" fill="{INK}" letter-spacing="0.7">biblical.wav</text>'
     )
     svg.append(
         f'<text x="{margin_l + 220}" y="74" font-family="{MONO}" font-size="13" '
-        f'fill="#8d836d" letter-spacing="3" text-transform="uppercase">'
+        f'fill="{INK_2}" letter-spacing="3" text-transform="uppercase">'
         f'seed 3 · pressure 0.8 · 48 kHz mono · spectrogram</text>'
     )
 
-    # cells — emit as a single <g> with stroke-free rects to keep file small
+    # cells: low intensity = warm wash, high intensity = deep saturated oxblood
+    # (inverse contrast vs the dark-canvas version: paper bg needs darker peaks)
     svg.append('<g id="heatmap">')
     for x in range(x_cols):
-        # Stack from the bottom (low freq) up.
         col = intensity[x]
         for y in range(y_bins):
             alpha = float(col[y])
             if alpha < 0.04:
                 continue
-            # Map intensity to a warm gradient: low = #7a2812, high = #fff3d6
-            # Choose 3 anchors for nice falloff.
             if alpha > 0.78:
-                fill = "#fff3d6"
+                fill = DEEP  # darkest, most saturated peak
             elif alpha > 0.55:
-                fill = "#f5a26b"
+                fill = OXBLOOD
             elif alpha > 0.3:
-                fill = "#ce552a"
+                fill = GLOW
             else:
-                fill = "#7a2812"
+                fill = EMBER
             rx = margin_l + x * cell_w
             ry = H - margin_b - (y + 1) * cell_h
             svg.append(
@@ -366,10 +386,8 @@ def render_spectrogram_biblical() -> None:
                 f'fill-opacity="{alpha:.2f}"/>'
             )
     svg.append("</g>")
-    # Bloomed copy of the heatmap for warmth — reference the same group via use,
-    # but resvg has limited <use> support across filters; cheaper to render a
-    # softened second pass directly.
-    svg.append('<g filter="url(#bloom)" opacity="0.55">')
+    # Bloomed copy for warmth
+    svg.append('<g filter="url(#bloom)" opacity="0.45">')
     for x in range(0, x_cols, 2):
         col = intensity[x]
         for y in range(0, y_bins, 2):
@@ -380,29 +398,28 @@ def render_spectrogram_biblical() -> None:
             ry = H - margin_b - (y + 2) * cell_h
             svg.append(
                 f'<rect x="{rx:.2f}" y="{ry:.2f}" width="{cell_w * 2.5:.2f}" '
-                f'height="{cell_h * 2.5:.2f}" fill="#ef7e57" '
+                f'height="{cell_h * 2.5:.2f}" fill="{GLOW}" '
                 f'fill-opacity="{alpha * 0.55:.2f}"/>'
             )
     svg.append("</g>")
 
-    # HPF / LPF rails — log-mapped y for 60 Hz and 2000 Hz
+    # HPF / LPF rails
     def freq_to_y(hz: float) -> float:
         f = math.log(hz)
         return H - margin_b - ((f - log_lo) / (log_hi - log_lo)) * plot_h
 
     for hz, label, dash in [(60.0, "HPF 60 Hz", "5,5"), (2000.0, "LPF 2 kHz", "5,5")]:
         y = freq_to_y(hz)
-        # Lines may fall outside the plotted band; clamp visibly.
         if y < margin_t or y > H - margin_b:
             continue
         svg.append(
             f'<line x1="{margin_l}" y1="{y:.2f}" x2="{W - margin_r}" '
-            f'y2="{y:.2f}" stroke="#ef7e57" stroke-opacity="0.7" stroke-width="1" '
+            f'y2="{y:.2f}" stroke="{OXBLOOD}" stroke-opacity="0.85" stroke-width="1" '
             f'stroke-dasharray="{dash}"/>'
         )
         svg.append(
             f'<text x="{W - margin_r}" y="{y - 6:.2f}" font-family="{MONO}" '
-            f'font-size="12" fill="#ef7e57" fill-opacity="0.85" letter-spacing="2" '
+            f'font-size="12" fill="{OXBLOOD}" fill-opacity="0.95" letter-spacing="2" '
             f'text-anchor="end" text-transform="uppercase">— {label}</text>'
         )
 
@@ -413,7 +430,7 @@ def render_spectrogram_biblical() -> None:
             continue
         svg.append(
             f'<text x="{margin_l - 12}" y="{y + 4:.2f}" font-family="{MONO}" '
-            f'font-size="11" fill="#8d836d" letter-spacing="1.5" '
+            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.5" '
             f'text-anchor="end">{hz} Hz</text>'
         )
 
@@ -424,32 +441,331 @@ def render_spectrogram_biblical() -> None:
         x = margin_l + plot_w * (k / x_ticks)
         svg.append(
             f'<line x1="{x:.2f}" y1="{H - margin_b}" x2="{x:.2f}" '
-            f'y2="{H - margin_b + 6}" stroke="rgba(239, 126, 87, 0.30)" '
+            f'y2="{H - margin_b + 6}" stroke="{OXBLOOD}" stroke-opacity="0.45" '
             f'stroke-width="1"/>'
         )
         svg.append(
             f'<text x="{x:.2f}" y="{H - margin_b + 24}" font-family="{MONO}" '
-            f'font-size="12" fill="#8d836d" letter-spacing="2" '
+            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
     svg.append(
         f'<text x="{W/2:.2f}" y="{H - 22}" font-family="{MONO}" font-size="12" '
-        f'fill="#8d836d" letter-spacing="4" text-anchor="middle" '
+        f'fill="{INK_MUTED}" letter-spacing="4" text-anchor="middle" '
         f'text-transform="uppercase">seconds</text>'
     )
 
-    # paper grain on top, low alpha
-    svg.append(f'<rect width="{W}" height="{H}" fill="#000" filter="url(#grain)"/>')
-    # vignette
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#vignette)"/>')
     svg.append("</svg>")
 
-    out = OUT / "spectrogram-biblical.svg"
+    out = OUT_SCR / "spectrogram-biblical.svg"
+    out.write_text("\n".join(svg))
+    print(f"wrote {out}")
+
+
+# ---------- brand marks: standalone, paper-canvas, same DEFS family -------------
+
+
+def _paper_canvas_rect(w: int, h: int, rx: int = 0) -> list[str]:
+    """Background + fingerprint pass for any standalone mark."""
+    parts: list[str] = []
+    if rx:
+        parts.append(
+            f'<rect width="{w}" height="{h}" rx="{rx}" fill="url(#bg)"/>'
+        )
+        parts.append(
+            f'<rect width="{w}" height="{h}" rx="{rx}" '
+            f'filter="url(#fingerprint)" opacity="0.6"/>'
+        )
+    else:
+        parts.append(f'<rect width="{w}" height="{h}" fill="url(#bg)"/>')
+        parts.append(
+            f'<rect width="{w}" height="{h}" filter="url(#fingerprint)" opacity="0.6"/>'
+        )
+    return parts
+
+
+def _grain_radial_gradient(id_: str) -> str:
+    """Warm grain radial — dark core, oxblood mid, fading to transparent.
+    On paper canvas we want the core to be visible, so we use a saturated
+    oxblood centre rather than a near-white core."""
+    return (
+        f'<radialGradient id="{id_}" cx="50%" cy="50%" r="60%">'
+        f'<stop offset="0%"   stop-color="{DEEP}"    stop-opacity="0.92"/>'
+        f'<stop offset="30%"  stop-color="{OXBLOOD}" stop-opacity="0.78"/>'
+        f'<stop offset="65%"  stop-color="{GLOW}"    stop-opacity="0.42"/>'
+        f'<stop offset="100%" stop-color="{GLOW}"    stop-opacity="0"/>'
+        f'</radialGradient>'
+    )
+
+
+def render_wordmark() -> None:
+    """Primary brand mark: italic Charter wordmark on paper, oxblood rule."""
+    W, H = 800, 240
+    svg: list[str] = []
+    svg.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+        f'role="img" aria-label="flatus wordmark">'
+    )
+    svg.append("<defs>")
+    svg.append(
+        f'<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="{PAPER}"/>'
+        f'<stop offset="100%" stop-color="{PAPER_2}"/>'
+        f'</linearGradient>'
+    )
+    svg.append(
+        '<linearGradient id="rule" x1="0" x2="1" y1="0" y2="0">'
+        f'<stop offset="0%"   stop-color="{OXBLOOD}" stop-opacity="0"/>'
+        f'<stop offset="15%"  stop-color="{OXBLOOD}" stop-opacity="0.88"/>'
+        f'<stop offset="85%"  stop-color="{OXBLOOD}" stop-opacity="0.88"/>'
+        f'<stop offset="100%" stop-color="{OXBLOOD}" stop-opacity="0"/>'
+        "</linearGradient>"
+    )
+    svg.append(
+        '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
+        '<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" '
+        'seed="7" result="fine"/>'
+        '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.18 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" '
+        'seed="13" result="coarse"/>'
+        '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.08 0" result="coarseLit"/>'
+        '<feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>'
+        "</filter>"
+    )
+    svg.append("</defs>")
+    svg.extend(_paper_canvas_rect(W, H))
+    svg.append(
+        f'<text x="60" y="170" font-family="{DISPLAY}" font-size="200" '
+        f'font-style="italic" font-weight="400" fill="{INK}" letter-spacing="-2">'
+        "flatus</text>"
+    )
+    svg.append(
+        f'<line x1="60" y1="200" x2="700" y2="200" stroke="url(#rule)" '
+        'stroke-width="2"/>'
+    )
+    svg.append(
+        f'<text x="60" y="228" font-family="{MONO}" font-size="14" '
+        f'fill="{INK_MUTED}" letter-spacing="2.5">A SMALL APPARATUS FOR MOVING AIR</text>'
+    )
+    svg.append("</svg>")
+    out = OUT_MARKS / "wordmark.svg"
+    out.write_text("\n".join(svg))
+    print(f"wrote {out}")
+
+
+def render_signature() -> None:
+    """Six-grain time-strip lifted from the banner, on paper."""
+    W, H = 800, 200
+    svg: list[str] = []
+    svg.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+        f'role="img" aria-label="flatus signature — six warm grains across a time strip">'
+    )
+    svg.append("<defs>")
+    svg.append(
+        f'<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="{PAPER}"/>'
+        f'<stop offset="100%" stop-color="{PAPER_2}"/>'
+        f'</linearGradient>'
+    )
+    svg.append(_grain_radial_gradient("g"))
+    svg.append(
+        '<filter id="bloom" x="-60%" y="-100%" width="220%" height="300%">'
+        '<feGaussianBlur stdDeviation="3"  result="b1"/>'
+        '<feGaussianBlur stdDeviation="10" in="SourceGraphic" result="b2"/>'
+        '<feGaussianBlur stdDeviation="20" in="SourceGraphic" result="b3"/>'
+        '<feMerge>'
+        '<feMergeNode in="b3"/><feMergeNode in="b2"/>'
+        '<feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/>'
+        '</feMerge>'
+        "</filter>"
+    )
+    svg.append(
+        '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
+        '<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" '
+        'seed="7" result="fine"/>'
+        '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.18 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" '
+        'seed="13" result="coarse"/>'
+        '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.08 0" result="coarseLit"/>'
+        '<feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>'
+        "</filter>"
+    )
+    svg.append("</defs>")
+    svg.extend(_paper_canvas_rect(W, H))
+    svg.append('<g filter="url(#bloom)">')
+    svg.append('<ellipse cx="120" cy="100" rx="24" ry="32" fill="url(#g)" opacity="0.82"/>')
+    svg.append('<ellipse cx="230" cy="100" rx="34" ry="42" fill="url(#g)" opacity="0.96"/>')
+    svg.append('<ellipse cx="380" cy="100" rx="48" ry="56" fill="url(#g)" opacity="1.0"/>')
+    svg.append('<ellipse cx="530" cy="100" rx="40" ry="50" fill="url(#g)" opacity="0.97"/>')
+    svg.append('<ellipse cx="650" cy="100" rx="28" ry="38" fill="url(#g)" opacity="0.78"/>')
+    svg.append('<ellipse cx="740" cy="100" rx="18" ry="26" fill="url(#g)" opacity="0.54"/>')
+    svg.append("</g>")
+    svg.append("</svg>")
+    out = OUT_MARKS / "signature.svg"
+    out.write_text("\n".join(svg))
+    print(f"wrote {out}")
+
+
+def render_monogram() -> None:
+    """Square 'f' + three grains. Already on paper; restyle to new grain palette."""
+    W, H = 240, 240
+    svg: list[str] = []
+    svg.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+        f'role="img" aria-label="flatus monogram — italic f with three grains">'
+    )
+    svg.append("<defs>")
+    svg.append(
+        f'<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="{PAPER}"/>'
+        f'<stop offset="100%" stop-color="{PAPER_2}"/>'
+        f'</linearGradient>'
+    )
+    svg.append(_grain_radial_gradient("gm"))
+    svg.append(
+        '<filter id="bloomM" x="-60%" y="-80%" width="220%" height="260%">'
+        '<feGaussianBlur stdDeviation="2"  result="m1"/>'
+        '<feGaussianBlur stdDeviation="6"  in="SourceGraphic" result="m2"/>'
+        '<feGaussianBlur stdDeviation="14" in="SourceGraphic" result="m3"/>'
+        '<feMerge>'
+        '<feMergeNode in="m3"/><feMergeNode in="m2"/>'
+        '<feMergeNode in="m1"/><feMergeNode in="SourceGraphic"/>'
+        '</feMerge>'
+        "</filter>"
+    )
+    svg.append(
+        '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
+        '<feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" '
+        'seed="7" result="fine"/>'
+        '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.20 0" result="fineLit"/>'
+        '<feMerge><feMergeNode in="fineLit"/></feMerge>'
+        "</filter>"
+    )
+    svg.append("</defs>")
+    svg.extend(_paper_canvas_rect(W, H, rx=44))
+    svg.append(
+        f'<text x="60" y="172" font-family="{DISPLAY}" font-size="190" '
+        f'font-style="italic" font-weight="400" fill="{INK}" letter-spacing="-2">f</text>'
+    )
+    svg.append('<g filter="url(#bloomM)">')
+    svg.append('<ellipse cx="130" cy="200" rx="9"  ry="13" fill="url(#gm)" opacity="0.88"/>')
+    svg.append('<ellipse cx="156" cy="200" rx="13" ry="17" fill="url(#gm)" opacity="0.98"/>')
+    svg.append('<ellipse cx="186" cy="200" rx="9"  ry="13" fill="url(#gm)" opacity="0.74"/>')
+    svg.append("</g>")
+    svg.append("</svg>")
+    out = OUT_MARKS / "monogram.svg"
+    out.write_text("\n".join(svg))
+    print(f"wrote {out}")
+
+
+def render_og_card() -> None:
+    """1200×630 social preview. Paper canvas, wordmark + signature + URL."""
+    W, H = 1200, 630
+    svg: list[str] = []
+    svg.append(
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+        f'role="img" aria-label="flatus — a small apparatus for moving air. '
+        f'Open Graph preview card.">'
+    )
+    svg.append("<defs>")
+    svg.append(
+        f'<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">'
+        f'<stop offset="0%" stop-color="{PAPER}"/>'
+        f'<stop offset="100%" stop-color="{PAPER_2}"/>'
+        f'</linearGradient>'
+    )
+    svg.append(_grain_radial_gradient("ogG"))
+    svg.append(
+        '<filter id="ogBloom" x="-60%" y="-80%" width="220%" height="260%">'
+        '<feGaussianBlur stdDeviation="4"  result="ob1"/>'
+        '<feGaussianBlur stdDeviation="14" in="SourceGraphic" result="ob2"/>'
+        '<feGaussianBlur stdDeviation="28" in="SourceGraphic" result="ob3"/>'
+        '<feMerge>'
+        '<feMergeNode in="ob3"/><feMergeNode in="ob2"/>'
+        '<feMergeNode in="ob1"/><feMergeNode in="SourceGraphic"/>'
+        '</feMerge>'
+        "</filter>"
+    )
+    svg.append(
+        '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
+        '<feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" '
+        'seed="7" result="fine"/>'
+        '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.16 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.30" numOctaves="1" '
+        'seed="13" result="coarse"/>'
+        '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
+        '0 0 0 0 0.07  0 0 0 0.07 0" result="coarseLit"/>'
+        '<feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>'
+        "</filter>"
+    )
+    svg.append(
+        '<radialGradient id="ogVig" cx="50%" cy="55%" r="75%">'
+        f'<stop offset="55%" stop-color="{INK}" stop-opacity="0"/>'
+        f'<stop offset="100%" stop-color="{INK}" stop-opacity="0.16"/>'
+        '</radialGradient>'
+    )
+    svg.append("</defs>")
+    svg.extend(_paper_canvas_rect(W, H))
+
+    # [ p → q ] motif top-left
+    svg.append(
+        f'<g font-family="{MONO}" font-size="22" letter-spacing="3">'
+        f'<text x="74" y="68" fill="{OXBLOOD}">[ p</text>'
+        f'<text x="128" y="68" fill="{GLOW}" font-size="24">→</text>'
+        f'<text x="154" y="68" fill="{OXBLOOD}">q ]</text>'
+        f'</g>'
+    )
+    # spec mark top-right
+    svg.append(
+        f'<text x="1126" y="68" font-family="{MONO}" font-size="16" '
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.0</text>'
+    )
+    # wordmark
+    svg.append(
+        f'<text x="74" y="340" font-family="{DISPLAY}" font-size="220" '
+        f'font-style="italic" font-weight="400" fill="{INK}" letter-spacing="-3">'
+        f'flatus</text>'
+    )
+    # tagline
+    svg.append(
+        f'<text x="78" y="388" font-family="{DISPLAY}" font-size="28" '
+        f'font-style="italic" fill="{INK_2}">a small apparatus for moving air.</text>'
+    )
+    # signature: 6 grains, oxblood, bloomed
+    svg.append('<g filter="url(#ogBloom)">')
+    svg.append('<ellipse cx="150"  cy="500" rx="32" ry="44" fill="url(#ogG)" opacity="0.82"/>')
+    svg.append('<ellipse cx="310"  cy="500" rx="46" ry="58" fill="url(#ogG)" opacity="0.96"/>')
+    svg.append('<ellipse cx="500"  cy="500" rx="64" ry="76" fill="url(#ogG)" opacity="1.0"/>')
+    svg.append('<ellipse cx="700"  cy="500" rx="54" ry="68" fill="url(#ogG)" opacity="0.97"/>')
+    svg.append('<ellipse cx="870"  cy="500" rx="38" ry="50" fill="url(#ogG)" opacity="0.78"/>')
+    svg.append('<ellipse cx="1010" cy="500" rx="22" ry="32" fill="url(#ogG)" opacity="0.54"/>')
+    svg.append("</g>")
+    # footer URL
+    svg.append(
+        f'<text x="600" y="600" font-family="{MONO}" font-size="18" '
+        f'fill="{INK_MUTED}" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>'
+    )
+    svg.append(f'<rect width="{W}" height="{H}" fill="url(#ogVig)"/>')
+    svg.append("</svg>")
+    out = OUT_MARKS / "og-card.svg"
     out.write_text("\n".join(svg))
     print(f"wrote {out}")
 
 
 if __name__ == "__main__":
-    OUT.mkdir(parents=True, exist_ok=True)
+    OUT_SCR.mkdir(parents=True, exist_ok=True)
+    OUT_MARKS.mkdir(parents=True, exist_ok=True)
     render_waveforms_all()
     render_spectrogram_biblical()
+    render_wordmark()
+    render_signature()
+    render_monogram()
+    render_og_card()
