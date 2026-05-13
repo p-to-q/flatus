@@ -10,6 +10,14 @@ It's also, by acoustic accident, the same waveform Apple uses in watchOS to push
 
 → **[Try it in your browser](https://p-to-q.github.io/flatus/)** — the landing page runs the same Rust synthesis core, compiled to WebAssembly. Same inputs, byte-identical WAV.
 
+<p align="center">
+  <a href="https://p-to-q.github.io/flatus/">
+    <img src="docs/screenshots/web-hero.png" alt="flatus landing page — italic display-serif wordmark, spectrogram banner with warm glow grains, prominent download button, and the Instrument panel for in-browser synthesis" width="100%" />
+  </a>
+  <br/>
+  <em><sub>the landing page synthesizes live in your browser via a 62 KB wasm bundle.</sub></em>
+</p>
+
 ## Listen
 
 Four canonical voices, rendered by the deterministic `generate-goldens` binary. Click to play in your browser (or right-click → save):
