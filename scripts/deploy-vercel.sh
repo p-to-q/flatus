@@ -39,4 +39,4 @@ echo
 
 # --yes accepts the auto-generated project name + defaults so this is safe
 # in CI / agent contexts.
-npx --yes vercel deploy --yes "${ARGS[@]}"
+npx --yes vercel deploy --yes "${ARGS[@]+"${ARGS[@]}"}"

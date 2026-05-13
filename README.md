@@ -8,10 +8,10 @@ A small thing that lives in your menubar and occasionally farts.
 
 It's also, by acoustic accident, the same waveform Apple uses in watchOS to push water out of the Apple Watch speaker. See [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) if you want receipts.
 
-→ **[Try it in your browser](https://p-to-q.github.io/flatus/)** — the landing page runs the same Rust synthesis core, compiled to WebAssembly. Same inputs, byte-identical WAV.
+→ **[Try it in your browser](https://flatus.vercel.app/)** — the landing page runs the same Rust synthesis core, compiled to WebAssembly. Same inputs, byte-identical WAV.
 
 <p align="center">
-  <a href="https://p-to-q.github.io/flatus/">
+  <a href="https://flatus.vercel.app/">
     <img src="docs/screenshots/web-hero.png" alt="flatus landing page — italic display-serif wordmark, spectrogram banner with warm glow grains, prominent download button, and the Instrument panel for in-browser synthesis" width="100%" />
   </a>
   <br/>
@@ -118,7 +118,7 @@ Add a fifth by appending one row to [`crates/fart-synth/src/personalities.rs`](c
 
 ## In the browser
 
-The [landing page](https://p-to-q.github.io/flatus/) compiles `crates/fart-synth` to `wasm32-unknown-unknown` and exposes one function: `renderWav(personality, seed, pressure, headphones) → Uint8Array`. The bundle is **62 KB of WASM** plus 10 KB of JS glue. No reimplementation, no parity drift — the bytes the page plays are the bytes the CLI would write.
+The [landing page](https://flatus.vercel.app/) compiles `crates/fart-synth` to `wasm32-unknown-unknown` and exposes one function: `renderWav(personality, seed, pressure, headphones) → Uint8Array`. The bundle is **62 KB of WASM** plus 10 KB of JS glue. No reimplementation, no parity drift — the bytes the page plays are the bytes the CLI would write.
 
 Build the bundle locally:
 
@@ -141,7 +141,7 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Status
 
-**v0.1.0** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [p-to-q.github.io/flatus](https://p-to-q.github.io/flatus/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
+**v0.1.0** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS needs a Gatekeeper bypass (right-click → Open). See [`CHANGELOG.md`](CHANGELOG.md) and the [latest release](https://github.com/p-to-q/flatus/releases/latest).
 
 ## Docs
 
