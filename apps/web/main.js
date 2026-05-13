@@ -518,7 +518,10 @@ function buildSpecimenGrid() {
       </div>
       <canvas class="specimen-wave" width="560" height="120" aria-hidden="true"></canvas>
       <div class="desc">${desc}</div>
-      <div class="specimen-meta"><span>seed ${seed}</span><span>pressure 0.60</span></div>
+      <div class="specimen-meta">
+        <span>seed ${seed} · pressure 0.60</span>
+        <a class="specimen-dl" href="./samples/v0.4/${name}.wav" download aria-label="Download canonical ${name}.wav">↓ .wav</a>
+      </div>
     `;
     const trigger = () => {
       setActivePersonality(name);
@@ -528,7 +531,11 @@ function buildSpecimenGrid() {
       renderAndPlay();
       document.getElementById("instrument").scrollIntoView({ behavior: "smooth", block: "start" });
     };
-    li.addEventListener("click", trigger);
+    li.addEventListener("click", (e) => {
+      // Let the download link work without also triggering the card.
+      if ((e.target instanceof HTMLAnchorElement) && e.target.classList.contains("specimen-dl")) return;
+      trigger();
+    });
     li.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
