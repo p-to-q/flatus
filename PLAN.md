@@ -244,10 +244,23 @@ Cut: `THESIS.md`, `HARD-CONSTRAINTS.md`, `glossary.md`, `rfcs/`, `adrs/`. Hard c
 - Universal binary (Apple Silicon + Intel)
 - Real macOS `IOHIDIdleTime` polling to replace the `business_hours()` stub in `apps/desktop/src-tauri/src/main.rs`
 
-**v0.3+ — stretch (not promised):**
+**v0.3 — the web experience** (shipped, 2026-05-13, [PR #5](https://github.com/p-to-q/flatus/pull/5)):
 
-- Web app with audio (synth re-implemented in TS for the browser, with an honest parity disclosure)
-- Windows / Linux
+- WASM port of `fart-synth` to `wasm32-unknown-unknown`; bundle 62 KB. Same Rust DSP, no TS reimplementation — bytes are bit-identical to the CLI.
+- Interactive landing at [flatus.vercel.app](https://flatus.vercel.app/) with live synth playground, specimen grid, scope-style waveform canvas, click-to-render banner.
+- Brand kit under [`docs/marks/`](docs/marks/) — wordmark, signature curve, monogram, OG card. README data visuals re-cut under one design language.
+- Personality durations bumped twice into the 0.5–4 s audible band.
+- DMG installer art + template tray icon (icon is now a real macOS template image instead of a colour PNG declared as one).
+- Deploy: Vercel primary, GitHub Pages mirror.
+
+**v0.4 — realism** (planned; design doc: [`docs/REALISM.md`](docs/REALISM.md)):
+
+The v0.3 synth sounds correct on every parameter and *also* sounds rendered. v0.4 closes that gap with three additions to the synth core — aperiodic tremor, brown-noise mix, bubble-burst transients — kept deliberately to three so the audio doesn't drift into a different space.
+
+**v0.5+ — stretch (not promised):**
+
+- More realism knobs from REALISM.md (formants, decay tail, saturation gating)
+- Windows / Linux desktop packages
 - More personalities (one row each in `personalities.rs`)
 - "Snitch log" mode for corporate IT
 
