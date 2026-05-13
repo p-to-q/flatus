@@ -59,8 +59,7 @@ pub fn write_wav(path: &Path, samples: &[f32], sample_rate_hz: u32) -> std::io::
 #[must_use]
 pub fn write_wav_to_vec(samples: &[f32], sample_rate_hz: u32) -> Vec<u8> {
     let mut buf = Vec::with_capacity(44 + samples.len() * 2);
-    write_wav_into(&mut buf, samples, sample_rate_hz)
-        .expect("Vec<u8> writes are infallible");
+    write_wav_into(&mut buf, samples, sample_rate_hz).expect("Vec<u8> writes are infallible");
     buf
 }
 

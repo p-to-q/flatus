@@ -170,7 +170,11 @@ fn run_demo(dir: &std::path::Path, headphones: bool) -> Result<()> {
         },
     };
 
-    println!("rendered {} personalities → {}", PERSONALITIES.len(), dir.display());
+    println!(
+        "rendered {} personalities → {}",
+        PERSONALITIES.len(),
+        dir.display()
+    );
     let seed: u64 = 42;
     let pressure: f32 = 0.6;
     for p in PERSONALITIES {
@@ -180,7 +184,7 @@ fn run_demo(dir: &std::path::Path, headphones: bool) -> Result<()> {
         let path = dir.join(format!("{}.wav", p.name));
         write_wav(&path, &samples, cfg.sample_rate_hz)
             .with_context(|| format!("writing wav to {}", path.display()))?;
-        let bytes = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+        let bytes = std::fs::metadata(&path).map_or(0, |m| m.len());
         let secs = samples.len() as f32 / cfg.sample_rate_hz as f32;
         println!(
             "  {:18} {:6.2}s  {:>6.1} KB  {}",
