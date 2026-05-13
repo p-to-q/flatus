@@ -1,97 +1,25 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- flatus / Open Graph card
-     1200×630 social preview. Twitter / Slack / LinkedIn / iMessage will
-     unfurl this when the URL is shared. Rasterise via
-     `scripts/rasterize-svg.sh docs/marks/og-card.svg apps/web/og-card.png 1200 630`
-     and reference from <meta property="og:image"> in apps/web/index.html. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="flatus — a small apparatus for moving air. Open Graph preview card.">
-  <defs>
-    <linearGradient id="ogBg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="#15161b"/>
-      <stop offset="55%" stop-color="#1c1d24"/>
-      <stop offset="100%" stop-color="#0f1014"/>
-    </linearGradient>
-    <radialGradient id="ogG" cx="50%" cy="50%" r="60%">
-      <stop offset="0%"   stop-color="#fff3d6" stop-opacity="0.98"/>
-      <stop offset="22%"  stop-color="#f5a26b" stop-opacity="0.88"/>
-      <stop offset="55%"  stop-color="#ce552a" stop-opacity="0.62"/>
-      <stop offset="100%" stop-color="#7a2812" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="ogBloom" x="-60%" y="-80%" width="220%" height="260%">
-      <feGaussianBlur stdDeviation="4"  result="ob1"/>
-      <feGaussianBlur stdDeviation="14" in="SourceGraphic" result="ob2"/>
-      <feGaussianBlur stdDeviation="28" in="SourceGraphic" result="ob3"/>
-      <feMerge>
-        <feMergeNode in="ob3"/>
-        <feMergeNode in="ob2"/>
-        <feMergeNode in="ob1"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <filter id="ogGrain" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" result="f"/>
-      <feColorMatrix in="f" values="0 0 0 0 1
-                                    0 0 0 0 1
-                                    0 0 0 0 1
-                                    0 0 0 0.12 0" result="fl"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.30" numOctaves="1" seed="11" result="c"/>
-      <feColorMatrix in="c" values="0 0 0 0 1
-                                    0 0 0 0 1
-                                    0 0 0 0 1
-                                    0 0 0 0.05 0" result="cl"/>
-      <feMerge>
-        <feMergeNode in="cl"/>
-        <feMergeNode in="fl"/>
-      </feMerge>
-      <feComposite in2="SourceGraphic" operator="in"/>
-    </filter>
-    <radialGradient id="ogVig" cx="50%" cy="55%" r="75%">
-      <stop offset="55%" stop-color="#000" stop-opacity="0"/>
-      <stop offset="100%" stop-color="#000" stop-opacity="0.55"/>
-    </radialGradient>
-  </defs>
-
-  <!-- canvas -->
-  <rect width="1200" height="630" fill="url(#ogBg)"/>
-
-  <!-- [p → q] motif, top-left -->
-  <g font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="22" letter-spacing="3">
-    <text x="74" y="68" fill="#ce552a">[ p</text>
-    <text x="128" y="68" fill="#f5a26b" font-size="24">→</text>
-    <text x="154" y="68" fill="#ce552a">q ]</text>
-  </g>
-
-  <!-- spec mark, top-right -->
-  <text x="1126" y="68" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace"
-        font-size="16" fill="#8d836d" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.0</text>
-
-  <!-- wordmark -->
-  <text x="74" y="340"
-        font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', Cambria, Georgia, serif"
-        font-size="220" font-style="italic" font-weight="400"
-        fill="#fafafa" letter-spacing="-3">flatus</text>
-
-  <!-- tagline -->
-  <text x="78" y="388"
-        font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', Cambria, Georgia, serif"
-        font-size="28" font-style="italic" fill="#cbc0a8">a small apparatus for moving air.</text>
-
-  <!-- signature: 6 grains, drop-in from signature.svg, positioned in lower band -->
-  <g filter="url(#ogBloom)">
-    <ellipse cx="150" cy="500" rx="32" ry="44" fill="url(#ogG)" opacity="0.78"/>
-    <ellipse cx="310" cy="500" rx="46" ry="58" fill="url(#ogG)" opacity="0.92"/>
-    <ellipse cx="500" cy="500" rx="64" ry="76" fill="url(#ogG)" opacity="1.0"/>
-    <ellipse cx="700" cy="500" rx="54" ry="68" fill="url(#ogG)" opacity="0.94"/>
-    <ellipse cx="870" cy="500" rx="38" ry="50" fill="url(#ogG)" opacity="0.74"/>
-    <ellipse cx="1010" cy="500" rx="22" ry="32" fill="url(#ogG)" opacity="0.50"/>
-  </g>
-
-  <!-- footer URL -->
-  <text x="600" y="600"
-        font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace"
-        font-size="18" fill="#cbc0a8" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>
-
-  <!-- paper grain overlay -->
-  <rect width="1200" height="630" filter="url(#ogGrain)" opacity="0.65"/>
-  <rect width="1200" height="630" fill="url(#ogVig)"/>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f7f1e3"/><stop offset="100%" stop-color="#efe7d2"/></linearGradient>
+<radialGradient id="ogG" cx="50%" cy="50%" r="60%"><stop offset="0%"   stop-color="#7a2812"    stop-opacity="0.92"/><stop offset="30%"  stop-color="#8c2f1e" stop-opacity="0.78"/><stop offset="65%"  stop-color="#c2533a"    stop-opacity="0.42"/><stop offset="100%" stop-color="#c2533a"    stop-opacity="0"/></radialGradient>
+<filter id="ogBloom" x="-60%" y="-80%" width="220%" height="260%"><feGaussianBlur stdDeviation="4"  result="ob1"/><feGaussianBlur stdDeviation="14" in="SourceGraphic" result="ob2"/><feGaussianBlur stdDeviation="28" in="SourceGraphic" result="ob3"/><feMerge><feMergeNode in="ob3"/><feMergeNode in="ob2"/><feMergeNode in="ob1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" seed="7" result="fine"/><feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  0 0 0 0 0.07  0 0 0 0.16 0" result="fineLit"/><feTurbulence type="fractalNoise" baseFrequency="0.30" numOctaves="1" seed="13" result="coarse"/><feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  0 0 0 0 0.07  0 0 0 0.07 0" result="coarseLit"/><feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge></filter>
+<radialGradient id="ogVig" cx="50%" cy="55%" r="75%"><stop offset="55%" stop-color="#1a1612" stop-opacity="0"/><stop offset="100%" stop-color="#1a1612" stop-opacity="0.16"/></radialGradient>
+</defs>
+<rect width="1200" height="630" fill="url(#bg)"/>
+<rect width="1200" height="630" filter="url(#fingerprint)" opacity="0.6"/>
+<g font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="22" letter-spacing="3"><text x="74" y="68" fill="#8c2f1e">[ p</text><text x="128" y="68" fill="#c2533a" font-size="24">→</text><text x="154" y="68" fill="#8c2f1e">q ]</text></g>
+<text x="1126" y="68" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="16" fill="#3a3128" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.0</text>
+<text x="74" y="340" font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif" font-size="220" font-style="italic" font-weight="400" fill="#1a1612" letter-spacing="-3">flatus</text>
+<text x="78" y="388" font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif" font-size="28" font-style="italic" fill="#3a3128">a small apparatus for moving air.</text>
+<g filter="url(#ogBloom)">
+<ellipse cx="150"  cy="500" rx="32" ry="44" fill="url(#ogG)" opacity="0.82"/>
+<ellipse cx="310"  cy="500" rx="46" ry="58" fill="url(#ogG)" opacity="0.96"/>
+<ellipse cx="500"  cy="500" rx="64" ry="76" fill="url(#ogG)" opacity="1.0"/>
+<ellipse cx="700"  cy="500" rx="54" ry="68" fill="url(#ogG)" opacity="0.97"/>
+<ellipse cx="870"  cy="500" rx="38" ry="50" fill="url(#ogG)" opacity="0.78"/>
+<ellipse cx="1010" cy="500" rx="22" ry="32" fill="url(#ogG)" opacity="0.54"/>
+</g>
+<text x="600" y="600" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="18" fill="#6b5e4f" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>
+<rect width="1200" height="630" fill="url(#ogVig)"/>
 </svg>

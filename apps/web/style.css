@@ -888,6 +888,34 @@ body::before {
   margin: 0;
 }
 
+/* ---------- figures: paper-canvas inline visuals ---------- */
+
+.figure {
+  margin: 4rem 0 3.5rem;
+  padding: 0.75rem;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: calc(var(--radius) - 2px);
+}
+.figure figcaption {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+  margin: 0.85rem 0.25rem 0.25rem;
+  text-align: center;
+}
+.figure-inset {
+  margin: 2.5rem 0 1rem;
+}
+
 /* ---------- print: hide interactive bits ---------- */
 @media print {
   .cta-row, .render-row, .waveform, .console, .specimens, .install { display: none; }

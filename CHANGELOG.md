@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.1.0-pre.3] — 2026-05-13
+
+### Added (paper-aesthetic visuals + shippable DMG)
+- **Unified paper aesthetic across every visual surface.** All supporting README/site visuals — `docs/screenshots/spectrogram-biblical.png`, `docs/screenshots/waveforms-all.png`, `docs/marks/{wordmark,signature,monogram,og-card}.png` — regenerated on the warm-paper canvas (`#f7f1e3` → `#efe7d2`) with oxblood data layers (`#8c2f1e`), a fingerprint paper-grain `feTurbulence` overlay, and softened `feGaussianBlur` bloom. Replaces the previous dark-canvas SVGs that didn't match the site's light palette.
+- **Live site now serves the full visual set.** `apps/web/screenshots/` and `apps/web/marks/` mirror the rasterised PNGs so they're reachable on `flatus.vercel.app`; previously only `banner.png` and `og-card.png` were deployed.
+- **Two new figures embedded on the homepage.** Waveform comparison sits between Instrument and Specimens; spectrogram of `biblical.wav` sits inside the Specifications block. New `.figure` CSS in `apps/web/style.css` (~20 lines) — paper mat, hairline frame, italic caption.
+- **macOS app icon redrawn from the monogram.** `pnpm tauri icon` regenerated the full icon set (32/64/128/128@2x/Square*, icon.icns, iOS, Android) from `docs/marks/monogram.svg` — italic `f` + three oxblood grains on a rounded paper square. Replaces the placeholder black-circle-with-arrow that previously shipped in `icons/icon.png`.
+- **Favicon unified to paper.** `apps/web/favicon.svg` now uses the paper canvas with a single bloomed oxblood grain and ink wisp, matching the homepage palette in both light and dark mode.
+- **DMG background renders correctly on all displays.** Previously the 1080×760 PNG was treated as 1x by Finder and only the top-left 540×380 region showed (centred wordmark clipped at the right edge). Replaced with a multi-image TIFF carrying 1x (540×380 @ 72 DPI) + 2x (1080×760 @ 144 DPI); Finder picks the matching rep per display.
+- **`scripts/render_all_visuals.sh` is the one-command regen.** Renders every SVG, rasterises via headless Chrome (preserves `feGaussianBlur` + `feTurbulence`), mirrors PNGs into `apps/web/`, and builds the retina TIFF via `tiffutil` + `tiffset`.
+- **`.github/workflows/release.yml` cuts releases on tag pushes.** `pnpm tauri build` on `macos-latest` produces both the `.app` and the `.dmg`; `softprops/action-gh-release@v2` uploads both to the GitHub Release for the tag (auto-creating the release if absent).
+- **README install section leads with the `.dmg`.** Drag-to-Applications path is the headline; the `.app.zip` fallback is documented for users who prefer to bypass the DMG step. Gatekeeper bypass instructions unchanged.
+
+### Fixed
+- `apps/desktop/src-tauri/icons/tray-template.png` is now 8-bit RGBA (was 8-bit gray+alpha, which `tauri::generate_context!()` rejected at compile time during release builds).
+
 ## [Unreleased]
 
 ### Added (v0.3 web experience, in progress)
