@@ -603,7 +603,7 @@ function applyArchToCta(detected) {
   if (detected.os === "macos") {
     const archLabel = detected.arch === "x86_64" ? "Intel" : "Apple Silicon";
     ctaMeta.textContent = `for macOS · ${archLabel} · ${LATEST_TAG} · unsigned`;
-    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — Gatekeeper needs one right-click → Open the first time.`;
+    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — clear the browser-quarantine xattr once with the command below before first launch.`;
     ctaBtn.href = detected.arch === "x86_64" ? RELEASE_BASE : DMG_URL;
     ctaBtn.dataset.state = "ready";
   } else if (detected.os === "linux") {
@@ -659,6 +659,29 @@ function wireCliCopy() {
       .map((l) => l.replace(/^\$\s?/, "").replace(/\s+#.*$/, ""))
       .filter((l) => l.trim().length > 0);
     const text = lines.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.dataset.state = "copied";
+      btn.textContent = "copied";
+      setTimeout(() => {
+        btn.removeAttribute("data-state");
+        btn.textContent = "copy";
+      }, 1400);
+    } catch {
+      btn.textContent = "press ⌘C";
+    }
+  });
+}
+
+// Same shape as wireCliCopy: copy a single command line into the clipboard
+// and flip the button label for 1.4s so the user knows it landed.
+function wireInstallCopy() {
+  const btn = document.getElementById("install-oneliner-copy");
+  const code = document.getElementById("install-oneliner-code");
+  if (!btn || !code) return;
+  btn.addEventListener("click", async () => {
+    // Strip the leading `$ ` prompt so the clipboard payload is paste-ready.
+    const text = code.innerText.replace(/^\$\s?/, "").trim();
     try {
       await navigator.clipboard.writeText(text);
       btn.dataset.state = "copied";
@@ -761,6 +784,7 @@ async function boot() {
 
   wireDownloadCta();
   wireCliCopy();
+  wireInstallCopy();
   wireScrollReveals();
 
   // Banner is a giant button — click anywhere on the spectrogram and we

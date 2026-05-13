@@ -71,14 +71,25 @@
 
     <section class="install" id="install" hidden>
       <h2 class="caption">First launch</h2>
-      <ol class="steps">
-        <li><span class="step-n">1</span><span class="step-b">Your download is starting. The file is a ZIP — unzip it.</span></li>
-        <li><span class="step-n">2</span><span class="step-b">Drag <code>flatus.app</code> into <code>/Applications</code>.</span></li>
-        <li><span class="step-n">3</span><span class="step-b"><strong>Right-click</strong> <code>flatus.app</code> → <strong>Open</strong>. Gatekeeper will warn it's unsigned (we're working on it); click <strong>Open</strong> again.</span></li>
-        <li><span class="step-n">4</span><span class="step-b">A small icon appears in your menubar. Left-click it to fart.</span></li>
-      </ol>
+
+      <p class="install-lede">
+        One paste into <strong>Terminal</strong> downloads the DMG, installs <code>flatus.app</code>, and clears the macOS browser-quarantine xattr that otherwise triggers a misleading <em>"app is damaged"</em> dialog on macOS 15+.
+      </p>
+
+      <pre class="codeblock install-oneliner"><button type="button" id="install-oneliner-copy" class="codeblock-copy" aria-label="Copy install command">copy</button><code id="install-oneliner-code"><span class="prompt">$</span> curl -fsSL https://flatus.vercel.app/install.sh | bash</code></pre>
+
+      <details class="install-manual">
+        <summary>Or do it by hand</summary>
+        <ol class="steps">
+          <li><span class="step-n">1</span><span class="step-b">Your download is starting. Open the <code>.dmg</code> (or unzip the <code>.app.zip</code>).</span></li>
+          <li><span class="step-n">2</span><span class="step-b">Drag <code>flatus.app</code> into <code>/Applications</code>.</span></li>
+          <li><span class="step-n">3</span><span class="step-b">In Terminal: <code>xattr -cr /Applications/flatus.app</code>. UI-only alternative: <strong>System Settings → Privacy &amp; Security → Open Anyway</strong> after the first blocked attempt.</span></li>
+          <li><span class="step-n">4</span><span class="step-b">Double-click <code>flatus.app</code>. A small icon appears in your menubar.</span></li>
+        </ol>
+      </details>
+
       <p class="install-foot">
-        Right-click → settings (volume, personality, output, quiet hours). Quit from the same menu.
+        Once running, right-click the tray icon for settings (volume, personality, output, quiet hours). Quit from the same menu.
       </p>
     </section>
 
