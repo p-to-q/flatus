@@ -196,6 +196,32 @@ function clearWaveformBlank() {
   ctx.fillText("press render to synthesize", cssW / 2, cssH / 2);
 }
 
+// Decode the 16-bit mono PCM samples out of a WAV byte array without going
+// through Web Audio. Lets us draw the waveform on first paint, before the
+// browser's autoplay policy lets us instantiate an AudioContext.
+function decodeWavSamplesSync(bytes) {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  // The header is 44 bytes for the canonical RIFF/fmt /data layout produced
+  // by `write_wav_into`. We don't bother scanning for the chunk; it's fixed.
+  const headerLen = 44;
+  const n = Math.max(0, Math.floor((dv.byteLength - headerLen) / 2));
+  const out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    out[i] = dv.getInt16(headerLen + i * 2, true) / 32768;
+  }
+  return out;
+}
+
+function fakeAudioBufferFromSamples(samples, sampleRate) {
+  return {
+    duration: samples.length / sampleRate,
+    sampleRate,
+    numberOfChannels: 1,
+    length: samples.length,
+    getChannelData: () => samples,
+  };
+}
+
 // --- Render & play -------------------------------------------------------------
 
 async function renderAndPlay({ autoPlay = true } = {}) {
@@ -412,8 +438,35 @@ async function boot() {
   buildSpecimenGrid();
 
   synthVersionEl.textContent = `Rust → wasm32 · ${wasmVersion()}`;
-  setStatus("ready · press render");
   setRenderEnabled(true);
+
+  // First paint: render the default personality synchronously and draw the
+  // waveform on canvas, without instantiating an AudioContext. Browsers block
+  // AudioContext until a user gesture; the WAV bytes have no such restriction.
+  // This way the page shows a real synthesised waveform instead of a "press
+  // render" placeholder before the user has clicked anything.
+  try {
+    const { personality, seed, pressure, headphones } = currentInputs();
+    const t0 = performance.now();
+    const bytes = renderWav(personality, seed, pressure, headphones);
+    const elapsed = performance.now() - t0;
+    if (bytes && bytes.length > 0) {
+      const samples = decodeWavSamplesSync(bytes);
+      drawWaveform(fakeAudioBufferFromSamples(samples, 48000));
+      const url = bytesToBlobUrl(bytes);
+      downloadWav.hidden = false;
+      downloadWav.href = url;
+      downloadWav.download = `flatus-${personality}-${seed}.wav`;
+      setStatus(
+        `previewed ${personality} · seed ${seed} · ${(samples.length / 48000).toFixed(2)}s · ${fmtBytes(bytes.length)} · synth ${elapsed.toFixed(0)} ms · press to play`,
+      );
+    } else {
+      setStatus("ready · press render");
+    }
+  } catch (err) {
+    console.error(err);
+    setStatus("ready · press render");
+  }
 
   // wire control interactions
   pressureSlider.addEventListener("input", () => {
