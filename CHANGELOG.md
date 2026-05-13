@@ -16,9 +16,7 @@
 ### Fixed
 - `apps/desktop/src-tauri/icons/tray-template.png` is now 8-bit RGBA (was 8-bit gray+alpha, which `tauri::generate_context!()` rejected at compile time during release builds).
 
-## [Unreleased]
-
-### Added (v0.3 web experience, in progress)
+### Added (v0.3 web experience, also folded into this tag)
 - `crates/fart-synth` now compiles to `wasm32-unknown-unknown` with a `wasm-bindgen` surface (`renderWav`, `listPersonalities`, `version`). Bundle: 62 KB wasm + 10 KB JS. Same Rust DSP the CLI runs — no parity drift.
 - New `wav::write_wav_to_vec` builds a 16-bit mono PCM WAV in memory so the browser can obtain bytes without filesystem I/O. Shared core is `write_wav_into<W: Write>`; the path-taking `write_wav` is a thin wrapper.
 - `cpal` is now a target-conditional dependency (native only); it was already only used by the `fart` binary.
@@ -31,9 +29,9 @@
 - Template tray icon (`apps/desktop/src-tauri/icons/tray-template.png`) — black-alpha three-grain silhouette, tints to match menubar.
 - `docs/banner.png` rasterised from the SVG so the README renders the `feGaussianBlur` bloom and `feTurbulence` paper grain that GitHub strips from inline SVG.
 
-## [0.1.0] — 2026-05-13 (target)
+## [v0.1.0-pre.1] — 2026-05-13
 
-Initial release. The comedy ships first; signing comes later.
+Initial scaffold. The comedy ships first; signing comes later.
 
 ### Added
 - `crates/fart-synth` — Rust synthesis core. Pressure state machine, granular envelope, 7-dimensional parameter space, four personality distributions (`polite-cough`, `default`, `biblical`, `silent-but-deadly`), mulberry32 seeded PRNG, RBJ biquad BPF/HPF/LPF, asymmetric tanh waveshaper, comb-filter wetness, dBFS-capped limiter.
