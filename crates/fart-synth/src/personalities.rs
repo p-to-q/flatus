@@ -51,7 +51,10 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.1, 0.05),
         crackle: (0.05, 0.05),
         centre_hz: (220.0, 30.0),
-        duration_ms: (80, 40),
+        // Bumped from 80→320 ms. 80 ms was sub-perceptual — registered as a
+        // click, not a "pop". 320 ms ± 90 ms lands in the audible-but-still-
+        // tight range that matches the personality's name.
+        duration_ms: (320, 90),
         base_rate_per_hour: 0.5,
         activity_bonus: 1.2,
         threshold_noise: 0.5,
@@ -66,7 +69,11 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.4, 0.1),
         crackle: (0.2, 0.1),
         centre_hz: (180.0, 30.0),
-        duration_ms: (400, 200),
+        // Bumped from 400→900 ms. The canonical voice needs enough length for
+        // the patter / tremor / pitch-arc dimensions to actually develop.
+        // 900 ± 250 puts most events in the 0.65-1.15 s band — meaty, with
+        // audible internal structure, but well short of "long fart" territory.
+        duration_ms: (900, 250),
         base_rate_per_hour: 1.0,
         activity_bonus: 1.5,
         threshold_noise: 0.3,
@@ -81,7 +88,11 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.5, 0.1),
         crackle: (0.3, 0.1),
         centre_hz: (110.0, 20.0),
-        duration_ms: (1500, 400),
+        // Bumped from 1500→2400 ms. Biblical is the showpiece — it should
+        // feel like an event, not a polite acknowledgement. 2.4 s ± 0.5 is the
+        // "uh oh" range; rare enough (refractory 300 s) that it lands as
+        // punctuation rather than wallpaper.
+        duration_ms: (2400, 500),
         base_rate_per_hour: 1.33,
         activity_bonus: 1.3,
         threshold_noise: 0.2,
@@ -96,7 +107,10 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.3, 0.1),
         crackle: (0.6, 0.15),
         centre_hz: (140.0, 25.0),
-        duration_ms: (600, 200),
+        // Bumped from 600→1100 ms. Crackle dimension needs space to oscillate;
+        // a sustained crackle reads as "deniable but pungent", which is the
+        // personality's whole bit.
+        duration_ms: (1100, 300),
         base_rate_per_hour: 1.5,
         activity_bonus: 2.0,
         threshold_noise: 0.4,
