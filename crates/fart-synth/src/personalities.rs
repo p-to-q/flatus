@@ -51,10 +51,9 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.1, 0.05),
         crackle: (0.05, 0.05),
         centre_hz: (220.0, 30.0),
-        // Bumped from 80→320 ms. 80 ms was sub-perceptual — registered as a
-        // click, not a "pop". 320 ms ± 90 ms lands in the audible-but-still-
-        // tight range that matches the personality's name.
-        duration_ms: (320, 90),
+        // Round 2: 320→450 ms ± 120. Still the "short" voice — but with
+        // enough body that you actually register it as a sound, not a click.
+        duration_ms: (450, 120),
         base_rate_per_hour: 0.5,
         activity_bonus: 1.2,
         threshold_noise: 0.5,
@@ -69,11 +68,10 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.4, 0.1),
         crackle: (0.2, 0.1),
         centre_hz: (180.0, 30.0),
-        // Bumped from 400→900 ms. The canonical voice needs enough length for
-        // the patter / tremor / pitch-arc dimensions to actually develop.
-        // 900 ± 250 puts most events in the 0.65-1.15 s band — meaty, with
-        // audible internal structure, but well short of "long fart" territory.
-        duration_ms: (900, 250),
+        // Round 2: 900→1400 ms ± 450. The default voice should regularly
+        // enter the 1.5-2 s "structured event" band — that's where the
+        // patter / tremor dimensions really sing.
+        duration_ms: (1400, 450),
         base_rate_per_hour: 1.0,
         activity_bonus: 1.5,
         threshold_noise: 0.3,
@@ -88,11 +86,11 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.5, 0.1),
         crackle: (0.3, 0.1),
         centre_hz: (110.0, 20.0),
-        // Bumped from 1500→2400 ms. Biblical is the showpiece — it should
-        // feel like an event, not a polite acknowledgement. 2.4 s ± 0.5 is the
-        // "uh oh" range; rare enough (refractory 300 s) that it lands as
-        // punctuation rather than wallpaper.
-        duration_ms: (2400, 500),
+        // Round 2: 2400→3400 ms ± 900. Biblical is the GGP (尴尬期, "awkward
+        // period") personality — most events should fall in 2.5-4.3 s, with
+        // the tail regularly crossing into 4-5 s social-disaster territory.
+        // Refractory stays 300 s so this doesn't become wallpaper noise.
+        duration_ms: (3400, 900),
         base_rate_per_hour: 1.33,
         activity_bonus: 1.3,
         threshold_noise: 0.2,
@@ -107,10 +105,10 @@ pub const PERSONALITIES: &[Personality] = &[
         tremor: (0.3, 0.1),
         crackle: (0.6, 0.15),
         centre_hz: (140.0, 25.0),
-        // Bumped from 600→1100 ms. Crackle dimension needs space to oscillate;
-        // a sustained crackle reads as "deniable but pungent", which is the
-        // personality's whole bit.
-        duration_ms: (1100, 300),
+        // Round 2: 1100→1700 ms ± 550. Wider distribution — sometimes a
+        // short pungent burst, sometimes a sustained crackle. The variance
+        // is the personality's whole bit.
+        duration_ms: (1700, 550),
         base_rate_per_hour: 1.5,
         activity_bonus: 2.0,
         threshold_noise: 0.4,

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- flatus / signature
+     Abstract mark — the 6-grain spectrogram strip lifted from the banner,
+     stripped of axis labels and brand text. Reads as "a fart event made
+     visible." Use anywhere a pure visual mark is wanted (avatar, sticker,
+     section divider, watermark, tray-icon at larger sizes).
+     Transparent background; sits over light surfaces by design. The bloom
+     and grain still bake in through Chrome rasterisation. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" role="img" aria-label="flatus signature — six warm grains across a time strip">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#fff3d6" stop-opacity="0.98"/>
+      <stop offset="22%"  stop-color="#f5a26b" stop-opacity="0.88"/>
+      <stop offset="55%"  stop-color="#ce552a" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#7a2812" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="bloom" x="-60%" y="-100%" width="220%" height="300%">
+      <feGaussianBlur stdDeviation="3"  result="b1"/>
+      <feGaussianBlur stdDeviation="10" in="SourceGraphic" result="b2"/>
+      <feGaussianBlur stdDeviation="20" in="SourceGraphic" result="b3"/>
+      <feMerge>
+        <feMergeNode in="b3"/>
+        <feMergeNode in="b2"/>
+        <feMergeNode in="b1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#bloom)">
+    <ellipse cx="120" cy="100" rx="24" ry="32" fill="url(#g)" opacity="0.78"/>
+    <ellipse cx="230" cy="100" rx="34" ry="42" fill="url(#g)" opacity="0.92"/>
+    <ellipse cx="380" cy="100" rx="48" ry="56" fill="url(#g)" opacity="1.0"/>
+    <ellipse cx="530" cy="100" rx="40" ry="50" fill="url(#g)" opacity="0.94"/>
+    <ellipse cx="650" cy="100" rx="28" ry="38" fill="url(#g)" opacity="0.74"/>
+    <ellipse cx="740" cy="100" rx="18" ry="26" fill="url(#g)" opacity="0.50"/>
+  </g>
+</svg>
