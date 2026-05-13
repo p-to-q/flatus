@@ -162,6 +162,40 @@ body::before {
   letter-spacing: 0.01em;
 }
 
+/* Entrance: wordmark settles in, tagline trails, banner fades up.
+ * Guarded behind no-preference so motion-sensitive users get static. */
+@media (prefers-reduced-motion: no-preference) {
+  .wordmark { animation: enter-fall 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .tagline  { animation: enter-fade 0.7s 0.18s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .banner   { animation: enter-up 0.9s 0.30s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .elevator { animation: enter-fade 0.7s 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .cta-row  { animation: enter-fade 0.7s 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .cta-hint { animation: enter-fade 0.7s 0.65s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+}
+@keyframes enter-fall {
+  from { opacity: 0; transform: translateY(-12px) rotate(-1deg); letter-spacing: 0em; }
+  to   { opacity: 1; transform: translateY(0) rotate(0); letter-spacing: -0.02em; }
+}
+@keyframes enter-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reveal sections as they enter the viewport. JS toggles .revealed. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+}
+
 .banner {
   margin: 0 0 2rem;
   padding: 0;

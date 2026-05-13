@@ -554,6 +554,32 @@ function applyArchToCta(detected) {
   }
 }
 
+// Fade sections in as they enter the viewport. Skips work if the user has
+// asked for reduced motion at the OS level — the CSS reveal rule is also
+// guarded behind prefers-reduced-motion, so the elements just stay visible.
+function wireScrollReveals() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    for (const el of document.querySelectorAll(".reveal")) el.classList.add("revealed");
+    return;
+  }
+  if (!("IntersectionObserver" in window)) {
+    for (const el of document.querySelectorAll(".reveal")) el.classList.add("revealed");
+    return;
+  }
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          io.unobserve(entry.target);
+        }
+      }
+    },
+    { rootMargin: "0px 0px -10% 0px", threshold: 0.05 },
+  );
+  for (const el of document.querySelectorAll(".reveal")) io.observe(el);
+}
+
 // Copy-to-clipboard for the CLI codeblock. Strips the leading `$ ` prompt and
 // the inline comments so what ends up in the clipboard is just the commands.
 function wireCliCopy() {
@@ -668,6 +694,7 @@ async function boot() {
 
   wireDownloadCta();
   wireCliCopy();
+  wireScrollReveals();
 
   // Banner is a giant button — click anywhere on the spectrogram and we
   // randomise the inputs and play. Nice surprise interaction; the page

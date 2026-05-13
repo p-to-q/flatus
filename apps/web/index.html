@@ -78,7 +78,7 @@
       </p>
     </section>
 
-    <section class="instrument" id="instrument" aria-labelledby="instrument-heading">
+    <section class="instrument reveal" id="instrument" aria-labelledby="instrument-heading">
       <header class="section-head">
         <h2 id="instrument-heading" class="caption">Instrument</h2>
         <p class="section-sub">
@@ -94,15 +94,15 @@
         </fieldset>
 
         <fieldset class="ctrl ctrl-pressure">
-          <legend>Pressure <output id="pressure-readout" for="pressure">0.60</output></legend>
-          <input id="pressure" type="range" min="0" max="1" step="0.01" value="0.60" />
+          <legend>Pressure <output id="pressure-readout" for="pressure">0.70</output></legend>
+          <input id="pressure" type="range" min="0" max="1" step="0.01" value="0.70" />
           <div class="ctrl-scale" aria-hidden="true"><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div>
         </fieldset>
 
         <fieldset class="ctrl ctrl-seed">
           <legend>Seed</legend>
           <div class="seed-row">
-            <input id="seed" type="number" min="0" max="99999999" step="1" value="42" inputmode="numeric" />
+            <input id="seed" type="number" min="0" max="99999999" step="1" value="31" inputmode="numeric" />
             <button type="button" id="seed-random" class="btn-mini" aria-label="Randomize seed">↻</button>
           </div>
         </fieldset>
@@ -139,7 +139,7 @@
       </aside>
     </section>
 
-    <section class="specimens" aria-labelledby="specimens-heading">
+    <section class="specimens reveal" aria-labelledby="specimens-heading">
       <header class="section-head">
         <h2 id="specimens-heading" class="caption">Specimens</h2>
         <p class="section-sub">Four canonical voices. Click one to load it into the instrument above.</p>
@@ -147,7 +147,7 @@
       <ol class="specimen-grid" id="specimen-grid"></ol>
     </section>
 
-    <section class="cli" aria-labelledby="cli-heading">
+    <section class="cli reveal" aria-labelledby="cli-heading">
       <header class="section-head">
         <h2 id="cli-heading" class="caption">Command line</h2>
         <p class="section-sub">No menubar? No problem. The same synth ships as a CLI on every platform that has Rust.</p>
@@ -161,7 +161,7 @@
 <span class="prompt">$</span> fart --list-personalities</code></pre>
     </section>
 
-    <section class="ledger" aria-labelledby="ledger-heading">
+    <section class="ledger reveal" aria-labelledby="ledger-heading">
       <header class="section-head">
         <h2 id="ledger-heading" class="caption">Specifications</h2>
       </header>
