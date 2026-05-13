@@ -3,70 +3,176 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A small apparatus for moving air." />
-  <meta name="theme-color" content="#15161b" />
+  <meta name="description" content="flatus — a small apparatus for moving air. A desktop companion that synthesizes a particular signal, in your menubar." />
+  <meta name="theme-color" content="#f7f1e3" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#15110d" media="(prefers-color-scheme: dark)" />
   <title>flatus — a small apparatus for moving air</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="preconnect" href="https://rsms.me/" crossorigin />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
   <link rel="stylesheet" href="./style.css" />
+  <meta property="og:title" content="flatus — a small apparatus for moving air" />
+  <meta property="og:description" content="A desktop companion that lives in your menubar and occasionally farts. Also, by acoustic accident, the same waveform watchOS uses to push water out of the Apple Watch speaker." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="./banner.png" />
 </head>
 <body>
-  <main>
-    <header>
-      <p class="brand"><code>[p → q]</code></p>
-      <h1>flatus</h1>
-      <p class="tagline"><em>a small apparatus for moving air.</em></p>
+  <div class="page">
+
+    <header class="masthead">
+      <a class="brand" href="https://www.ptoq.io/" aria-label="A [p → q] project"><span aria-hidden="true">[ p → q ]</span></a>
+      <span class="catalog">spec 01 · flatus 0.1.0</span>
     </header>
 
-    <section class="banner">
-      <!-- apps/web/banner.svg is a copy of docs/banner.svg, so this page works
-           when apps/web/ is deployed standalone as the doc root. -->
-      <img src="./banner.svg" alt="spectrogram of one fart event — energy 80–400 Hz, six grains, HPF at 60 Hz, LPF at 2 kHz" />
-    </section>
-
-    <section class="prose">
-      <p>
-        flatus is a desktop companion that lives in your menubar and occasionally farts.
-        It is also, by acoustic accident, the same waveform Apple ships in watchOS to
-        push water out of the Apple Watch speaker.
+    <section class="hero">
+      <h1 class="wordmark">flatus</h1>
+      <p class="tagline">a small apparatus for moving air.</p>
+      <figure class="banner" aria-label="Spectrogram of one fart event — energy concentrated 80 to 400 Hz, six grains across one second, bounded by a 60 Hz high-pass and a 2 kHz low-pass.">
+        <img src="./banner.svg" alt="" />
+      </figure>
+      <p class="elevator">
+        A desktop companion that lives in your menubar and occasionally farts.
+        It is also, by acoustic accident, the same waveform Apple ships in
+        watchOS to push water out of the Apple Watch speaker.
       </p>
-      <p>
-        Make of that what you will.
+
+      <div class="cta-row">
+        <a id="download-cta" class="cta primary" href="https://github.com/p-to-q/flatus/releases/latest" data-state="idle">
+          <span class="cta-label">Download</span>
+          <span class="cta-meta" id="cta-meta">for macOS · Apple Silicon · v0.1.0 · unsigned</span>
+        </a>
+        <a class="cta ghost" href="#instrument">try it in your browser ↓</a>
+      </div>
+      <p class="cta-hint" id="cta-hint">Detecting your machine…</p>
+    </section>
+
+    <section class="install" id="install" hidden>
+      <h2 class="caption">First launch</h2>
+      <ol class="steps">
+        <li><span class="step-n">1</span><span class="step-b">Your download is starting. The file is a ZIP — unzip it.</span></li>
+        <li><span class="step-n">2</span><span class="step-b">Drag <code>flatus.app</code> into <code>/Applications</code>.</span></li>
+        <li><span class="step-n">3</span><span class="step-b"><strong>Right-click</strong> <code>flatus.app</code> → <strong>Open</strong>. Gatekeeper will warn it's unsigned (we're working on it); click <strong>Open</strong> again.</span></li>
+        <li><span class="step-n">4</span><span class="step-b">A small icon appears in your menubar. Left-click it to fart.</span></li>
+      </ol>
+      <p class="install-foot">
+        Right-click → settings (volume, personality, output, quiet hours). Quit from the same menu.
       </p>
     </section>
 
-    <section class="cli">
-      <p class="caption"># the CLI</p>
-      <pre><code>$ git clone https://github.com/p-to-q/flatus
-$ cd flatus
-$ cargo install --path crates/fart-synth
-$ fart                              <span class="comment"># one shot</span>
-$ fart --personality biblical       <span class="comment"># pick a voice</span>
-$ fart --render out.wav             <span class="comment"># silent: write a WAV</span>
-$ fart --list-personalities</code></pre>
-      <p class="caption note">
-        <em>Not on crates.io yet. The desktop menubar app is the <code>.app</code> bundle —
-        see the README's "First launch" for the right-click‑to‑Open dance.</em>
-      </p>
+    <section class="instrument" id="instrument" aria-labelledby="instrument-heading">
+      <header class="section-head">
+        <h2 id="instrument-heading" class="caption">Instrument</h2>
+        <p class="section-sub">
+          A live preview, synthesized in your browser by the same Rust crate the
+          CLI uses, compiled to WebAssembly. Same inputs, same bytes.
+        </p>
+      </header>
+
+      <div class="console">
+        <fieldset class="ctrl ctrl-personality">
+          <legend>Personality</legend>
+          <div class="personalities" id="personality-group" role="radiogroup"></div>
+        </fieldset>
+
+        <fieldset class="ctrl ctrl-pressure">
+          <legend>Pressure <output id="pressure-readout" for="pressure">0.60</output></legend>
+          <input id="pressure" type="range" min="0" max="1" step="0.01" value="0.60" />
+          <div class="ctrl-scale" aria-hidden="true"><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div>
+        </fieldset>
+
+        <fieldset class="ctrl ctrl-seed">
+          <legend>Seed</legend>
+          <div class="seed-row">
+            <input id="seed" type="number" min="0" max="99999999" step="1" value="42" inputmode="numeric" />
+            <button type="button" id="seed-random" class="btn-mini" aria-label="Randomize seed">↻</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="ctrl ctrl-cap">
+          <legend>Output cap</legend>
+          <div class="seg" role="radiogroup" aria-label="Output cap">
+            <label class="seg-opt"><input type="radio" name="cap" value="speakers" checked /><span>speakers · −6 dBFS</span></label>
+            <label class="seg-opt"><input type="radio" name="cap" value="headphones" /><span>headphones · −18 dBFS</span></label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="render-row">
+        <button type="button" id="render-btn" class="render" aria-describedby="render-status">
+          <svg class="render-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14l12-7z" fill="currentColor" /></svg>
+          <span class="render-label">render &amp; play</span>
+        </button>
+        <a id="download-wav" class="link-quiet" download="flatus.wav" hidden>↓ save .wav</a>
+        <span id="render-status" class="render-status" aria-live="polite">load wasm…</span>
+      </div>
+
+      <canvas id="waveform" class="waveform" width="1200" height="220" aria-label="Rendered waveform"></canvas>
+
+      <aside class="instrument-margin">
+        <dl>
+          <dt>sample rate</dt><dd>48 000 Hz</dd>
+          <dt>bit depth</dt><dd>16</dd>
+          <dt>channels</dt><dd>1 (mono)</dd>
+          <dt>band</dt><dd>60 Hz – 2 kHz</dd>
+          <dt>cap</dt><dd>−6 dBFS / −18 dBFS</dd>
+          <dt>synthesis</dt><dd id="synth-version">Rust → wasm32</dd>
+        </dl>
+      </aside>
     </section>
 
-    <section class="links">
-      <ul>
-        <li><a href="https://github.com/p-to-q/flatus">github.com/p-to-q/flatus</a></li>
-        <li><a href="https://github.com/p-to-q/flatus/blob/main/docs/ACOUSTICS.md">acoustics writeup (the receipts)</a></li>
-        <li><a href="https://github.com/p-to-q/flatus/blob/main/README.md">readme</a></li>
-        <li><a href="https://github.com/p-to-q/flatus/releases/latest">latest release (unsigned <code>.app</code>)</a></li>
-        <li><a href="https://www.ptoq.io/">[p → q]</a></li>
-      </ul>
+    <section class="specimens" aria-labelledby="specimens-heading">
+      <header class="section-head">
+        <h2 id="specimens-heading" class="caption">Specimens</h2>
+        <p class="section-sub">Four canonical voices. Click one to load it into the instrument above.</p>
+      </header>
+      <ol class="specimen-grid" id="specimen-grid"></ol>
     </section>
 
-    <section class="prose status">
-      <p><em>v0.1 — unsigned. macOS only. apple silicon. ymmv.</em></p>
+    <section class="cli" aria-labelledby="cli-heading">
+      <header class="section-head">
+        <h2 id="cli-heading" class="caption">Command line</h2>
+        <p class="section-sub">No menubar? No problem. The same synth ships as a CLI on every platform that has Rust.</p>
+      </header>
+<pre class="codeblock"><code><span class="prompt">$</span> git clone https://github.com/p-to-q/flatus
+<span class="prompt">$</span> cd flatus
+<span class="prompt">$</span> cargo install --path crates/fart-synth
+<span class="prompt">$</span> fart                              <span class="comment"># one shot, default voice</span>
+<span class="prompt">$</span> fart --personality biblical       <span class="comment"># pick a voice</span>
+<span class="prompt">$</span> fart --seed 42 --render out.wav   <span class="comment"># write a WAV; identical to this page</span>
+<span class="prompt">$</span> fart --list-personalities</code></pre>
     </section>
 
-    <footer>
-      <p>Q.E.D.</p>
-      <p class="copyright">© 2026 Wooden Computer Co., Ltd. Apache-2.0.</p>
+    <section class="ledger" aria-labelledby="ledger-heading">
+      <header class="section-head">
+        <h2 id="ledger-heading" class="caption">Specifications</h2>
+      </header>
+      <table class="spec-table">
+        <tbody>
+          <tr><th>Frequency band</th><td>60 Hz – 2 kHz (HPF, LPF)</td></tr>
+          <tr><th>Sample rate</th><td>48 000 Hz</td></tr>
+          <tr><th>Bit depth</th><td>16-bit, signed, little-endian</td></tr>
+          <tr><th>Channels</th><td>1 (mono)</td></tr>
+          <tr><th>Output cap</th><td>−6 dBFS (speakers) · −18 dBFS (headphones)</td></tr>
+          <tr><th>Session ceiling</th><td>30 s</td></tr>
+          <tr><th>Cooldown</th><td>60 s minimum between events</td></tr>
+          <tr><th>Determinism</th><td>(personality, seed, pressure) → bit-identical WAV</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="colophon">
+      <nav class="colophon-nav" aria-label="Project links">
+        <a href="https://github.com/p-to-q/flatus">github.com/p-to-q/flatus</a>
+        <a href="https://github.com/p-to-q/flatus/blob/main/docs/ACOUSTICS.md">acoustics writeup</a>
+        <a href="https://github.com/p-to-q/flatus/blob/main/README.md">readme</a>
+        <a href="https://github.com/p-to-q/flatus/releases/latest">releases</a>
+        <a href="https://www.ptoq.io/">[ p → q ]</a>
+      </nav>
+      <p class="qed">Q.E.D.</p>
+      <p class="copy">© 2026 Wooden Computer Co., Ltd. · Apache-2.0</p>
     </footer>
-  </main>
+  </div>
+
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
