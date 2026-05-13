@@ -554,6 +554,32 @@ function applyArchToCta(detected) {
   }
 }
 
+// Copy-to-clipboard for the CLI codeblock. Strips the leading `$ ` prompt and
+// the inline comments so what ends up in the clipboard is just the commands.
+function wireCliCopy() {
+  const btn = document.getElementById("copy-cli");
+  const code = document.getElementById("cli-code");
+  if (!btn || !code) return;
+  btn.addEventListener("click", async () => {
+    const lines = code.innerText
+      .split("\n")
+      .map((l) => l.replace(/^\$\s?/, "").replace(/\s+#.*$/, ""))
+      .filter((l) => l.trim().length > 0);
+    const text = lines.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.dataset.state = "copied";
+      btn.textContent = "copied";
+      setTimeout(() => {
+        btn.removeAttribute("data-state");
+        btn.textContent = "copy";
+      }, 1400);
+    } catch {
+      btn.textContent = "press ⌘C";
+    }
+  });
+}
+
 function wireDownloadCta() {
   const detected = detectArch();
   applyArchToCta(detected);
@@ -641,6 +667,7 @@ async function boot() {
   }
 
   wireDownloadCta();
+  wireCliCopy();
 
   // Banner is a giant button — click anywhere on the spectrogram and we
   // randomise the inputs and play. Nice surprise interaction; the page

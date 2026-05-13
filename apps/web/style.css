@@ -124,7 +124,11 @@ body::before {
 }
 .live-dot.ready {
   background: var(--warm);
-  animation: live-pulse 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot.ready {
+    animation: live-pulse 2.6s ease-in-out infinite;
+  }
 }
 @keyframes live-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 126, 87, 0.6); }
@@ -730,7 +734,33 @@ body::before {
   padding: 1.1rem 1.25rem;
   overflow-x: auto;
   margin: 0;
+  position: relative;
 }
+.codeblock-copy {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  appearance: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.codeblock:hover .codeblock-copy,
+.codeblock:focus-within .codeblock-copy { opacity: 1; }
+.codeblock-copy:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.codeblock-copy[data-state="copied"] { color: var(--accent); border-color: var(--accent); opacity: 1; }
 .codeblock code {
   font-family: var(--font-mono);
   font-size: 0.85rem;
