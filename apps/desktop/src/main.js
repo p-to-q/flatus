@@ -29,6 +29,10 @@ let current = {
 
 async function mount() {
   const personalities = await invoke("list_personalities");
+  // Drop the static fallback options (used when the page is rendered without
+  // a Tauri runtime — e.g. screenshots or web previews) and replace with the
+  // live list from Rust.
+  personalitySel.innerHTML = "";
   for (const name of personalities) {
     const opt = document.createElement("option");
     opt.value = name;

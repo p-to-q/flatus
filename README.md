@@ -82,6 +82,12 @@ After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray 
 - **Right-click** (or ⌘-click) → settings (volume, personality, output, quiet hours).
 - **Quit** from the right-click menu.
 
+<p align="center">
+  <img src="docs/screenshots/desktop-popover.png" alt="flatus menubar settings popover — title, italic tagline, personality select (default), 100% volume slider, output headphones, quiet hours, and a prominent 'fart now' button" width="340" />
+  <br/>
+  <em><sub>the settings popover. right-click the menubar icon to open.</sub></em>
+</p>
+
 ## Use (CLI)
 
 ```sh
