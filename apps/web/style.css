@@ -275,6 +275,20 @@ body::before {
   margin: 0 0 2rem;
 }
 
+/* Lettrine — large italic drop-cap on the opening sentence, in the accent
+ * oxblood. Pure CSS, no DOM change. */
+.elevator::first-letter {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 3.4em;
+  line-height: 0.85;
+  float: left;
+  margin: 0.08em 0.14em -0.04em -0.04em;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
 .cta-row {
   display: flex;
   flex-wrap: wrap;
@@ -393,6 +407,23 @@ body::before {
 /* ---------- section heads ---------- */
 
 .section-head { margin-bottom: 1.5rem; }
+
+/* Printer's asterism above each numbered section — a small fleuron between
+ * chapters. Sits just inside the section's top padding. */
+.section-head[data-folio]::before {
+  content: "⁂";
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--accent);
+  opacity: 0.55;
+  letter-spacing: 0.45em;
+  margin: -1.25rem 0 1.5rem;
+  text-indent: 0.45em; /* compensate the trailing letter-spacing */
+  user-select: none;
+}
+
 .caption {
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -401,6 +432,18 @@ body::before {
   color: var(--accent);
   margin: 0 0 0.25rem;
   font-weight: 500;
+}
+
+/* Folio roman numeral, rendered inline before the caption text with a
+ * hairline separator. Mutes the numeral so the section name stays primary. */
+.caption[data-num]::before {
+  content: attr(data-num);
+  margin-right: 0.65em;
+  padding-right: 0.7em;
+  border-right: 1px solid currentColor;
+  opacity: 0.5;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
 }
 .section-sub {
   font-family: var(--font-display);
