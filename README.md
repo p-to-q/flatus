@@ -27,7 +27,7 @@ Four canonical voices, rendered by the deterministic `generate-goldens` binary a
 - ▸ [biblical.wav](https://flatus.vercel.app/samples/v0.4/biblical.wav) · _slow, low, devastating_ · 372 KB
 - ▸ [silent-but-deadly.wav](https://flatus.vercel.app/samples/v0.4/silent-but-deadly.wav) · _exactly what it says_ · 164 KB
 
-For an A/B with the pre-realism cut, the v0.3 archive sits at [`flatus.vercel.app/samples/v0.3/`](https://flatus.vercel.app/samples/v0.3/) — same `(personality, seed, pressure)` triples, byte-identical to the WAVs flatus shipped before [`docs/REALISM.md`](docs/REALISM.md) landed.
+For an A/B with the pre-realism cut, the v0.3 archive sits alongside, byte-identical to the WAVs flatus shipped before [`docs/REALISM.md`](docs/REALISM.md) landed: [biblical](https://flatus.vercel.app/samples/v0.3/biblical.wav) · [default](https://flatus.vercel.app/samples/v0.3/default.wav) · [polite-cough](https://flatus.vercel.app/samples/v0.3/polite-cough.wav) · [silent-but-deadly](https://flatus.vercel.app/samples/v0.3/silent-but-deadly.wav) ([manifest](https://flatus.vercel.app/samples/v0.3/manifest.json)).
 
 <p align="center">
   <img src="docs/screenshots/spectrogram-biblical.png" alt="spectrogram of biblical.wav — energy concentrated below 2 kHz, six grains across 1.8 seconds, dashed HPF 60 Hz and LPF 2 kHz rails" width="100%" />
