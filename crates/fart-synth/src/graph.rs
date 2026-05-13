@@ -59,6 +59,12 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
     // 2) Render each grain.
     let mut buf = vec![0.0_f32; n_samples];
     let mut pink = PinkNoise::default();
+    let mut brown = BrownNoise::default();
+    // v0.4 realism knob #4: brown-noise weight derived from wetness. Real
+    // wet fart spectra fall off faster than 1/f (pink) — the low end is
+    // closer to 1/f² (brown). Dry voices stay pink-heavy; wet voices
+    // pick up roughly half their source from the brown integrator.
+    let brown_weight = (0.55 * params.wetness).clamp(0.0, 0.55);
 
     for g in &grains {
         let mut bpf = Biquad::bandpass(sr, g.centre_hz, g.q);
@@ -76,8 +82,13 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
                 libm::powf((1.0 - d).max(0.0), 1.5)
             };
 
-            // Source: noise / saw mix.
-            let n = pink.next(rng.next_f32() * 2.0 - 1.0);
+            // Source: noise / saw mix. The noise itself is now a
+            // pink/brown blend per `brown_weight`.
+            let white_p = rng.next_f32() * 2.0 - 1.0;
+            let white_b = rng.next_f32() * 2.0 - 1.0;
+            let p = pink.next(white_p);
+            let b = brown.next(white_b);
+            let n = (1.0 - brown_weight) * p + brown_weight * b;
             saw_phase += saw_inc;
             if saw_phase >= 1.0 {
                 saw_phase -= 1.0;
@@ -91,14 +102,66 @@ pub fn render(params: &FartParams, cfg: &RenderConfig) -> Vec<f32> {
         }
     }
 
-    // 3) Tremor LFO across the whole event (4–25 Hz). Depth scales with `tremor`.
+    // v0.4 realism knob #2: bubble-burst transients. Real wet farts
+    // contain individual gas pockets collapsing — short Gaussian-windowed
+    // sine bursts, sparse but audible. The pop centre frequency tracks
+    // the personality's natural pitch (`centre_hz`): bigger cavity →
+    // bigger bubble → lower pop. That keeps energy in the band each
+    // personality claims, and matches the physics (bubble Helmholtz
+    // resonance scales with bubble size). Density + strength derive
+    // from existing wetness + crackle axes; no new personality
+    // dimension.
+    let pop_density_per_sec = params.wetness * 16.0 + params.crackle * 6.0;
+    let pop_strength = 0.16 + 0.24 * params.crackle;
+    let pop_centre_base = params.centre_hz.clamp(80.0, 400.0);
+    let event_secs = n_samples as f32 / sr;
+    let pop_count = ((pop_density_per_sec * event_secs) as usize).min(48);
+    for _ in 0..pop_count {
+        let start = (rng.next_f32() * n_samples as f32) as usize;
+        let length_samples = (sr * (0.008 + rng.next_f32() * 0.007)) as usize; // 8–15 ms
+        // Centre 1.2× – 2.4× the personality's pitch; biblical (~110 Hz)
+        // gets pops at 130–270 Hz, polite-cough (~220 Hz) gets pops at
+        // 265–530 Hz. Always inside or close to each band's tolerance.
+        let centre_hz = pop_centre_base * (1.2 + rng.next_f32() * 1.2);
+        let phase_inc = centre_hz / sr;
+        let mut phase = rng.next_f32();
+        let usable = length_samples.min(n_samples.saturating_sub(start));
+        for i in 0..usable {
+            let t = i as f32 / length_samples.max(1) as f32;
+            // Gaussian window centred at t=0.5; σ² ≈ 1/18 of duration.
+            let env = libm::expf(-(t - 0.5) * (t - 0.5) * 18.0);
+            phase += phase_inc;
+            if phase >= 1.0 {
+                phase -= 1.0;
+            }
+            let pop = libm::sinf(2.0 * PI * phase) * env * pop_strength;
+            buf[start + i] += pop;
+        }
+    }
+
+    // v0.4 realism knob #1: aperiodic tremor. The previous sine LFO
+    // sounded mechanical — biological airflow through a soft sphincter
+    // is a random walk under low-pass smoothing, not a clean oscillation.
+    // We sample a new target every ~30 ms and 1-pole-LPF toward it; the
+    // resulting signal wobbles like a real pressure modulation rather
+    // than singing like a wah pedal.
     if params.tremor > 1e-3 {
-        let tremor_hz = 4.0 + 21.0 * params.tremor;
         let depth = 0.6 * params.tremor;
+        // 1-pole LP coefficient for ~3 Hz cutoff at sr=48 kHz:
+        //   alpha = exp(-2π * fc / sr) ≈ 0.99961
+        let alpha = libm::expf(-2.0 * PI * 3.0 / sr);
+        let target_interval = ((sr * 0.030) as usize).max(1);
+        let mut state = 0.0_f32;
+        let mut target = rng.next_f32() * 2.0 - 1.0;
         for (i, s) in buf.iter_mut().enumerate() {
-            let t = i as f32 / sr;
-            let lfo = 1.0 - depth + depth * libm::sinf(2.0 * PI * tremor_hz * t).abs();
-            *s *= lfo;
+            if i % target_interval == 0 {
+                target = rng.next_f32() * 2.0 - 1.0;
+            }
+            state = alpha * state + (1.0 - alpha) * target;
+            // |state| in roughly [0, 1] after smoothing; modulate gain
+            // between (1 − depth) and 1.0 like the old LFO did.
+            let modulation = 1.0 - depth + depth * state.abs();
+            *s *= modulation;
         }
     }
 
@@ -254,6 +317,24 @@ impl Biquad {
         self.y2 = self.y1;
         self.y1 = y;
         y
+    }
+}
+
+/// Brown-noise integrator. Feeds on white noise samples (uniform in [−1, 1])
+/// and returns brown (1/f²) samples roughly in [−1, 1]. Implemented as a
+/// leaky-integrator random walk with gain compensation; the cap is the leak.
+#[derive(Clone, Debug, Default)]
+pub struct BrownNoise {
+    state: f32,
+}
+
+impl BrownNoise {
+    /// Step the brown integrator. `white` should be uniform in [−1, 1].
+    pub fn next(&mut self, white: f32) -> f32 {
+        // Step size + clamp keep the walk bounded; 3.5 is gain compensation so
+        // the output rms lands roughly in the same window as PinkNoise::next.
+        self.state = (self.state + 0.02 * white).clamp(-1.0, 1.0);
+        self.state * 3.5
     }
 }
 

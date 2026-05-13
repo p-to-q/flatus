@@ -20,12 +20,14 @@ It's also, by acoustic accident, the same waveform Apple uses in watchOS to push
 
 ## Listen
 
-Four canonical voices, rendered by the deterministic `generate-goldens` binary. Click to play in your browser (or right-click → save):
+Four canonical voices, rendered by the deterministic `generate-goldens` binary and CDN-hosted alongside the website. Click to play in your browser (or right-click → save):
 
-- ▸ [polite-cough.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/polite-cough.wav) · _short, dry, plausibly deniable_ · 7.4 KB
-- ▸ [default.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/default.wav) · _the canon. wet enough, not so wet_ · 55 KB
-- ▸ [biblical.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/biblical.wav) · _slow, low, devastating_ · 174 KB
-- ▸ [silent-but-deadly.wav](https://github.com/p-to-q/flatus/raw/main/fixtures/golden/silent-but-deadly.wav) · _exactly what it says_ · 64 KB
+- ▸ [polite-cough.wav](https://flatus.vercel.app/samples/v0.4/polite-cough.wav) · _short, dry, plausibly deniable_ · 49 KB
+- ▸ [default.wav](https://flatus.vercel.app/samples/v0.4/default.wav) · _the canon. wet enough, not so wet_ · 163 KB
+- ▸ [biblical.wav](https://flatus.vercel.app/samples/v0.4/biblical.wav) · _slow, low, devastating_ · 372 KB
+- ▸ [silent-but-deadly.wav](https://flatus.vercel.app/samples/v0.4/silent-but-deadly.wav) · _exactly what it says_ · 164 KB
+
+For an A/B with the pre-realism cut, the v0.3 archive sits at [`flatus.vercel.app/samples/v0.3/`](https://flatus.vercel.app/samples/v0.3/) — same `(personality, seed, pressure)` triples, byte-identical to the WAVs flatus shipped before [`docs/REALISM.md`](docs/REALISM.md) landed.
 
 <p align="center">
   <img src="docs/screenshots/spectrogram-biblical.png" alt="spectrogram of biblical.wav — energy concentrated below 2 kHz, six grains across 1.8 seconds, dashed HPF 60 Hz and LPF 2 kHz rails" width="100%" />
@@ -148,9 +150,23 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 - [`README.md`](README.md) — you are here
 - [`PLAN.md`](PLAN.md) — the internal plan (philosophy, architecture, milestones)
 - [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) — the citation-backed plausibility writeup
-- [`docs/REALISM.md`](docs/REALISM.md) — v0.4 research: why v0.3 sounds rendered + which knobs we're turning to close the gap
+- [`docs/REALISM.md`](docs/REALISM.md) — v0.4 research: why v0.3 sounded rendered + which three knobs we turned
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — conventions
 - [`docs/marks/`](docs/marks/) — brand kit (wordmark, signature, monogram, OG card)
+
+### Brand kit
+
+<p align="center">
+  <img src="docs/marks/wordmark.png" alt="flatus wordmark — italic Charter serif with a small-caps mono tagline" width="48%" />
+  &nbsp;
+  <img src="docs/marks/signature.png" alt="flatus signature — six warm grains across a time strip, abstract spectrogram mark" width="48%" />
+  <br/>
+  <img src="docs/marks/monogram.png" alt="flatus monogram — italic f with three small grains, rounded square paper backdrop" width="22%" />
+  &nbsp;
+  <img src="docs/marks/og-card.svg" alt="flatus Open Graph card — wordmark + signature on dark canvas with brand frame" width="60%" />
+</p>
+
+SVG sources under [`docs/marks/`](docs/marks/) along with their README. The OG card above is also wired into the live site at [`flatus.vercel.app`](https://flatus.vercel.app/) as the `og:image` / `twitter:image` for social unfurls.
 
 ## License
 

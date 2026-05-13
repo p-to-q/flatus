@@ -748,11 +748,24 @@ body::before {
 .specimen-meta {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--muted);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
+}
+.specimen-dl {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--rule);
+  padding: 0 0.2em 1px;
+  letter-spacing: 0.05em;
+  transition: color 0.12s, border-color 0.12s;
+}
+.specimen-dl:hover {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
 }
 
 /* ---------- cli ---------- */
