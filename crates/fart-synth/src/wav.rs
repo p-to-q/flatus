@@ -8,11 +8,13 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
-/// Write `samples` (f32 in [−1, 1]) as 16-bit mono PCM to `path`. Clips out-of-range
-/// values; caller is expected to have applied the limiter already.
-pub fn write_wav(path: &Path, samples: &[f32], sample_rate_hz: u32) -> std::io::Result<()> {
-    let mut f = BufWriter::new(File::create(path)?);
-
+/// Write a 16-bit mono PCM WAV into any `Write` sink. Clips out-of-range samples;
+/// caller is expected to have applied the limiter already.
+pub fn write_wav_into<W: Write>(
+    w: &mut W,
+    samples: &[f32],
+    sample_rate_hz: u32,
+) -> std::io::Result<()> {
     let bits_per_sample: u16 = 16;
     let channels: u16 = 1;
     let byte_rate: u32 = sample_rate_hz * u32::from(channels) * u32::from(bits_per_sample) / 8;
@@ -20,33 +22,46 @@ pub fn write_wav(path: &Path, samples: &[f32], sample_rate_hz: u32) -> std::io::
     let data_size: u32 = (samples.len() as u32) * (u32::from(bits_per_sample) / 8);
     let riff_size: u32 = 36 + data_size;
 
-    // RIFF header
-    f.write_all(b"RIFF")?;
-    f.write_all(&riff_size.to_le_bytes())?;
-    f.write_all(b"WAVE")?;
+    w.write_all(b"RIFF")?;
+    w.write_all(&riff_size.to_le_bytes())?;
+    w.write_all(b"WAVE")?;
 
-    // fmt chunk
-    f.write_all(b"fmt ")?;
-    f.write_all(&16u32.to_le_bytes())?; // chunk size = 16 for PCM
-    f.write_all(&1u16.to_le_bytes())?; // audio format = 1 (PCM)
-    f.write_all(&channels.to_le_bytes())?;
-    f.write_all(&sample_rate_hz.to_le_bytes())?;
-    f.write_all(&byte_rate.to_le_bytes())?;
-    f.write_all(&block_align.to_le_bytes())?;
-    f.write_all(&bits_per_sample.to_le_bytes())?;
+    w.write_all(b"fmt ")?;
+    w.write_all(&16u32.to_le_bytes())?;
+    w.write_all(&1u16.to_le_bytes())?;
+    w.write_all(&channels.to_le_bytes())?;
+    w.write_all(&sample_rate_hz.to_le_bytes())?;
+    w.write_all(&byte_rate.to_le_bytes())?;
+    w.write_all(&block_align.to_le_bytes())?;
+    w.write_all(&bits_per_sample.to_le_bytes())?;
 
-    // data chunk
-    f.write_all(b"data")?;
-    f.write_all(&data_size.to_le_bytes())?;
+    w.write_all(b"data")?;
+    w.write_all(&data_size.to_le_bytes())?;
 
     for &s in samples {
         let clamped = s.clamp(-1.0, 1.0);
         let v = (clamped * f32::from(i16::MAX)) as i16;
-        f.write_all(&v.to_le_bytes())?;
+        w.write_all(&v.to_le_bytes())?;
     }
+    Ok(())
+}
 
+/// Write a 16-bit mono PCM WAV to `path`. Thin wrapper around [`write_wav_into`].
+pub fn write_wav(path: &Path, samples: &[f32], sample_rate_hz: u32) -> std::io::Result<()> {
+    let mut f = BufWriter::new(File::create(path)?);
+    write_wav_into(&mut f, samples, sample_rate_hz)?;
     f.flush()?;
     Ok(())
+}
+
+/// Build a 16-bit mono PCM WAV in memory. Used by the WASM bindings (which can't
+/// touch the filesystem) and by anyone else who wants the bytes without disk I/O.
+#[must_use]
+pub fn write_wav_to_vec(samples: &[f32], sample_rate_hz: u32) -> Vec<u8> {
+    let mut buf = Vec::with_capacity(44 + samples.len() * 2);
+    write_wav_into(&mut buf, samples, sample_rate_hz)
+        .expect("Vec<u8> writes are infallible");
+    buf
 }
 
 /// SHA-256 of a WAV file on disk, hex-encoded. Used by the golden-fixture manifest.

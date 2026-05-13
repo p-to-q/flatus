@@ -20,6 +20,9 @@ pub mod prng;
 pub mod safety;
 pub mod wav;
 
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
+
 pub use graph::{render, RenderConfig};
 pub use params::FartParams;
 pub use personalities::{lookup_personality, sample_params, Personality, PERSONALITIES};
