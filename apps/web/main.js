@@ -592,7 +592,7 @@ function detectArch() {
       if (typeof renderer === "string" && /Intel/i.test(renderer)) arch = "x86_64";
     }
   } catch {
-    // ignore; default arm64 (v0.1 only ships aarch64 anyway)
+    // ignore; default arm64 (packaged .dmg is Apple Silicon only)
   }
   return { os: "macos", arch };
 }
@@ -606,12 +606,12 @@ function applyArchToCta(detected) {
     ctaBtn.dataset.state = "ready";
   } else if (detected.os === "linux") {
     ctaMeta.textContent = `Linux · build from source`;
-    ctaHint.textContent = "Linux build is CLI-only for v0.1. Scroll to the Command line section.";
+    ctaHint.textContent = "Linux build is CLI-only for now. Scroll to the Command line section.";
     ctaBtn.href = "#cli";
     ctaBtn.dataset.state = "redirect-cli";
   } else if (detected.os === "windows") {
     ctaMeta.textContent = `Windows · build from source`;
-    ctaHint.textContent = "Windows isn't packaged yet for v0.1 — the CLI builds with cargo. See below.";
+    ctaHint.textContent = "Windows isn't packaged yet — the CLI builds with cargo. See below.";
     ctaBtn.href = "#cli";
     ctaBtn.dataset.state = "redirect-cli";
   } else {

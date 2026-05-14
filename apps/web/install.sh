@@ -4,7 +4,9 @@
 #   curl -fsSL https://flatus.vercel.app/install.sh | bash
 #
 # What it does:
-#   1. resolves the latest GitHub release of p-to-q/flatus (incl. pre-releases)
+#   1. resolves the newest GitHub **release** of p-to-q/flatus (API order;
+#      today that is the stable line, e.g. v0.2.0 — pre-releases may appear
+#      later in the list)
 #   2. downloads the DMG, mounts it, copies flatus.app into /Applications
 #   3. clears the com.apple.quarantine xattr that triggers the misleading
 #      "app is damaged and can't be opened" dialog on macOS 15+ for
@@ -15,7 +17,7 @@
 #   - open it, drag flatus.app into /Applications
 #   - run: xattr -cr /Applications/flatus.app
 #
-# The bundle itself is unsigned. Until v0.1 ships notarization, you are
+# The bundle itself is unsigned. Until we ship a notarized build, you are
 # trusting the GitHub release artifact (and, for the curl|bash path,
 # this script). Inspect the source before running.
 

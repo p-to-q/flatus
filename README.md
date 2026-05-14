@@ -10,6 +10,8 @@ It's also, by acoustic accident, the same waveform Apple uses in watchOS to push
 
 → **[Try it in your browser](https://flatus.vercel.app/)** — the landing page runs the same Rust synthesis core, compiled to WebAssembly. Same inputs, byte-identical WAV.
 
+**Desktop (macOS Apple Silicon):** current build is **[v0.2.0](https://github.com/p-to-q/flatus/releases/tag/v0.2.0)** — DMG `flatus_0.2.0_aarch64.dmg` and `flatus-v0.2.0-aarch64.app.zip`. The [site download CTA](https://flatus.vercel.app/) points at the same tag; the [one-liner installer](https://flatus.vercel.app/install.sh) resolves whatever GitHub lists as the newest release and pulls the attached `.dmg`.
+
 <p align="center">
   <a href="https://flatus.vercel.app/">
     <img src="docs/screenshots/web-hero.png" alt="flatus landing page — italic display-serif wordmark, spectrogram banner with warm glow grains, prominent download button, and the Instrument panel for in-browser synthesis" width="100%" />
@@ -155,7 +157,7 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Roadmap
 
-- [x] First release
+- [x] First desktop release ([v0.2.0](https://github.com/p-to-q/flatus/releases/tag/v0.2.0))
 - [x] Live synth in the browser
 - [ ] Cease-and-desist from Apple's lawyers (re: US 9,451,354 et seq.)
 - [ ] Speaker manufacturer warranty claims department
