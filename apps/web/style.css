@@ -595,63 +595,96 @@ body::after {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------- personality (card-style radio group) ---------- */
+
 .personalities {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.4rem;
-  margin-top: 0.35rem;
+  margin-top: 0.5rem;
 }
 .personality {
   appearance: none;
+  position: relative;
   border: 1px solid var(--rule);
   background: var(--paper);
   color: var(--ink-2);
-  padding: 0.55rem 0.65rem;
-  border-radius: 4px;
+  padding: 0.55rem 0.7rem 0.55rem 1.1rem;
+  border-radius: 8px;
   font-family: var(--font-ui);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
   letter-spacing: -0.005em;
-  transition: background 0.1s, color 0.1s, border-color 0.1s;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
   text-transform: lowercase;
+}
+.personality::before {
+  content: "";
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: translateY(-50%);
+  transition: opacity 0.12s ease;
 }
 .personality:hover { border-color: var(--ink-2); color: var(--ink); }
 .personality[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
+  background: var(--paper-2);
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+.personality[aria-pressed="true"]::before { opacity: 1; color: var(--accent); }
+
+/* ---------- pressure (rounded track + ink thumb, mono readout) ---------- */
+
+.ctrl-pressure legend output {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 0.45rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--ink);
 }
 
 #pressure {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 4px;
   background: var(--rule);
-  border-radius: 2px;
+  border-radius: 999px;
   outline: none;
-  margin: 1.1rem 0 0.5rem;
+  margin: 1rem 0 0.5rem;
 }
 #pressure::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--ink);
   border: 2px solid var(--paper);
-  cursor: grab;
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 0 1px 4px rgba(26, 22, 18, 0.25);
+  cursor: pointer;
 }
 #pressure::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--ink);
   border: 2px solid var(--paper);
-  cursor: grab;
-  box-shadow: 0 0 0 1px var(--accent);
+  box-shadow: 0 1px 4px rgba(26, 22, 18, 0.25);
+  cursor: pointer;
 }
 .ctrl-scale {
   display: flex;
@@ -660,59 +693,126 @@ body::after {
   font-size: 0.65rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
-.seed-row {
-  display: flex;
+/* ---------- seed (input bar with nested replay square) ---------- */
+
+.seed-field {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.6rem;
+  gap: 4px;
+  width: 100%;
+  height: 36px;
+  margin-top: 0.55rem;
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper);
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
+.seed-field:hover { border-color: var(--ink-2); }
+.seed-field:focus-within { border-color: var(--ink); }
+
 #seed {
   flex: 1;
-  border: 1px solid var(--rule);
-  background: var(--paper);
+  min-width: 0;
+  height: 100%;
+  padding: 0 0.55rem;
+  border: none;
+  background: transparent;
   color: var(--ink);
-  padding: 0.55rem 0.7rem;
   font-family: var(--font-mono);
   font-size: 0.95rem;
-  border-radius: 4px;
-  outline: none;
   font-variant-numeric: tabular-nums;
+  outline: none;
+  -moz-appearance: textfield;
 }
-#seed:focus { border-color: var(--accent); }
-.btn-mini {
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  color: var(--ink-2);
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.1rem;
+#seed::-webkit-outer-spin-button,
+#seed::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.seed-replay {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--paper-2);
+  color: var(--ink-3, var(--ink-2));
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
 }
-.btn-mini:hover { color: var(--accent); border-color: var(--accent); }
+.seed-replay:hover { color: var(--accent); background: var(--paper); }
+.seed-replay:active { transform: scale(0.94); }
+.seed-replay-icon { display: block; }
+
+/* ---------- output cap (segmented pill) ---------- */
 
 .seg {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
+  display: inline-flex;
+  gap: 2px;
+  margin-top: 0.55rem;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  width: 100%;
 }
 .seg-opt {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex: 1;
+  display: block;
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--ink-2);
-  padding: 0.35rem 0;
 }
-.seg-opt input { accent-color: var(--accent); }
+.seg-opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+.seg-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  transition: background 0.12s ease, color 0.12s ease;
+  text-align: center;
+  line-height: 1.15;
+}
+.seg-pill .seg-meta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.seg-opt:hover .seg-pill { color: var(--ink); }
+.seg-opt input:checked + .seg-pill {
+  background: var(--ink);
+  color: var(--paper);
+}
+.seg-opt input:checked + .seg-pill .seg-meta { color: var(--paper-2); }
+.seg-opt input:focus-visible + .seg-pill {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .render-row {
   display: flex;

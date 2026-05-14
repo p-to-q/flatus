@@ -4,7 +4,7 @@
 >
 > **A small apparatus for moving air.**
 >
-> The second proof in the `[p → q]` lineage. After **`wittgenstein`** comes **`flatus`** — a desktop companion that vibrates a laptop speaker near its resonance, _in the manner of a fart_.
+> Another proof in the lineage. After **`wittgenstein`** comes **`flatus`** — a desktop companion that vibrates a laptop speaker near its resonance, _in the manner of a fart_.
 
 This document is the **internal** plan — design, philosophy, milestones. The **public** face of the repo is the OpenWhip-tier `README.md`; the two-tier voice is intentional (see §10).
 
@@ -18,7 +18,7 @@ p   surface form          a fart sound on your desktop, intermittent
 q   consequence           a diaphragm at fs displaces air at the grille
 ```
 
-Read the output as audio and your friends laugh. Read the same node graph as a function and you have the engineering Apple did for water in the Apple Watch, scaled to a laptop microspeaker. The waveform that makes the joke and the waveform that does the work are the same waveform. That is what `[p → q]` means here.
+Read the output as audio and your friends laugh. Read the same node graph as a function and you have the engineering Apple did for water in the Apple Watch, scaled to a laptop microspeaker. The waveform that makes the joke and the waveform that does the work are the same waveform. That is the arrow here.
 
 ---
 
@@ -137,7 +137,7 @@ Architectural commitments:
 
 - **`fart-synth` is the single source of truth.** Synthesis happens in Rust via a plain sample-loop driving `cpal`. The Tauri webview is _just UI_ — it calls `invoke("fart_now", …)` and Rust does the work. No isomorphic TS Web Audio mirror.
 - **State machine lives in Rust.** The `Pressure` struct ticks once per second in a background thread inside the Tauri shell. The webview reads/writes settings only; it does not drive timing.
-- **Tray UX is OpenWhip-shaped.** Left-click fires a fart immediately. Right-click (or ⌘-click on a one-button mouse) opens the settings popover. The default action is _to do the thing_, not _to open dashboards_.
+- **Tray UX stays menubar-first, but now uses the native menu as the shallow surface.** Click opens the tray menu (`Fart now`, `Show window`, `Quit`); the fuller window carries the longer controls and first-launch help. The default action is still _to do the thing_, not _to open dashboards_.
 - **Three shells, all thin.** Tauri = window + tray + UI + invoke. CLI = parameter-parse + one call. Skill = bash wrapping CLI. Each shell well under 500 lines.
 
 ---
@@ -155,7 +155,7 @@ pub const MAX_SESSION_MS: u32 = 30_000;
 pub const MIN_COOLDOWN_MS: u32 = 60_000;
 ```
 
-**Headphone detection** is a **user-facing toggle** in the popover (Speakers / Headphones, default Headphones). CoreAudio's transport-type API cannot distinguish Bluetooth headphones from Bluetooth speakers, and the failure mode is in the dangerous direction (under-attenuation). One UI toggle, one sentence in the README explains why.
+**Headphone detection** is a **user-facing toggle** in the desktop window (Speakers / Headphones). CoreAudio's transport-type API cannot distinguish Bluetooth headphones from Bluetooth speakers, and the failure mode is in the dangerous direction (under-attenuation). One UI toggle, one sentence in the README explains why.
 
 ---
 
@@ -227,7 +227,7 @@ Cut: `THESIS.md`, `HARD-CONSTRAINTS.md`, `glossary.md`, `rfcs/`, `adrs/`. Hard c
 
 - [x] `crates/fart-synth` with `FartParams`, pressure state machine, grain envelope, four personalities
 - [x] `bin/fart` plays via cpal; flags for `--personality`, `--seed`, `--render`, `--print-state`, `--headphones`, `--list-personalities`
-- [x] `apps/desktop` Tauri menubar shell — Accessory mode, tray click = fart, right-click = settings popover (volume, personality, output, quiet hours)
+- [x] `apps/desktop` Tauri menubar shell — Accessory mode, tray menu + full window, volume/personality/output/quiet-hours controls
 - [x] **Unsigned `.app` only.** No DMG, no notarization, no Apple Developer ID required.
 - [x] `apps/web/` static landing page (deploy-ready; subdomain TBD)
 - [x] `fixtures/golden/manifest.json` placeholder
@@ -274,7 +274,7 @@ The v0.3 synth sounds correct on every parameter and *also* sounds rendered. v0.
 
 The two voices reinforce each other. **The comedy is a side effect of taking the physics seriously, not the other way around.**
 
-The org's lineage already has both registers — `wittgenstein` is austere, but the canon includes Hundred Rabbits and Pauline Oliveros, which are not. The two-tier voice is native to `[p → q]`, just spread across two files.
+The lineage already has both registers — `wittgenstein` is austere, but the canon includes Hundred Rabbits and Pauline Oliveros, which are not. The two-tier voice is native to this project family, just spread across two files.
 
 ---
 

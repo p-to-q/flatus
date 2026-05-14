@@ -24,8 +24,8 @@
   <div class="page">
 
     <header class="masthead">
-      <a class="brand" href="https://www.ptoq.io/" aria-label="A [p → q] project"><span aria-hidden="true">[ p → q ]</span></a>
-      <span class="catalog"><span class="live-dot" id="live-dot" aria-hidden="true"></span><span id="live-label">booting</span> · spec 01 · flatus 0.1.0</span>
+      <span class="brand" aria-label="flatus">flatus</span>
+      <span class="catalog"><span class="live-dot" id="live-dot" aria-hidden="true"></span><span id="live-label">booting</span> · reference set · flatus 0.1.0</span>
     </header>
 
     <section class="hero">
@@ -60,9 +60,9 @@
       </p>
 
       <div class="cta-row">
-        <a id="download-cta" class="cta primary" href="https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3" data-state="idle">
+        <a id="download-cta" class="cta primary" href="https://github.com/p-to-q/flatus/releases/tag/v0.1.0" data-state="idle">
           <span class="cta-label">Download</span>
-          <span class="cta-meta" id="cta-meta">for macOS · Apple Silicon · v0.1.0-pre.3 · unsigned</span>
+          <span class="cta-meta" id="cta-meta">for macOS · Apple Silicon · v0.1.0 · unsigned</span>
         </a>
         <a class="cta ghost" href="#instrument">try it in your browser ↓</a>
       </div>
@@ -89,7 +89,7 @@
       </details>
 
       <p class="install-foot">
-        Once running, right-click the tray icon for settings (volume, personality, output, quiet hours). Quit from the same menu.
+        Once running, click the tray icon for the native menu. Open the fuller window from there whenever you want the longer personality view, onboarding, or recovery help.
       </p>
     </section>
 
@@ -117,17 +117,47 @@
 
         <fieldset class="ctrl ctrl-seed">
           <legend>Seed</legend>
-          <div class="seed-row">
-            <input id="seed" type="number" min="0" max="99999999" step="1" value="31" inputmode="numeric" />
-            <button type="button" id="seed-random" class="btn-mini" aria-label="Randomize seed">↻</button>
+          <div class="seed-field">
+            <input id="seed" type="number" min="0" max="99999999" step="1" value="31" inputmode="numeric" aria-label="seed" />
+            <button type="button" id="seed-random" class="seed-replay" aria-label="Randomize seed" title="Randomize seed">
+              <svg class="seed-replay-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path
+                  d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+                <polyline
+                  points="13.5 2 13.5 5 10.5 5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
           </div>
         </fieldset>
 
         <fieldset class="ctrl ctrl-cap">
           <legend>Output cap</legend>
           <div class="seg" role="radiogroup" aria-label="Output cap">
-            <label class="seg-opt"><input type="radio" name="cap" value="speakers" checked /><span>speakers · −6 dBFS</span></label>
-            <label class="seg-opt"><input type="radio" name="cap" value="headphones" /><span>headphones · −18 dBFS</span></label>
+            <label class="seg-opt">
+              <input type="radio" name="cap" value="speakers" checked />
+              <span class="seg-pill">
+                <span class="seg-name">speakers</span>
+                <span class="seg-meta">−6 dBFS</span>
+              </span>
+            </label>
+            <label class="seg-opt">
+              <input type="radio" name="cap" value="headphones" />
+              <span class="seg-pill">
+                <span class="seg-name">headphones</span>
+                <span class="seg-meta">−18 dBFS</span>
+              </span>
+            </label>
           </div>
         </fieldset>
       </div>
@@ -206,14 +236,12 @@
 
     <footer class="colophon">
       <nav class="colophon-nav" aria-label="Project links">
-        <a href="https://github.com/p-to-q/flatus">github.com/p-to-q/flatus</a>
-        <a href="https://github.com/p-to-q/flatus/blob/main/docs/ACOUSTICS.md">acoustics writeup</a>
+        <a href="https://github.com/p-to-q/flatus">source</a>
+        <a href="https://github.com/p-to-q/flatus/blob/main/docs/ACOUSTICS.md">acoustics</a>
         <a href="https://github.com/p-to-q/flatus/blob/main/README.md">readme</a>
         <a href="https://github.com/p-to-q/flatus/releases">releases</a>
-        <a href="https://www.ptoq.io/">[ p → q ]</a>
       </nav>
-      <p class="qed">Q.E.D.</p>
-      <p class="copy">© 2026 Wooden Computer Co., Ltd. · Apache-2.0</p>
+      <p class="copy">Apache-2.0 · unsigned macOS release</p>
     </footer>
   </div>
 

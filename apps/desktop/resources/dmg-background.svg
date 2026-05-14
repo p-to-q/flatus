@@ -1,56 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  flatus — DMG installer background, 540×380.
+
+  Reads as the formula [ flatus → Applications ]:
+
+    1. wordmark + tagline (italic display serif, centred)
+    2. two large brackets framing the icon row Finder draws at y=220
+    3. a chunky arrow between the two icons, same weight as the brackets
+
+  All chrome (catalog mark, version, instruction strip) is gone — the
+  icons themselves are the only "letters" inside the formula. Brackets
+  and arrow use the muted paper-ink colour (#5e5040), the same family
+  the desktop window and web landing already rely on for rules / muted
+  type, instead of pure black.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 380" role="img" aria-label="flatus — installer background">
   <defs>
-    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f7f1e3" />
-      <stop offset="1" stop-color="#efe7d2" />
+      <stop offset="1" stop-color="#ece2c6" />
     </linearGradient>
-    <radialGradient id="warm" cx="100%" cy="100%" r="80%">
-      <stop offset="0" stop-color="#ef7e57" stop-opacity="0.18" />
-      <stop offset="1" stop-color="#ef7e57" stop-opacity="0" />
-    </radialGradient>
+
     <filter id="grain" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="3" />
-      <feColorMatrix values="0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0.05 0" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" stitchTiles="stitch" />
+      <feColorMatrix values="0 0 0 0 0.10  0 0 0 0 0.09  0 0 0 0 0.07  0 0 0 0.035 0" />
       <feComposite in2="SourceGraphic" operator="in" />
     </filter>
   </defs>
 
-  <!-- paper background -->
+  <!-- canvas -->
   <rect width="540" height="380" fill="url(#paper)" />
-  <rect width="540" height="380" fill="url(#warm)" />
   <rect width="540" height="380" fill="#000" filter="url(#grain)" opacity="0.5" />
 
-  <!-- hairline rule near the top -->
-  <line x1="40" y1="56" x2="500" y2="56" stroke="#d9cfb7" stroke-width="1" />
+  <!-- wordmark -->
+  <text x="270" y="118"
+        font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif"
+        font-style="italic" font-size="54" letter-spacing="-1" fill="#1a1612" text-anchor="middle">flatus</text>
 
-  <!-- catalog mark top-left, version top-right -->
-  <text x="40" y="44" font-family="'Berkeley Mono', 'SF Mono', ui-monospace, monospace" font-size="11" fill="#8d836d" letter-spacing="1">
-    [ p → q ]
-  </text>
-  <text x="500" y="44" font-family="'Berkeley Mono', 'SF Mono', ui-monospace, monospace" font-size="11" fill="#8d836d" text-anchor="end" letter-spacing="0.5">
-    spec 01 · v0.1.0
-  </text>
+  <!-- tagline -->
+  <text x="270" y="142"
+        font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif"
+        font-style="italic" font-size="14" fill="#3a3128" text-anchor="middle">a small apparatus for moving air.</text>
 
-  <!-- wordmark, italic display serif, centered horizontally -->
-  <text x="270" y="118" font-family="'Charter', 'Iowan Old Style', 'Source Serif Pro', Cambria, Georgia, serif" font-style="italic" font-size="64" fill="#1a1612" text-anchor="middle">
-    flatus
-  </text>
-  <text x="270" y="146" font-family="'Charter', 'Iowan Old Style', 'Source Serif Pro', Cambria, Georgia, serif" font-style="italic" font-size="16" fill="#3a3128" text-anchor="middle">
-    a small apparatus for moving air.
-  </text>
+  <!-- [ flatus → Applications ]
+       Finder paints the two 128px icons at x=150 and x=390 (y=220).
+       Brackets sit just outside the icon column; the arrow centres the
+       gap between them. All three glyphs share the same muted ink so
+       the formula reads as one continuous mark. -->
+  <g fill="none" stroke="#5e5040" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+    <!-- left bracket [  -->
+    <polyline points="68,150 50,150 50,290 68,290" />
+    <!-- right bracket ]  -->
+    <polyline points="472,150 490,150 490,290 472,290" />
+  </g>
 
-  <!-- instruction strip near the bottom -->
-  <line x1="40" y1="316" x2="500" y2="316" stroke="#d9cfb7" stroke-width="1" />
-  <text x="270" y="338" font-family="'Berkeley Mono', 'SF Mono', ui-monospace, monospace" font-size="11" fill="#8d836d" text-anchor="middle" letter-spacing="0.5">
-    drag flatus into Applications · first launch needs right-click → Open · unsigned
-  </text>
-
-  <!-- subtle arc echoing the banner; placed centrally between the two icon slots -->
-  <g transform="translate(270 230)" opacity="0.55">
-    <circle r="3" cx="-30" cy="0" fill="#ef7e57" />
-    <circle r="4.5" cx="-10" cy="0" fill="#ef7e57" />
-    <circle r="3" cx="10" cy="0" fill="#ef7e57" />
-    <circle r="1.6" cx="28" cy="0" fill="#ef7e57" />
+  <!-- arrow shaft + chunky triangular head, ink-weight matched to the brackets -->
+  <g fill="#5e5040" stroke="none">
+    <rect x="232" y="217" width="60" height="6" rx="0" />
+    <polygon points="287,205 310,220 287,235" />
   </g>
 </svg>

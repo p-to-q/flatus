@@ -43,11 +43,11 @@ For an A/B with the pre-realism cut, the v0.3 archive sits alongside, byte-ident
 curl -fsSL https://flatus.vercel.app/install.sh | bash
 ```
 
-Resolves the latest pre-release on GitHub, downloads the DMG, copies `flatus.app` into `/Applications`, and clears the macOS browser-quarantine xattr — all in one go. The script is short; read it first if you'd rather not pipe a remote URL to bash: [`apps/web/install.sh`](apps/web/install.sh).
+Resolves the latest GitHub release, downloads the DMG, copies `flatus.app` into `/Applications`, and clears the macOS browser-quarantine xattr — all in one go. The script is short; read it first if you'd rather not pipe a remote URL to bash: [`apps/web/install.sh`](apps/web/install.sh).
 
 ### Option A′ — pre-built `.dmg` by hand
 
-Grab the **unsigned** `flatus_*.dmg` from the [latest pre-release](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
+Grab the **unsigned** `flatus_*.dmg` from the [latest release](https://github.com/p-to-q/flatus/releases/tag/v0.1.0) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
 
 Prefer to skip the DMG step? The same release also ships a `flatus-*.app.zip` — unzip and drag the `.app` into `/Applications/` yourself.
 
@@ -84,7 +84,7 @@ The compiled bundle lives at `target/release/bundle/macos/flatus.app` (workspace
 
 The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine.
 
-**One-liner (recommended).** Paste this into Terminal — it downloads the latest pre-release DMG, installs `flatus.app` into `/Applications`, and clears the quarantine xattr in one shot:
+**One-liner (recommended).** Paste this into Terminal — it downloads the latest DMG, installs `flatus.app` into `/Applications`, and clears the quarantine xattr in one shot:
 
 ```sh
 curl -fsSL https://flatus.vercel.app/install.sh | bash
@@ -106,17 +106,11 @@ The script is short and worth a look before piping it to bash: [`apps/web/instal
 UI-only path: open **System Settings → Privacy & Security**, scroll to the bottom, and click **Open Anyway** next to the "flatus.app was blocked" notice. Re-open the app and confirm.
 </details>
 
-After that, `flatus` runs as a menubar-only app: **no dock icon**, a small tray icon in your menubar.
+After that, `flatus` runs as a menubar-first app: **no dock icon**, a small tray icon in your menubar.
 
-- **Left-click the tray** → fart now.
-- **Right-click** (or ⌘-click) → settings (volume, personality, output, quiet hours).
-- **Quit** from the right-click menu.
-
-<p align="center">
-  <img src="docs/screenshots/desktop-popover.png" alt="flatus menubar settings popover — title, italic tagline, personality select (default), 100% volume slider, output headphones, quiet hours, and a prominent 'fart now' button" width="340" />
-  <br/>
-  <em><sub>the settings popover. right-click the menubar icon to open.</sub></em>
-</p>
+- **Click the tray** → the native menu (`Fart now`, `Show window`, `Quit`).
+- **Show window** → the fuller desktop surface for personality, output cap, seed preview, quiet hours, and first-launch help.
+- **Right-click** still works as a fallback menu.
 
 ## Use (CLI)
 
@@ -171,14 +165,17 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Status
 
-**v0.1.0-pre.3** — unsigned `.app` on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS 15+ needs a one-shot `xattr -cr /Applications/flatus.app` to clear the browser-quarantine xattr (see [First launch](#first-launch)). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.0-pre.3).
+**v0.1.0** — official first release, still unsigned on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS 15+ may still need a one-shot `xattr -cr /Applications/flatus.app` to clear the browser-quarantine xattr (see [First launch](#first-launch)). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.0).
 
 ## Docs
 
 - [`README.md`](README.md) — you are here
 - [`PLAN.md`](PLAN.md) — the internal plan (philosophy, architecture, milestones)
 - [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) — the citation-backed plausibility writeup
+- [`docs/AUDIO_BASELINE.md`](docs/AUDIO_BASELINE.md) — the current reference set, parity checks, and manual signoff flow
 - [`docs/REALISM.md`](docs/REALISM.md) — v0.4 research: why v0.3 sounded rendered + which three knobs we turned
+- [`docs/PRODUCT_BACKLOG.md`](docs/PRODUCT_BACKLOG.md) — post-launch cleanup, interaction, and product-quality backlog
+- [`docs/PLUGIN_RESEARCH.md`](docs/PLUGIN_RESEARCH.md) — cadence, optional extensions, and plugin-shape research for the next phase
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — conventions
 - [`docs/marks/`](docs/marks/) — brand kit (wordmark, signature, monogram, OG card)
 
@@ -199,5 +196,3 @@ SVG sources under [`docs/marks/`](docs/marks/) along with their README. The OG c
 ## License
 
 Apache-2.0.
-
-A `[p → q]` project. We're interested in the arrow.

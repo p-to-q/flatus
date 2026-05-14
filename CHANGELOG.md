@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.1.0] — 2026-05-14
+
+### Changed
+- **Formal first release.** Versioning, release links, website CTA metadata, and desktop bundle metadata now point at `v0.1.0` instead of the previous pre-release tags.
+- **Desktop shell semantics are now explicit.** The menubar icon opens the native tray menu; `Show window` opens the fuller desktop surface. README, web install copy, and engineering docs were updated to match the actual shipped behavior.
+- **Manual desktop preview is now a coherent reference surface.** The desktop window uses the same three-event preview structure as the website instrument, keeps shuffle deterministic for the current seed, and resets to each personality's reference seed when you switch voices.
+
+### Fixed
+- **First-launch state can now complete.** The main window now has a real onboarding completion path instead of a persistent "first launch" state that reopened on every start.
+- **Desktop no longer depends on a remote UI font at runtime.** The app window now uses local system UI fonts so the bundled `.app` remains visually stable offline.
+- **Audio baseline docs now distinguish fixture parity from interactive preview parity.** This closes the gap where `verify_audio_baseline.sh` could pass while the desktop/manual listening reference still drifted from the website instrument.
+
 ## [v0.1.0-pre.3] — 2026-05-13
 
 ### Added (paper-aesthetic visuals + shippable DMG)
@@ -25,7 +37,7 @@
 - Download CTA detects platform/arch (UA + WebGL renderer heuristic), links to the latest release asset, and reveals an inline 4-step first-launch stepper on click.
 - Live web prototype deployed at `https://flatus.vercel.app/` via `vercel.json` + `scripts/deploy-vercel.sh`. A redundant `.github/workflows/pages.yml` mirror also ships `apps/web/` to GitHub Pages on every push to main.
 - `fart --demo <DIR>` renders all four personalities to a folder and prints a summary table; `fart --list-personalities` now interleaves one-line descriptions with the rhythm params.
-- DMG installer: bundle.targets now produces `flatus_0.1.0_aarch64.dmg` with a custom 540×380 background (paper wordmark, hairline frame, `[ p → q ] · spec 01 · v0.1.0`, drag hint along the bottom).
+- DMG installer: bundle.targets now produces `flatus_0.1.0_aarch64.dmg` with a custom 540×380 background (paper wordmark, `FLATUS` catalog mark, spec label, drag hint along the bottom).
 - Template tray icon (`apps/desktop/src-tauri/icons/tray-template.png`) — black-alpha three-grain silhouette, tints to match menubar.
 - `docs/banner.png` rasterised from the SVG so the README renders the `feGaussianBlur` bloom and `feTurbulence` paper grain that GitHub strips from inline SVG.
 

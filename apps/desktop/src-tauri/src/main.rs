@@ -1,43 +1,59 @@
-// flatus — Tauri v2 menubar shell.
+// flatus — Tauri v2 desktop shell.
 //
-// Architecture commitments (mirroring PLAN.md §5):
-//   - `ActivationPolicy::Accessory` → no dock icon, tray-only.
-//   - Left-click on tray  = fire a fart now (the OpenWhip move).
-//   - Right-click on tray = open/toggle the settings popover.
-//   - Synthesis runs in this Rust process via `fart-synth` + `cpal`.
-//     The webview is UI only; it calls `invoke("fart_now", …)` and Rust does the work.
+// Architecture:
+//   - `ActivationPolicy::Accessory` → no dock icon, tray-first.
+//   - Tray menu opens actions; the main webview window is the full UI.
+//   - Synthesis runs in Rust via `fart-synth` + `cpal`.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod idle;
 
+use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{SampleFormat, StreamConfig};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::{
-    menu::{Menu, MenuItem},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    menu::{Menu, MenuItem, PredefinedMenuItem},
+    tray::TrayIconBuilder,
+    window::Color,
     AppHandle, Manager,
 };
+use time::OffsetDateTime;
 
+use fart_synth::wav::write_wav_to_vec;
 use fart_synth::{
     personalities::{lookup_personality, sample_params, PERSONALITIES},
     pressure::{ActivitySignal, Pressure, TickResult},
     prng::Mulberry32,
-    render, safety, RenderConfig,
+    render, safety, RenderConfig, VERSION,
 };
 
-// -------------------- Settings --------------------
+const SETTINGS_VERSION: u32 = 1;
+const SETTINGS_FILE: &str = "settings.json";
+const AUDIO_BASELINE: &str = "fixtures-v0.4 + web-instrument-reference";
+/// Matches `apps/web/main.js` — three short events with gaps so manual play
+/// feels like the in-browser instrument, not a single blink.
+const SESSION_EVENTS: usize = 3;
+const SESSION_GAP_MS: u32 = 280;
+const DEFAULT_PREVIEW_PRESSURE: f32 = 0.6;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Settings {
+    version: u32,
     personality: String,
+    /// "single" (always play the selected personality) or "shuffle" (pick one
+    /// of the four personalities at random per fire). Manual preview/play and
+    /// automatic playback both honor this mode. Defaults to "single".
+    #[serde(default = "default_play_mode")]
+    play_mode: String,
     /// 0–1 volume on top of the engineering cap.
     volume: f32,
     /// "speakers" or "headphones".
@@ -45,37 +61,335 @@ struct Settings {
     /// Hour 0–23 for quiet-hours start. `None` = disabled.
     quiet_start: Option<u8>,
     quiet_end: Option<u8>,
+    onboarding_completed: bool,
+    /// When false, automatic ticks still run but no sound plays on `TickResult::Fart`.
+    #[serde(default = "default_auto_play_enabled")]
+    auto_play_enabled: bool,
+    /// PRNG seed for the next manual `fart_now` / preview session (`seed`,
+    /// `seed+1`, `seed+2` across the three events). Rolled after each manual fire.
+    #[serde(default = "default_manual_seed")]
+    manual_seed: u64,
+}
+
+fn default_manual_seed() -> u64 {
+    17
+}
+
+fn default_auto_play_enabled() -> bool {
+    true
+}
+
+fn default_play_mode() -> String {
+    "single".to_string()
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            version: SETTINGS_VERSION,
             personality: "default".to_string(),
+            play_mode: default_play_mode(),
             volume: 1.0,
-            output: "headphones".to_string(), // safer default — see PLAN.md §6
+            output: "speakers".to_string(),
             quiet_start: None,
             quiet_end: None,
+            onboarding_completed: false,
+            auto_play_enabled: default_auto_play_enabled(),
+            manual_seed: default_manual_seed(),
         }
     }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct PersonalityProfile {
+    name: String,
+    headline: &'static str,
+    reference_seed: u64,
+    rhythm: &'static str,
+    detail_lines: Vec<&'static str>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct AppSnapshot {
+    settings: Settings,
+    audio_baseline: &'static str,
+    version: &'static str,
+    profiles: Vec<PersonalityProfile>,
 }
 
 #[derive(Clone)]
 struct AppState {
     settings: Arc<Mutex<Settings>>,
     pressure: Arc<Mutex<Pressure>>,
+    settings_path: Arc<PathBuf>,
 }
 
 impl AppState {
-    fn new() -> Self {
-        let personality = &PERSONALITIES[1]; // default
+    fn new(settings: Settings, settings_path: PathBuf) -> Self {
+        let personality = lookup_personality(&settings.personality).unwrap_or(&PERSONALITIES[1]);
         Self {
-            settings: Arc::new(Mutex::new(Settings::default())),
+            settings: Arc::new(Mutex::new(settings)),
             pressure: Arc::new(Mutex::new(Pressure::new(personality, seed_now()))),
+            settings_path: Arc::new(settings_path),
         }
+    }
+
+    fn save_settings(&self, settings: &Settings) -> Result<()> {
+        save_settings(&self.settings_path, settings)
     }
 }
 
-// -------------------- Invoke handlers --------------------
+#[derive(Clone, Copy)]
+struct RenderPlan {
+    sample_rate_hz: u32,
+    output_gain_dbfs: f32,
+    volume: f32,
+}
+
+fn sanitize_settings(mut settings: Settings) -> Settings {
+    settings.version = SETTINGS_VERSION;
+    if lookup_personality(&settings.personality).is_none() {
+        settings.personality = Settings::default().personality;
+    }
+    settings.play_mode = match settings.play_mode.as_str() {
+        "shuffle" => "shuffle".to_string(),
+        _ => "single".to_string(),
+    };
+    settings.volume = settings.volume.clamp(0.0, 1.0);
+    settings.output = match settings.output.as_str() {
+        "headphones" => "headphones".to_string(),
+        _ => "speakers".to_string(),
+    };
+    settings.quiet_start = settings.quiet_start.map(|h| h.min(23));
+    settings.quiet_end = settings.quiet_end.map(|h| h.min(23));
+    // Keep within JS `Number` safe integer range for the webview UI.
+    settings.manual_seed %= 1_000_000_000;
+    settings
+}
+
+fn settings_path(app: &AppHandle) -> Result<PathBuf> {
+    let dir = app
+        .path()
+        .app_config_dir()
+        .context("resolving app config directory")?;
+    fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
+    Ok(dir.join(SETTINGS_FILE))
+}
+
+fn load_settings(path: &PathBuf) -> Settings {
+    fs::read_to_string(path)
+        .ok()
+        .and_then(|raw| serde_json::from_str::<Settings>(&raw).ok())
+        .map(sanitize_settings)
+        .unwrap_or_default()
+}
+
+fn save_settings(path: &PathBuf, settings: &Settings) -> Result<()> {
+    let pretty = serde_json::to_string_pretty(settings)?;
+    fs::write(path, pretty + "\n").with_context(|| format!("writing {}", path.display()))
+}
+
+fn personality_profiles() -> Vec<PersonalityProfile> {
+    vec![
+        PersonalityProfile {
+            name: "polite-cough".to_string(),
+            headline: "short, dry, plausibly deniable.",
+            reference_seed: reference_seed_for_personality("polite-cough"),
+            rhythm: "usually sparse, often under half a second, leaves before anyone makes eye contact.",
+            detail_lines: vec![
+                "A brief little throat-clearer with very little aftertaste.",
+                "Best when the room needs a rumor, not an announcement.",
+                "Small enough to pass as furniture if your luck holds.",
+            ],
+        },
+        PersonalityProfile {
+            name: "default".to_string(),
+            headline: "the canon. wet enough, not so wet.",
+            reference_seed: reference_seed_for_personality("default"),
+            rhythm: "the best baseline for everyday cadence and the reference voice for signoff.",
+            detail_lines: vec![
+                "Balanced body, sensible pacing, enough texture to feel lived in.",
+                "The one that should make the product make sense to a first-time listener.",
+                "If a new build sounds wrong here, we stop and investigate.",
+            ],
+        },
+        PersonalityProfile {
+            name: "biblical".to_string(),
+            headline: "slow, low, devastating.",
+            reference_seed: reference_seed_for_personality("biblical"),
+            rhythm: "rare, heavy, and comfortable taking its time once it commits.",
+            detail_lines: vec![
+                "The long-form disaster voice. Give it room.",
+                "Large cavity, lower center, longer tail, less apology.",
+                "This one defines the upper bound of acceptable absurdity.",
+            ],
+        },
+        PersonalityProfile {
+            name: "silent-but-deadly".to_string(),
+            headline: "exactly what it says.",
+            reference_seed: reference_seed_for_personality("silent-but-deadly"),
+            rhythm: "more active, more crackle, and a little less interested in social harmony.",
+            detail_lines: vec![
+                "Fast onset, dirtier texture, and the most variable social outcome.",
+                "Useful for testing how much motion the UI can tolerate before it feels busy.",
+                "A good reminder that the display layer can be playful while the synth stays deterministic.",
+            ],
+        },
+    ]
+}
+
+fn reference_seed_for_personality(personality_name: &str) -> u64 {
+    match personality_name {
+        "polite-cough" => 7,
+        "default" => 17,
+        "biblical" => 31,
+        "silent-but-deadly" => 9,
+        _ => 17,
+    }
+}
+
+/// Names of canonical personalities, in the order shown in the UI. Used to
+/// pick a random voice in shuffle mode.
+const CANONICAL_PERSONALITIES: &[&str] =
+    &["polite-cough", "default", "biblical", "silent-but-deadly"];
+
+/// Pick the personality for one fire.
+///
+/// Both manual (`fart_now`) and automatic (`spawn_pressure_loop`) fires go
+/// through here so `single` / `shuffle` stays consistent across surfaces:
+///
+/// - `single` — always the personality the user picked.
+/// - `shuffle` — uniform-random choice across the four canonical personalities.
+
+fn select_fire_voice(settings: &Settings, rng_seed: u64) -> String {
+    if settings.play_mode == "shuffle" {
+        let mut rng = Mulberry32::new(rng_seed);
+        let idx = (rng.next_u32() as usize) % CANONICAL_PERSONALITIES.len();
+        CANONICAL_PERSONALITIES[idx].to_string()
+    } else {
+        settings.personality.clone()
+    }
+}
+
+fn build_render_plan(settings: &Settings, _pressure: f32) -> RenderPlan {
+    let headphones = settings.output == "headphones";
+    RenderPlan {
+        sample_rate_hz: safety::SAMPLE_RATE_HZ,
+        output_gain_dbfs: if headphones {
+            safety::HEADPHONE_DBFS
+        } else {
+            safety::MAX_OUTPUT_DBFS
+        },
+        volume: settings.volume.clamp(0.0, 1.0),
+    }
+}
+
+fn render_samples_for_settings(
+    settings: &Settings,
+    pressure: f32,
+    seed: u64,
+) -> Result<(Vec<f32>, RenderPlan)> {
+    let personality = lookup_personality(&settings.personality)
+        .ok_or_else(|| anyhow::anyhow!("unknown personality: {}", settings.personality))?;
+    let mut rng = Mulberry32::new(seed);
+    let params = sample_params(personality, &mut rng, pressure.clamp(0.0, 1.0));
+    let plan = build_render_plan(settings, pressure);
+    let cfg = RenderConfig {
+        sample_rate_hz: plan.sample_rate_hz,
+        output_gain_dbfs: plan.output_gain_dbfs,
+    };
+    let mut samples = render(&params, &cfg);
+    if plan.volume <= 0.0 {
+        samples.fill(0.0);
+    } else if plan.volume < 1.0 {
+        for sample in &mut samples {
+            *sample *= plan.volume;
+        }
+    }
+    Ok((samples, plan))
+}
+
+/// Three-event session with silent gaps — mirrors `apps/web/main.js` `renderSession`.
+///
+/// `base_seed` overrides `base_settings.manual_seed`, so the preview/play paths
+/// can render any seed in real time without first persisting it. The three
+/// events use `base_seed`, `base_seed+1`, `base_seed+2`.
+fn render_manual_session(
+    base_settings: &Settings,
+    personality_name: &str,
+    base_seed: u64,
+) -> Result<(Vec<f32>, RenderPlan)> {
+    let sr = safety::SAMPLE_RATE_HZ;
+    let gap_samples =
+        usize::try_from(u64::from(SESSION_GAP_MS) * u64::from(sr) / 1000).unwrap_or(0);
+
+    let mut merged: Vec<f32> = Vec::new();
+    let mut last_plan: Option<RenderPlan> = None;
+
+    for i in 0..SESSION_EVENTS {
+        let mut s = base_settings.clone();
+        s.personality = personality_name.to_string();
+        let seed = base_seed.wrapping_add(i as u64);
+        let (mut block, plan) = render_samples_for_settings(&s, DEFAULT_PREVIEW_PRESSURE, seed)?;
+        last_plan = Some(plan);
+        if i > 0 {
+            merged.resize(merged.len().saturating_add(gap_samples), 0.0);
+        }
+        merged.append(&mut block);
+    }
+
+    let plan = last_plan.ok_or_else(|| anyhow::anyhow!("empty session"))?;
+    Ok((merged, plan))
+}
+
+fn quiet_hours_active(settings: &Settings, now_hour: u8) -> bool {
+    match (settings.quiet_start, settings.quiet_end) {
+        (Some(start), Some(end)) if start == end => true,
+        (Some(start), Some(end)) if start < end => (start..end).contains(&now_hour),
+        (Some(start), Some(end)) => now_hour >= start || now_hour < end,
+        _ => false,
+    }
+}
+
+fn current_local_hour() -> Option<u8> {
+    OffsetDateTime::now_local().ok().map(|dt| dt.hour())
+}
+
+#[tauri::command]
+fn main_window_hide(app: AppHandle) -> Result<(), String> {
+    app.get_webview_window("main")
+        .ok_or_else(|| "no main window".to_string())?
+        .hide()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn main_window_minimize(app: AppHandle) -> Result<(), String> {
+    app.get_webview_window("main")
+        .ok_or_else(|| "no main window".to_string())?
+        .minimize()
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn main_window_toggle_maximize(app: AppHandle) -> Result<(), String> {
+    let w = app
+        .get_webview_window("main")
+        .ok_or_else(|| "no main window".to_string())?;
+    if w.is_maximized().map_err(|e| e.to_string())? {
+        w.unmaximize().map_err(|e| e.to_string())
+    } else {
+        w.maximize().map_err(|e| e.to_string())
+    }
+}
+
+fn show_main_window(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
 
 #[tauri::command]
 fn get_settings(state: tauri::State<AppState>) -> Settings {
@@ -83,52 +397,111 @@ fn get_settings(state: tauri::State<AppState>) -> Settings {
 }
 
 #[tauri::command]
-fn set_settings(new_settings: Settings, state: tauri::State<AppState>) {
-    *state.settings.lock() = new_settings;
+fn get_app_snapshot(state: tauri::State<AppState>) -> AppSnapshot {
+    AppSnapshot {
+        settings: state.settings.lock().clone(),
+        audio_baseline: AUDIO_BASELINE,
+        version: VERSION,
+        profiles: personality_profiles(),
+    }
 }
 
 #[tauri::command]
-fn list_personalities() -> Vec<String> {
-    PERSONALITIES.iter().map(|p| p.name.to_string()).collect()
+fn set_settings(new_settings: Settings, state: tauri::State<AppState>) -> Result<Settings, String> {
+    let sanitized = sanitize_settings(new_settings);
+    state
+        .save_settings(&sanitized)
+        .map_err(|err| format!("could not save settings: {err}"))?;
+    *state.settings.lock() = sanitized.clone();
+    Ok(sanitized)
 }
 
-/// Fire a fart immediately, regardless of pressure. Returns the personality used.
+#[tauri::command]
+fn list_personality_profiles() -> Vec<PersonalityProfile> {
+    personality_profiles()
+}
+
 #[tauri::command]
 fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
-    let (personality_name, dbfs) = {
-        let s = state.settings.lock();
-        let dbfs = if s.output == "headphones" {
-            safety::HEADPHONE_DBFS
-        } else {
-            safety::MAX_OUTPUT_DBFS
-        };
-        (s.personality.clone(), dbfs)
-    };
-
-    let personality = lookup_personality(&personality_name)
-        .ok_or_else(|| format!("unknown personality: {}", personality_name))?;
+    let app = state.inner().clone();
+    let settings = app.settings.lock().clone();
+    let chosen_name = select_fire_voice(&settings, settings.manual_seed);
 
     {
-        let mut p = state.pressure.lock();
-        let _ = p.force_fire(personality);
+        let personality = lookup_personality(&chosen_name)
+            .ok_or_else(|| format!("unknown personality: {chosen_name}"))?;
+        let mut pressure = app.pressure.lock();
+        let _ = pressure.force_fire(personality);
     }
 
-    let mut rng = Mulberry32::new(seed_now());
-    let params = sample_params(personality, &mut rng, 0.7);
-    let cfg = RenderConfig {
-        sample_rate_hz: safety::SAMPLE_RATE_HZ,
-        output_gain_dbfs: dbfs,
-    };
-    let samples = render(&params, &cfg);
-
+    let (samples, plan) = render_manual_session(&settings, &chosen_name, settings.manual_seed)
+        .map_err(|e| format!("render failed: {e}"))?;
+    let sample_rate_hz = plan.sample_rate_hz;
     thread::spawn(move || {
-        let _ = play_blocking(samples, cfg.sample_rate_hz);
+        let _ = play_blocking(samples, sample_rate_hz);
     });
 
-    Ok(personality_name)
+    let next_seed = seed_now() % 1_000_000_000;
+    {
+        let mut g = app.settings.lock();
+        g.manual_seed = next_seed;
+        let to_save = g.clone();
+        drop(g);
+        app.save_settings(&to_save)
+            .map_err(|e| format!("could not save settings: {e}"))?;
+    }
+
+    Ok(chosen_name)
 }
 
-// -------------------- Audio playback (cpal, same shape as the CLI) --------------------
+/// Real-time preview render. `seed` overrides the persisted `manual_seed` so
+/// the frontend can show the waveform for the seed currently in the input
+/// field without first writing it to disk. When `seed` is `None`, the
+/// persisted `manual_seed` is used (matches what `fart_now` would play).
+#[tauri::command]
+fn render_preview_wav(seed: Option<u64>, state: tauri::State<AppState>) -> Result<Vec<u8>, String> {
+    let settings = state.settings.lock().clone();
+    let base_seed = seed.unwrap_or(settings.manual_seed);
+    let name = select_fire_voice(&settings, base_seed);
+    let (merged, plan) =
+        render_manual_session(&settings, &name, base_seed).map_err(|e| e.to_string())?;
+    Ok(write_wav_to_vec(&merged, plan.sample_rate_hz))
+}
+
+#[tauri::command]
+fn show_main_window_command(app: AppHandle) {
+    show_main_window(&app);
+}
+
+#[tauri::command]
+fn quit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn complete_onboarding(state: tauri::State<AppState>) -> Result<(), String> {
+    let mut settings = state.settings.lock().clone();
+    settings.onboarding_completed = true;
+    settings = sanitize_settings(settings);
+    state
+        .save_settings(&settings)
+        .map_err(|err| format!("could not save onboarding state: {err}"))?;
+    *state.settings.lock() = settings;
+    Ok(())
+}
+
+#[tauri::command]
+fn reset_onboarding(state: tauri::State<AppState>, app: AppHandle) -> Result<(), String> {
+    let mut settings = state.settings.lock().clone();
+    settings.onboarding_completed = false;
+    settings = sanitize_settings(settings);
+    state
+        .save_settings(&settings)
+        .map_err(|err| format!("could not reset onboarding: {err}"))?;
+    *state.settings.lock() = settings;
+    show_main_window(&app);
+    Ok(())
+}
 
 fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
     let host = cpal::default_host();
@@ -170,6 +543,22 @@ fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
                     feed(&mono, &mut cursor, device_channels, &mut tmp);
                     for (o, s) in out.iter_mut().zip(tmp.iter()) {
                         *o = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+                    }
+                },
+                err_fn,
+                None,
+            )?
+        }
+        SampleFormat::U16 => {
+            let mono = mono.clone();
+            device.build_output_stream(
+                &config,
+                move |out: &mut [u16], _| {
+                    let mut tmp = vec![0.0_f32; out.len()];
+                    feed(&mono, &mut cursor, device_channels, &mut tmp);
+                    for (o, s) in out.iter_mut().zip(tmp.iter()) {
+                        let v = (s.clamp(-1.0, 1.0) * 0.5 + 0.5) * u16::MAX as f32;
+                        *o = v as u16;
                     }
                 },
                 err_fn,
@@ -228,13 +617,6 @@ fn seed_now() -> u64 {
         .unwrap_or(0xc0ff_eeee_c0ff_eeee)
 }
 
-// -------------------- Pressure background loop --------------------
-
-/// "Active" = HID input within this many seconds. Long enough that brief
-/// reading pauses don't toggle the bonus; short enough that walking away
-/// cools the pressure rate quickly.
-const ACTIVE_THRESHOLD_SECS: u64 = 60;
-
 fn spawn_pressure_loop(app: AppHandle) {
     let state = app.state::<AppState>().inner().clone();
     thread::spawn(move || {
@@ -242,125 +624,219 @@ fn spawn_pressure_loop(app: AppHandle) {
         loop {
             thread::sleep(Duration::from_secs(1));
             let now = std::time::Instant::now();
-            let dt = now.duration_since(last).as_secs_f32();
+            let dt_raw = now.duration_since(last).as_secs_f32();
             last = now;
 
-            let (personality_name, dbfs) = {
-                let s = state.settings.lock();
-                let dbfs = if s.output == "headphones" {
-                    safety::HEADPHONE_DBFS
-                } else {
-                    safety::MAX_OUTPUT_DBFS
-                };
-                (s.personality.clone(), dbfs)
-            };
-            let Some(personality) = lookup_personality(&personality_name) else {
+            let settings = state.settings.lock().clone();
+            let Some(personality) = lookup_personality(&settings.personality) else {
                 continue;
             };
 
-            // Real macOS activity detection via `IOHIDSystem`'s `HIDIdleTime`
-            // (see `idle.rs`). Platforms without an implementation report
-            // `None`, which falls back to the baseline rate (inactive).
+            let dt = dt_raw;
+
             let activity = ActivitySignal {
-                user_is_active: idle::user_idle_secs().is_some_and(|s| s < ACTIVE_THRESHOLD_SECS),
+                user_is_active: idle::user_idle_secs().is_some_and(|s| s < 60),
             };
 
             let result = state.pressure.lock().tick(dt, activity, personality);
+            // The pressure model decides *when* to fire; the chosen
+            // personality plus render settings decide *what* it sounds like.
             if let TickResult::Fart { pressure } = result {
-                let mut rng = Mulberry32::new(seed_now());
-                let params = sample_params(personality, &mut rng, pressure);
-                let cfg = RenderConfig {
-                    sample_rate_hz: safety::SAMPLE_RATE_HZ,
-                    output_gain_dbfs: dbfs,
+                if !settings.auto_play_enabled {
+                    continue;
+                }
+                if current_local_hour().is_some_and(|hour| quiet_hours_active(&settings, hour)) {
+                    continue;
+                }
+                let fire_seed = seed_now();
+                let chosen_name = select_fire_voice(&settings, fire_seed);
+                let render_settings = Settings {
+                    personality: chosen_name,
+                    ..settings.clone()
                 };
-                let samples = render(&params, &cfg);
-                let _ = play_blocking(samples, cfg.sample_rate_hz);
+                if let Ok((samples, plan)) =
+                    render_samples_for_settings(&render_settings, pressure, fire_seed)
+                {
+                    let _ = play_blocking(samples, plan.sample_rate_hz);
+                }
             }
         }
     });
 }
 
-// -------------------- Tray + setup --------------------
+fn build_tray_menu(app: &AppHandle) -> Result<Menu<tauri::Wry>> {
+    let item_show = MenuItem::with_id(app, "open_main", "Show window", true, None::<&str>)?;
+    let sep1 = PredefinedMenuItem::separator(app)?;
+    let item_fart = MenuItem::with_id(app, "fart_now", "Fart now", true, None::<&str>)?;
+    let sep2 = PredefinedMenuItem::separator(app)?;
+    let item_quit = MenuItem::with_id(app, "quit", "Quit flatus", true, Some("Cmd+Q"))?;
+    Ok(Menu::with_items(
+        app,
+        &[&item_show, &sep1, &item_fart, &sep2, &item_quit],
+    )?)
+}
 
 fn main() {
     tauri::Builder::default()
-        .manage(AppState::new())
-        .invoke_handler(tauri::generate_handler![
-            get_settings,
-            set_settings,
-            list_personalities,
-            fart_now,
-        ])
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            // Settings window starts hidden; we toggle it from the tray.
-            if let Some(w) = app.get_webview_window("settings") {
-                let _ = w.hide();
-            }
+            let settings_path = settings_path(&app.handle())?;
+            let settings = load_settings(&settings_path);
+            save_settings(&settings_path, &settings)?;
+            app.manage(AppState::new(settings.clone(), settings_path));
 
-            // Tray menu (shown on right-click and via the keyboard shortcut).
-            let item_fart = MenuItem::with_id(app, "fart_now", "Fart now", true, None::<&str>)?;
-            let item_settings =
-                MenuItem::with_id(app, "open_settings", "Settings…", true, None::<&str>)?;
-            let item_quit = MenuItem::with_id(app, "quit", "Quit flatus", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&item_fart, &item_settings, &item_quit])?;
-
+            let menu = build_tray_menu(&app.handle())?;
+            let handle = app.handle().clone();
+            // Left-click drops the native menu (the "F · ⋯" feel the brand
+            // wants). The menu's "Show window" item is the only path to the
+            // big surface; there is no longer a webview popover.
             let _tray = TrayIconBuilder::with_id("main")
-                .icon(tauri::include_image!("icons/icon.png"))
+                .icon(tauri::include_image!("icons/tray-template@2x.png"))
                 .icon_as_template(true)
                 .menu(&menu)
-                .show_menu_on_left_click(false)
+                .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "fart_now" => {
                         let state: tauri::State<AppState> = app.state();
                         let _ = fart_now(state);
                     }
-                    "open_settings" => toggle_settings(app),
-                    "quit" => {
-                        app.exit(0);
-                    }
+                    "open_main" => show_main_window(app),
+                    "quit" => app.exit(0),
                     _ => {}
-                })
-                .on_tray_icon_event(|tray, event| {
-                    if let TrayIconEvent::Click {
-                        button,
-                        button_state,
-                        ..
-                    } = event
-                    {
-                        if button_state == MouseButtonState::Up {
-                            match button {
-                                MouseButton::Left => {
-                                    let app = tray.app_handle().clone();
-                                    let state: tauri::State<AppState> = app.state();
-                                    let _ = fart_now(state);
-                                }
-                                MouseButton::Right => toggle_settings(tray.app_handle()),
-                                _ => {}
-                            }
-                        }
-                    }
                 })
                 .build(app)?;
 
-            spawn_pressure_loop(app.handle().clone());
+            if let Some(main) = handle.get_webview_window("main") {
+                let _ = main.set_shadow(true);
+                let _ = main.set_background_color(Some(Color(0, 0, 0, 0)));
+                let _ = main.hide();
+            }
 
+            if !settings.onboarding_completed {
+                show_main_window(&handle);
+            }
+
+            spawn_pressure_loop(handle);
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            get_settings,
+            get_app_snapshot,
+            set_settings,
+            list_personality_profiles,
+            fart_now,
+            render_preview_wav,
+            main_window_hide,
+            main_window_minimize,
+            main_window_toggle_maximize,
+            show_main_window_command,
+            quit_app,
+            complete_onboarding,
+            reset_onboarding,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
-fn toggle_settings(app: &AppHandle) {
-    if let Some(w) = app.get_webview_window("settings") {
-        let visible = w.is_visible().unwrap_or(false);
-        if visible {
-            let _ = w.hide();
-        } else {
-            let _ = w.show();
-            let _ = w.set_focus();
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quiet_hours_supports_cross_midnight_ranges() {
+        let settings = Settings {
+            quiet_start: Some(22),
+            quiet_end: Some(7),
+            ..Settings::default()
+        };
+        assert!(quiet_hours_active(&settings, 23));
+        assert!(quiet_hours_active(&settings, 3));
+        assert!(!quiet_hours_active(&settings, 12));
+    }
+
+    #[test]
+    fn render_plan_honors_output_and_volume() {
+        let settings = Settings {
+            output: "speakers".to_string(),
+            volume: 0.35,
+            ..Settings::default()
+        };
+        let plan = build_render_plan(&settings, 0.8);
+        assert_eq!(plan.output_gain_dbfs, safety::MAX_OUTPUT_DBFS);
+        assert!((plan.volume - 0.35).abs() < 1e-6);
+    }
+
+    #[test]
+    fn sanitize_settings_restores_supported_personality() {
+        let settings = Settings {
+            personality: "mystery".to_string(),
+            volume: 9.0,
+            output: "sideways".to_string(),
+            quiet_start: Some(99),
+            quiet_end: Some(24),
+            ..Settings::default()
+        };
+        let sanitized = sanitize_settings(settings);
+        assert_eq!(sanitized.personality, "default");
+        // Unknown output strings now fall back to "speakers" (the documented
+        // default), not "headphones" — that earlier behaviour silently
+        // halved the volume on legacy / corrupted settings files.
+        assert_eq!(sanitized.output, "speakers");
+        assert_eq!(sanitized.volume, 1.0);
+        assert_eq!(sanitized.quiet_start, Some(23));
+        assert_eq!(sanitized.quiet_end, Some(23));
+    }
+
+    #[test]
+    fn sanitize_settings_normalises_play_mode() {
+        let mut s = Settings::default();
+        s.play_mode = "garbage".to_string();
+        assert_eq!(sanitize_settings(s).play_mode, "single");
+
+        let mut s = Settings::default();
+        s.play_mode = "shuffle".to_string();
+        assert_eq!(sanitize_settings(s).play_mode, "shuffle");
+    }
+
+    #[test]
+    fn select_fire_voice_single_uses_selected_personality() {
+        let s = Settings {
+            personality: "biblical".to_string(),
+            play_mode: "single".to_string(),
+            ..Settings::default()
+        };
+        for seed in [1, 7, 42, 0xdead_beef] {
+            let name = select_fire_voice(&s, seed);
+            assert_eq!(name, "biblical");
         }
+    }
+
+    #[test]
+    fn select_fire_voice_shuffle_picks_only_canonical_personalities() {
+        let s = Settings {
+            play_mode: "shuffle".to_string(),
+            ..Settings::default()
+        };
+        let mut hits = std::collections::HashSet::new();
+        for seed in 0..1024_u64 {
+            let name = select_fire_voice(&s, seed.wrapping_mul(0x9E37_79B9));
+            assert!(
+                CANONICAL_PERSONALITIES.contains(&name.as_str()),
+                "shuffle picked unknown personality `{name}`",
+            );
+            hits.insert(name);
+        }
+        // Across 1024 seeds we should reach all four personalities.
+        assert_eq!(hits.len(), CANONICAL_PERSONALITIES.len());
+    }
+
+    #[test]
+    fn reference_seed_matches_web_reference_values() {
+        assert_eq!(reference_seed_for_personality("polite-cough"), 7);
+        assert_eq!(reference_seed_for_personality("default"), 17);
+        assert_eq!(reference_seed_for_personality("biblical"), 31);
+        assert_eq!(reference_seed_for_personality("silent-but-deadly"), 9);
     }
 }

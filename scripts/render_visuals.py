@@ -19,7 +19,7 @@ Visual language (mirrors apps/web/style.css light palette):
   - fingerprint paper grain  two-octave fractal noise, ink overlay
   - soft bloom on data layers
   - personality labels in Charter / Iowan italic
-  - small-caps mono frame: [ p → q ] · spec 01 · flatus 0.1.0
+  - small-caps mono frame: FLATUS · spec 01 · flatus 0.1.0
 
 Run from the repo root:
   python3 scripts/render_visuals.py
@@ -186,7 +186,7 @@ def render_waveforms_all() -> None:
     # frame header
     svg.append(
         f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
+        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">FLATUS</text>'
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
@@ -345,7 +345,7 @@ def render_spectrogram_biblical() -> None:
     # frame header
     svg.append(
         f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>'
+        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">FLATUS</text>'
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
@@ -715,13 +715,10 @@ def render_og_card() -> None:
     svg.append("</defs>")
     svg.extend(_paper_canvas_rect(W, H))
 
-    # [ p → q ] motif top-left
+    # flatus mark top-left
     svg.append(
-        f'<g font-family="{MONO}" font-size="22" letter-spacing="3">'
-        f'<text x="74" y="68" fill="{OXBLOOD}">[ p</text>'
-        f'<text x="128" y="68" fill="{GLOW}" font-size="24">→</text>'
-        f'<text x="154" y="68" fill="{OXBLOOD}">q ]</text>'
-        f'</g>'
+        f'<text x="74" y="68" font-family="{MONO}" font-size="22" '
+        f'fill="{OXBLOOD}" letter-spacing="3">FLATUS</text>'
     )
     # spec mark top-right
     svg.append(

@@ -90,7 +90,7 @@ Description for whatever platform it lands on (kept under 280 chars):
 
 > A desktop companion that occasionally farts. The waveform is the same
 > kind Apple uses to eject water from the Apple Watch (US 9,451,354). The
-> joke is real. The physics is real. Apache-2.0, by [p → q].
+> joke is real. The physics is real. Apache-2.0.
 
 ---
 

@@ -35,7 +35,7 @@
   </defs>
 <rect width="1600" height="520" fill="url(#bg)"/>
 <rect width="1600" height="520" filter="url(#fingerprint)" opacity="0.55"/>
-<text x="80" y="44" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="14" fill="#8c2f1e" letter-spacing="3" text-transform="uppercase">[ p → q ]</text>
+<text x="80" y="44" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="14" fill="#8c2f1e" letter-spacing="3" text-transform="uppercase">FLATUS</text>
 <text x="1530" y="44" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="14" fill="#3a3128" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>
 <text x="80" y="74" font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif" font-style="italic" font-size="30" fill="#1a1612" letter-spacing="0.7">biblical.wav</text>
 <text x="300" y="74" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="13" fill="#3a3128" letter-spacing="3" text-transform="uppercase">seed 3 · pressure 0.8 · 48 kHz mono · spectrogram</text>
