@@ -21,7 +21,7 @@ There are four canonical ways to do this:
 - `biblical` — slow, low, devastating
 - `silent-but-deadly` — exactly what it says
 
-The names may change their dress, and the stage may shift from window to browser, yet the matter itself remains constant. For what makes a fart unwelcome is not its voice, but its odour; the ear, left to its own devices, seldom takes offence. So these four tempers keep their character. The copy may wander, the seed may turn the wheel, but each personality returns, in the end, to its own familiar nature.
+For what makes a fart unwelcome is not its voice, but its odour; the ear, left to its own devices, seldom takes offence. So these four tempers keep their character. The copy may wander, the seed may turn the wheel, but each personality returns, in the end, to its own familiar nature.
 
 <p align="center">
   <img src="docs/screenshots/desktop-main-window.png" alt="flatus desktop window — personality list, single-versus-shuffle mode, volume slider, and the large manual fire button" width="100%" />
