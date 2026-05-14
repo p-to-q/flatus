@@ -31,8 +31,8 @@
   --font-ui: "Inter var", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono: "Berkeley Mono", "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
 
-  --shadow-soft: 0 1px 0 rgba(26, 22, 18, 0.04), 0 12px 32px -16px rgba(26, 22, 18, 0.18);
-  --radius: 6px;
+  --shadow-soft: 0 1px 0 rgba(26, 22, 18, 0.03), 0 18px 36px -24px rgba(26, 22, 18, 0.14);
+  --radius: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -104,39 +104,15 @@ body::after {
 .page {
   position: relative;
   z-index: 1;
-  max-width: 1080px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 4rem;
+  padding: 2rem clamp(1rem, 4vw, 2.5rem) 5rem;
 }
-
-/* ---------- masthead ---------- */
-
-.masthead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--rule);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-  text-transform: lowercase;
-}
-
-.masthead .brand {
-  color: var(--ink);
-  text-decoration: none;
-  letter-spacing: 0.08em;
-}
-.masthead .brand:hover { color: var(--accent); }
 
 /* ---------- hero ---------- */
 
 .hero {
-  padding: clamp(2.5rem, 7vw, 5rem) 0 2.5rem;
-  border-bottom: 1px solid var(--rule);
+  padding: clamp(1.25rem, 5vw, 3rem) 0 3rem;
 }
 
 .wordmark {
@@ -155,7 +131,7 @@ body::after {
   font-style: italic;
   font-size: clamp(1.1rem, 2.2vw, 1.45rem);
   color: var(--ink-2);
-  margin: 0.5rem 0 2rem;
+  margin: 0.45rem 0 1.75rem;
   letter-spacing: 0.01em;
 }
 
@@ -196,7 +172,7 @@ body::after {
 .banner {
   margin: 0 0 2rem;
   padding: 0;
-  border: 1px solid var(--rule);
+  border: 1px solid color-mix(in srgb, var(--rule) 78%, transparent);
   border-radius: var(--radius);
   background: #15161b;
   box-shadow: var(--shadow-soft);
@@ -241,64 +217,30 @@ body::after {
   mix-blend-mode: screen;
 }
 
-.banner-hint {
-  position: absolute;
-  right: 0.85rem;
-  bottom: 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: rgba(247, 241, 227, 0.55);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  background: rgba(21, 22, 27, 0.45);
-  backdrop-filter: blur(2px);
-  padding: 0.25rem 0.55rem;
-  border-radius: 999px;
-  border: 1px solid rgba(247, 241, 227, 0.18);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(2px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.banner-button:hover .banner-hint,
-.banner-button:focus-visible .banner-hint { opacity: 1; transform: translateY(0); }
+.banner-hint { display: none; }
 
 .elevator {
   font-family: var(--font-display);
-  font-size: 1.125rem;
-  line-height: 1.55;
+  font-size: 1.08rem;
+  line-height: 1.58;
   color: var(--ink-2);
-  max-width: 38rem;
-  margin: 0 0 2rem;
-}
-
-/* Lettrine — large italic drop-cap on the opening sentence, in the accent
- * oxblood. Pure CSS, no DOM change. */
-.elevator::first-letter {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 3.4em;
-  line-height: 0.85;
-  float: left;
-  margin: 0.08em 0.14em -0.04em -0.04em;
-  color: var(--accent);
-  letter-spacing: -0.02em;
+  max-width: 34rem;
+  margin: 0 0 1.7rem;
 }
 
 .cta-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
+  gap: 0.9rem;
+  margin-bottom: 0.65rem;
 }
 
 .cta {
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.85rem 1.25rem;
+  padding: 0.8rem 1.15rem;
   border-radius: var(--radius);
   font-family: var(--font-ui);
   font-weight: 600;
@@ -338,12 +280,12 @@ body::after {
 .cta.ghost {
   background: transparent;
   color: var(--ink-2);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--rule-soft);
 }
 .cta.ghost:hover {
   color: var(--ink);
-  border-color: var(--ink-2);
-  background: var(--paper-2);
+  border-color: var(--rule);
+  background: color-mix(in srgb, var(--paper-2) 65%, transparent);
 }
 
 .cta-hint {
@@ -351,14 +293,18 @@ body::after {
   font-size: 0.78rem;
   color: var(--muted);
   margin: 0;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
 }
 
 /* ---------- install steps (revealed after download) ---------- */
 
 .install {
-  padding: 2rem 0 1.5rem;
-  border-bottom: 1px solid var(--rule);
+  margin: 0 0 1.25rem;
+  padding: 1.5rem 1.4rem 1.35rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--paper-2) 72%, transparent);
+  box-shadow: var(--shadow-soft);
 }
 .steps {
   list-style: none;
@@ -398,7 +344,7 @@ body::after {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--muted);
-  margin: 1.25rem 0 0;
+  margin: 1rem 0 0;
 }
 
 .install-lede {
@@ -423,8 +369,8 @@ body::after {
  * first-timers see the affordance immediately, and frame the block with an
  * oxblood left rail to mark it as the recommended one-liner. */
 .install-oneliner {
-  border-left: 3px solid var(--accent);
-  padding-left: 1.5rem;
+  border-left: 2px solid var(--accent);
+  padding-left: 1.15rem;
 }
 .install-oneliner .codeblock-copy { opacity: 1; }
 
@@ -456,59 +402,30 @@ body::after {
 
 /* ---------- section heads ---------- */
 
-.section-head { margin-bottom: 1.5rem; }
-
-/* Printer's asterism above each numbered section — a small fleuron between
- * chapters. Sits just inside the section's top padding. */
-.section-head[data-folio]::before {
-  content: "⁂";
-  display: block;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: 1rem;
-  color: var(--accent);
-  opacity: 0.55;
-  letter-spacing: 0.45em;
-  margin: -1.25rem 0 1.5rem;
-  text-indent: 0.45em; /* compensate the trailing letter-spacing */
-  user-select: none;
-}
+.section-head { margin-bottom: 1.25rem; }
 
 .caption {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0 0 0.25rem;
-  font-weight: 500;
-}
-
-/* Folio roman numeral, rendered inline before the caption text with a
- * hairline separator. Mutes the numeral so the section name stays primary. */
-.caption[data-num]::before {
-  content: attr(data-num);
-  margin-right: 0.65em;
-  padding-right: 0.7em;
-  border-right: 1px solid currentColor;
-  opacity: 0.5;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.9rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
   font-weight: 400;
-  font-variant-numeric: tabular-nums;
 }
 .section-sub {
   font-family: var(--font-display);
-  font-size: 1.08rem;
+  font-size: 1.02rem;
   color: var(--ink-2);
   margin: 0;
-  max-width: 38rem;
-  line-height: 1.55;
+  max-width: 34rem;
+  line-height: 1.58;
 }
 
 /* ---------- instrument (live synth) ---------- */
 
 .instrument {
-  padding: 3rem 0 2.5rem;
-  border-bottom: 1px solid var(--rule);
+  padding: 3.25rem 0 0;
   position: relative;
 }
 .instrument-margin {
@@ -549,7 +466,8 @@ body::after {
   border-radius: var(--radius);
   margin: 0;
   padding: 0.8rem 0.95rem 0.95rem;
-  background: var(--paper-2);
+  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
+  box-shadow: 0 1px 0 rgba(26, 22, 18, 0.02);
 }
 .ctrl legend {
   font-family: var(--font-mono);
@@ -847,16 +765,15 @@ body::after {
   height: 220px;
   margin-top: 1.5rem;
   background: #15161b;
-  border: 1px solid var(--rule);
+  border: 1px solid color-mix(in srgb, var(--rule) 82%, transparent);
   border-radius: var(--radius);
-  box-shadow: inset 0 1px 0 rgba(255, 243, 214, 0.05), var(--shadow-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 243, 214, 0.05), 0 8px 24px -18px rgba(26, 22, 18, 0.18);
 }
 
 /* ---------- specimens ---------- */
 
 .specimens {
-  padding: 3rem 0 2.5rem;
-  border-bottom: 1px solid var(--rule);
+  padding: 3.25rem 0 0;
 }
 .specimen-grid {
   list-style: none;
@@ -870,9 +787,9 @@ body::after {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 1rem 1.05rem 0.95rem;
-  background: var(--paper-2);
+  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
   cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -890,11 +807,9 @@ body::after {
 }
 .specimen:hover {
   border-color: var(--ink-2);
-  transform: translateY(-2px);
-  box-shadow: 0 1px 0 rgba(26, 22, 18, 0.04), 0 14px 32px -18px rgba(26, 22, 18, 0.32);
+  box-shadow: 0 10px 24px -20px rgba(26, 22, 18, 0.18);
 }
 .specimen:hover::after { opacity: 1; }
-.specimen:active { transform: translateY(0); }
 
 .specimen-head {
   display: flex;
@@ -964,17 +879,17 @@ body::after {
 /* ---------- cli ---------- */
 
 .cli {
-  padding: 3rem 0 2.5rem;
-  border-bottom: 1px solid var(--rule);
+  padding: 3.25rem 0 0;
 }
 .codeblock {
-  background: var(--paper-2);
+  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 1.1rem 1.25rem;
   overflow-x: auto;
   margin: 0;
   position: relative;
+  box-shadow: 0 8px 24px -20px rgba(26, 22, 18, 0.14);
 }
 .codeblock-copy {
   position: absolute;
@@ -1014,8 +929,7 @@ body::after {
 /* ---------- ledger (specifications) ---------- */
 
 .ledger {
-  padding: 3rem 0 2rem;
-  border-bottom: 1px solid var(--rule);
+  padding: 3.25rem 0 0;
 }
 .spec-table {
   width: 100%;
@@ -1023,7 +937,15 @@ body::after {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: block;
+  padding: 0.25rem 0.75rem;
+  box-shadow: 0 8px 24px -20px rgba(26, 22, 18, 0.14);
 }
+.spec-table tbody { display: table; width: 100%; border-collapse: collapse; }
 .spec-table th,
 .spec-table td {
   padding: 0.6rem 0.5rem;
@@ -1045,7 +967,7 @@ body::after {
 /* ---------- colophon ---------- */
 
 .colophon {
-  padding: 2.5rem 0 0;
+  padding: 4rem 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1091,12 +1013,12 @@ body::after {
 /* ---------- figures: paper-canvas inline visuals ---------- */
 
 .figure {
-  margin: 4rem 0 3.5rem;
+  margin: 3rem 0 2.5rem;
   padding: 0.75rem;
-  background: var(--paper-2);
+  background: color-mix(in srgb, var(--paper-2) 78%, transparent);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 8px 24px -20px rgba(26, 22, 18, 0.14);
 }
 .figure img {
   display: block;
@@ -1107,9 +1029,9 @@ body::after {
 .figure figcaption {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   color: var(--ink-2);
-  margin: 0.85rem 0.25rem 0.25rem;
+  margin: 0.75rem 0.25rem 0.15rem;
   text-align: center;
 }
 .figure-inset {
