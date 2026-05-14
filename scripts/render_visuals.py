@@ -19,7 +19,6 @@ Visual language (mirrors apps/web/style.css light palette):
   - fingerprint paper grain  two-octave fractal noise, ink overlay
   - soft bloom on data layers
   - personality labels in Charter / Iowan italic
-  - small-caps mono frame: FLATUS · spec 01 · flatus 0.1.1
 
 Run from the repo root:
   python3 scripts/render_visuals.py
@@ -166,7 +165,7 @@ def render_waveforms_all() -> None:
 
     W, H = 1600, 600
     margin_l, margin_r = 80, 60
-    margin_t, margin_b = 90, 80
+    margin_t, margin_b = 72, 80
     lane_h = (H - margin_t - margin_b) / len(PERSONALITIES)
     plot_w = W - margin_l - margin_r
 
@@ -183,19 +182,10 @@ def render_waveforms_all() -> None:
     )
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#band)"/>')
 
-    # frame header
     svg.append(
-        f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">FLATUS</text>'
-    )
-    svg.append(
-        f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.1</text>'
-    )
-    svg.append(
-        f'<text x="{margin_l}" y="70" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="22" fill="{INK}" letter-spacing="0.5">'
-        f'four canonical voices, shared time axis</text>'
+        f'<text x="{margin_l}" y="52" font-family="{DISPLAY}" font-style="italic" '
+        f'font-size="36" fill="{INK}" letter-spacing="0.3">'
+        f'canonical voices</text>'
     )
 
     # data layers
@@ -262,12 +252,6 @@ def render_waveforms_all() -> None:
             f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
-    svg.append(
-        f'<text x="{W/2:.2f}" y="{H - 22}" font-family="{MONO}" '
-        f'font-size="12" fill="{INK_MUTED}" letter-spacing="4" '
-        f'text-anchor="middle" text-transform="uppercase">seconds · shared scale</text>'
-    )
-
     # vignette (very light on paper — just corner darkening to ground the figure)
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#vignette)"/>')
     svg.append("</svg>")

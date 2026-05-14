@@ -66,6 +66,10 @@ Four canonical voices, rendered by the deterministic `generate-goldens` binary a
 
 For an A/B with the pre-realism cut, the v0.3 archive still sits alongside: [biblical](https://flatus.vercel.app/samples/v0.3/biblical.wav) · [default](https://flatus.vercel.app/samples/v0.3/default.wav) · [polite-cough](https://flatus.vercel.app/samples/v0.3/polite-cough.wav) · [silent-but-deadly](https://flatus.vercel.app/samples/v0.3/silent-but-deadly.wav) · [manifest](https://flatus.vercel.app/samples/v0.3/manifest.json)
 
+<p align="center">
+  <img src="docs/screenshots/waveforms-all.png" alt="Waveform comparison of the four canonical voices — polite-cough, default, biblical, and silent-but-deadly — on a shared time axis." width="100%" />
+</p>
+
 ## Audio note
 
 Desktop manual playback is aligned to the **website specimen reference**: one reference event, fixed preview pressure, and the current seed. The downloadable canonical `.wav` files are a separate pinned regression set used for deterministic release checks. The full baseline and signoff flow live in [`docs/AUDIO_BASELINE.md`](docs/AUDIO_BASELINE.md).
