@@ -203,9 +203,9 @@ DMG background, and generated visual assets.
 Known text/code locations:
 
 - `README.md`
-- `PLAN.md`
+- `docs/PLAN.md`
 - `CHANGELOG.md`
-- `docs/DEMO.md`
+- `docs/archive/DEMO.md`
 - `docs/ENGINEERING.md`
 - `apps/desktop/src/index.html`
 - `apps/web/index.html`
@@ -305,7 +305,7 @@ a fast launch, but it will slow future management if left alone.
 
 Known drift:
 
-- `PLAN.md` still lists some completed work as pending.
+- `docs/PLAN.md` still lists some completed work as pending.
 - `docs/ENGINEERING.md` says the browser audio would be a reimplementation,
   while current wasm uses the Rust synth core.
 - `docs/REALISM.md` begins as a prospective plan and later records shipped

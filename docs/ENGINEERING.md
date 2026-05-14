@@ -82,7 +82,7 @@ Keep the docs surface small. Don't add a new file unless it earns its place.
 | File                  | Lives at        | Purpose                                                   |
 | --------------------- | --------------- | --------------------------------------------------------- |
 | `README.md`           | repo root       | Public face. OpenWhip-tier. ~40 lines, joke roadmap.      |
-| `PLAN.md`             | repo root       | Internal. Philosophy, milestones, architecture, history.  |
+| `docs/PLAN.md`        | `docs/`         | Internal. Philosophy, milestones, architecture, history.  |
 | `docs/ACOUSTICS.md`   | `docs/`         | Citation-backed plausibility writeup.                     |
 | `docs/AUDIO_BASELINE.md` | `docs/`      | Technical + listening reference for release signoff.      |
 | `docs/PRODUCT_BACKLOG.md` | `docs/`    | Post-launch cleanup and product-quality backlog.          |
@@ -98,7 +98,7 @@ No `THESIS.md`, no `glossary.md`, no `rfcs/`, no `adrs/`. If a design decision w
 Two registers, intentional:
 
 - **`README.md`** — OpenWhip-tier. Casual, slightly self-deprecating, joke roadmap, ~40 lines, no philosophy. Comedy on the surface.
-- **`PLAN.md` and `docs/ACOUSTICS.md`** — Wittgenstein-key. Indicative mood, short declarative sentences, no exclamation marks, em-dashes used surgically, primary sources quoted without irony. Seriousness in the interior.
+- **`docs/PLAN.md` and `docs/ACOUSTICS.md`** — Wittgenstein-key. Indicative mood, short declarative sentences, no exclamation marks, em-dashes used surgically, primary sources quoted without irony. Seriousness in the interior.
 
 If a sentence in the README would look out of place in OpenWhip's README, rewrite it. If a sentence in `PLAN.md` would look out of place next to a quote from the Tractatus, rewrite that one.
 

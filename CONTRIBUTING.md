@@ -67,7 +67,7 @@ cargo test -p fart-synth --test golden   # confirms the new pins
 
 - One feature per PR.
 - Normal English commits. No Conventional Commits ceremony.
-- If you touched `src/safety.rs` constants, mention it in the commit message and add a line to [`PLAN.md`](PLAN.md) §14.
+- If you touched `src/safety.rs` constants, mention it in the commit message and add a line to [`docs/PLAN.md`](docs/PLAN.md) §14.
 - If you added a personality, add one entry to `personalities.rs` and one fixture to the `CANON` array in `src/bin/generate_goldens.rs`.
 
 ## License

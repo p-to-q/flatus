@@ -125,7 +125,7 @@ Initial scaffold. The comedy ships first; signing comes later.
 - `apps/web` — static landing page placeholder.
 - `skills/fart` — Claude Skill bundle with bash wrapper around the CLI.
 - `fixtures/golden` — manifest scaffold; canonical WAVs generated at first `cargo test`.
-- Docs: `README.md` (OpenWhip-tier public face), `PLAN.md` (internal plan, philosophy and architecture), `docs/ACOUSTICS.md` (citation-backed plausibility writeup), `docs/ENGINEERING.md` (conventions).
+- Docs: `README.md` (OpenWhip-tier public face), `docs/PLAN.md` (internal plan, philosophy and architecture), `docs/ACOUSTICS.md` (citation-backed plausibility writeup), `docs/ENGINEERING.md` (conventions).
 - License: Apache-2.0.
 
 ### Hard constraints (frozen)

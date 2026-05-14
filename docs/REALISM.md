@@ -183,7 +183,7 @@ ways:
 
 - [`docs/ACOUSTICS.md`](ACOUSTICS.md) — peer-reviewed evidence trail.
   §5 (Fart acoustics) is the load-bearing one for this work.
-- [`PLAN.md`](../PLAN.md) — project plan; v0.4 milestone is updated to
+- [`PLAN.md`](PLAN.md) — project plan; v0.4 milestone is updated to
   reference this document.
 - Granular synthesis reference: Roads, *Microsound* (MIT Press, 2001) —
   the grain-plan-then-render approach in `grain.rs::plan` mirrors his

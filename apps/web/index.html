@@ -53,7 +53,7 @@
         <span class="banner-hint" aria-hidden="true">click to play</span>
       </button>
       <p class="elevator">
-        A desktop companion that lives in your menubar and occasionally farts.
+        A small thing that lives in your menubar and occasionally farts.
         It is also, by acoustic accident, the same waveform Apple ships in
         watchOS to push water out of the Apple Watch speaker.
       </p>
@@ -72,7 +72,7 @@
       <h2 class="caption">First launch</h2>
 
       <p class="install-lede">
-        One paste into <strong>Terminal</strong> downloads the DMG, installs <code>flatus.app</code>, and clears the macOS browser-quarantine xattr that otherwise triggers a misleading <em>"app is damaged"</em> dialog on macOS 15+.
+        One paste into <strong>Terminal</strong> fetches the DMG, drops <code>flatus.app</code> into <code>/Applications</code>, and clears the quarantine bit that otherwise produces macOS's unhelpful <em>"app is damaged"</em> line.
       </p>
 
       <pre class="codeblock install-oneliner"><button type="button" id="install-oneliner-copy" class="codeblock-copy" aria-label="Copy install command">copy</button><code id="install-oneliner-code"><span class="prompt">$</span> curl -fsSL https://flatus.vercel.app/install.sh | bash</code></pre>
@@ -88,7 +88,7 @@
       </details>
 
       <p class="install-foot">
-        Once running, click the tray icon for the native menu. Open the fuller window from there whenever you want the longer personality view, onboarding, or recovery help.
+        Once it is running, the menubar icon is home base. Open the fuller window from there whenever you want the longer personality view, help, or recovery.
       </p>
     </section>
 
@@ -96,9 +96,8 @@
       <header class="section-head" data-folio>
         <h2 id="instrument-heading" class="caption" data-num="II">Instrument</h2>
         <p class="section-sub">
-          A live preview, synthesized in your browser by the same Rust crate the
-          CLI uses, compiled to WebAssembly. Each render fires a small cluster
-          of events so the spacing is audible.
+          A live preview, rendered in your browser by the same Rust synthesis core.
+          Not a recording, not a mockup, and not especially dignified.
         </p>
       </header>
 
@@ -186,13 +185,13 @@
 
     <figure class="figure reveal">
       <img src="./screenshots/waveforms-all.png" alt="Waveform comparison of the four personalities — polite-cough, default, biblical, silent-but-deadly — on a shared time axis up to 4 seconds." loading="lazy" />
-      <figcaption>four canonical voices, shared time axis. real waveforms of the byte-identical golden fixtures.</figcaption>
+      <figcaption>four canonical voices, on a shared time axis. these are real waveforms from the pinned fixtures.</figcaption>
     </figure>
 
     <section class="specimens reveal" aria-labelledby="specimens-heading">
       <header class="section-head" data-folio>
         <h2 id="specimens-heading" class="caption" data-num="III">Specimens</h2>
-        <p class="section-sub">Four canonical voices. Each card shows the desktop-aligned preview seed used by the live specimen playback; <code>↓ .wav</code> downloads the separately pinned canonical golden fixture from the CLI manifest.</p>
+        <p class="section-sub">Four canonical voices. Tap to hear the desktop-aligned specimen; use <code>↓ .wav</code> if you want the separately pinned canonical file.</p>
       </header>
       <ol class="specimen-grid" id="specimen-grid"></ol>
     </section>
@@ -200,7 +199,7 @@
     <section class="cli reveal" aria-labelledby="cli-heading">
       <header class="section-head" data-folio>
         <h2 id="cli-heading" class="caption" data-num="IV">Command line</h2>
-        <p class="section-sub">No menubar? No problem. The same synth ships as a CLI on every platform that has Rust.</p>
+        <p class="section-sub">No menubar? No problem. The same instrument ships as a CLI anywhere Rust will go.</p>
       </header>
 <pre class="codeblock"><button type="button" class="codeblock-copy" id="copy-cli" aria-label="Copy CLI commands">copy</button><code id="cli-code"><span class="prompt">$</span> git clone https://github.com/p-to-q/flatus
 <span class="prompt">$</span> cd flatus

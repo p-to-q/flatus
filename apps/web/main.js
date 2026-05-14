@@ -598,23 +598,23 @@ function applyArchToCta(detected) {
   if (detected.os === "macos") {
     const archLabel = detected.arch === "x86_64" ? "Intel" : "Apple Silicon";
     ctaMeta.textContent = `for macOS · ${archLabel} · ${LATEST_TAG} · unsigned`;
-    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned — clear the browser-quarantine xattr once with the command below before first launch.`;
+    ctaHint.textContent = `Detected ${archLabel}. ${LATEST_TAG} is unsigned, so macOS may need one small act of persuasion before first launch.`;
     ctaBtn.href = detected.arch === "x86_64" ? RELEASE_BASE : DMG_URL;
     ctaBtn.dataset.state = "ready";
   } else if (detected.os === "linux") {
     ctaMeta.textContent = `Linux · build from source`;
-    ctaHint.textContent = "Linux build is CLI-only for now. Scroll to the Command line section.";
+    ctaHint.textContent = "Linux is CLI-only for the moment. The command line section is the right door.";
     ctaBtn.href = "#cli";
     ctaBtn.dataset.state = "redirect-cli";
   } else if (detected.os === "windows") {
     ctaMeta.textContent = `Windows · build from source`;
-    ctaHint.textContent = "Windows isn't packaged yet — the CLI builds with cargo. See below.";
+    ctaHint.textContent = "Windows is not packaged yet, but the CLI still builds with cargo. See below.";
     ctaBtn.href = "#cli";
     ctaBtn.dataset.state = "redirect-cli";
   } else {
     ctaBtn.href = RELEASE_BASE;
     ctaBtn.dataset.state = "release-page";
-    ctaHint.textContent = "Couldn't detect your platform — head to the releases page.";
+    ctaHint.textContent = "Could not place your machine. The releases page will know what to do.";
   }
 }
 

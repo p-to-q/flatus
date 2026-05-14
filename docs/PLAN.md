@@ -197,7 +197,7 @@ flatus/
 │   ├── ACOUSTICS.md
 │   └── ENGINEERING.md
 ├── README.md
-├── PLAN.md
+├── docs/PLAN.md
 ├── CHANGELOG.md
 ├── LICENSE                       # Apache-2.0
 ├── .gitignore
@@ -213,7 +213,7 @@ Four files. Don't invent a fifth without a real reason.
 | File              | Audience  | Voice                                                              |
 | ----------------- | --------- | ------------------------------------------------------------------ |
 | `README.md`       | public    | OpenWhip-tier. ~40 lines. Casual, joke roadmap, self-deprecating.  |
-| `PLAN.md`         | internal  | Indicative mood, philosophy, milestones. Wittgenstein-key.         |
+| `docs/PLAN.md`    | internal  | Indicative mood, philosophy, milestones. Wittgenstein-key.         |
 | `docs/ACOUSTICS.md` | both    | Citation-backed plausibility. The "we're actually serious" leg.    |
 | `docs/ENGINEERING.md` | internal | Short. Conventions that actually constrain code.                 |
 

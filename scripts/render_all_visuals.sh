@@ -32,8 +32,6 @@ ras docs/marks/og-card.svg    docs/marks/og-card.png    1200  630
 # 3. Mirror PNGs into apps/web/ (Vercel deploys only apps/web/).
 #    docs/* is the editable source; apps/web/* is the deployment.
 mkdir -p apps/web/screenshots apps/web/marks
-cp docs/screenshots/web-hero.png             apps/web/screenshots/web-hero.png
-cp docs/screenshots/desktop-popover.png      apps/web/screenshots/desktop-popover.png
 cp docs/screenshots/spectrogram-biblical.png apps/web/screenshots/spectrogram-biblical.png
 cp docs/screenshots/waveforms-all.png        apps/web/screenshots/waveforms-all.png
 cp docs/marks/wordmark.png                   apps/web/marks/wordmark.png

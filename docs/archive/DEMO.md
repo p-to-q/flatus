@@ -1,4 +1,4 @@
-# `flatus/docs/DEMO.md`
+# `flatus/docs/archive/DEMO.md`
 
 > A 90-second demo script for the first recording. Internal. _Read it once,
 > rehearse once, then record._

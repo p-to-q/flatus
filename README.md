@@ -10,13 +10,7 @@ It's also, by acoustic accident, the same waveform Apple uses in watchOS to push
 
 → **[Try it in your browser](https://flatus.vercel.app/)**
 
-**Desktop (macOS Apple Silicon):** current build is **[v0.2.1](https://github.com/p-to-q/flatus/releases/tag/v0.2.1)** — DMG `flatus_0.2.1_aarch64.dmg` and `flatus-v0.2.1-aarch64.app.zip`. The [site download CTA](https://flatus.vercel.app/) points at the same tag; the [one-liner installer](https://flatus.vercel.app/install.sh) resolves the newest GitHub release and pulls the attached `.dmg`.
-
-<p align="center">
-  <a href="https://flatus.vercel.app/">
-    <img src="docs/screenshots/web-hero.png" alt="flatus landing page — italic display-serif wordmark, spectrogram banner with warm glow grains, prominent download button, and the Instrument panel for in-browser synthesis" width="100%" />
-  </a>
-</p>
+**Desktop (macOS Apple Silicon):** [download the latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.1) or use the [one-line installer](https://flatus.vercel.app/install.sh).
 
 ## Personality
 
@@ -27,7 +21,7 @@ There are four canonical ways to do this:
 - `biblical` — slow, low, devastating
 - `silent-but-deadly` — exactly what it says
 
-The synth IDs stay stable. The desktop and web surfaces can present them with different copy, seeds, and emphasis, but the voices themselves are deterministic.
+The names may change their dress, and the stage may shift from window to browser, yet the matter itself remains constant. For what makes a fart unwelcome is not its voice, but its odour; the ear, left to its own devices, seldom takes offence. So these four tempers keep their character. The copy may wander, the seed may turn the wheel, but each personality returns, in the end, to its own familiar nature.
 
 <p align="center">
   <img src="docs/screenshots/desktop-main-window.png" alt="flatus desktop window — personality list, single-versus-shuffle mode, volume slider, and the large manual fire button" width="100%" />
@@ -130,7 +124,7 @@ The [landing page](https://flatus.vercel.app/) runs the same synthesis core as t
 - [`docs/REALISM.md`](docs/REALISM.md) — how we pushed the synth toward sounding less obviously rendered
 - [`docs/PRODUCT_BACKLOG.md`](docs/PRODUCT_BACKLOG.md) — cleanup, interaction, and next-phase product work
 - [`docs/ENGINEERING.md`](docs/ENGINEERING.md) — conventions
-- [`PLAN.md`](PLAN.md) — the longer internal rationale and architecture
+- [`docs/PLAN.md`](docs/PLAN.md) — the longer internal rationale and architecture
 
 ## License
 
