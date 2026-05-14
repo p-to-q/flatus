@@ -47,7 +47,7 @@ Resolves the latest GitHub release, downloads the DMG, copies `flatus.app` into 
 
 ### Option A′ — pre-built `.dmg` by hand
 
-Grab the **unsigned** `flatus_*.dmg` from the [latest release](https://github.com/p-to-q/flatus/releases/tag/v0.1.1) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
+Grab the **unsigned** `flatus_*.dmg` from the [latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.0) (or the [full list](https://github.com/p-to-q/flatus/releases)). Open it, drag `flatus.app` into the `Applications` folder shortcut, eject the disk. Then see [First launch](#first-launch).
 
 Prefer to skip the DMG step? The same release also ships a `flatus-*.app.zip` — unzip and drag the `.app` into `/Applications/` yourself.
 If you're just trying to use the app, this is the only part that matters: install the app, clear quarantine once if macOS asks, then use the tray menu to get to `Fart now` or `Show window`.
@@ -83,7 +83,7 @@ The compiled bundle lives at `target/release/bundle/macos/flatus.app` (workspace
 
 ## First launch
 
-The `.app` is **unsigned** (no Apple Developer cert in v0.1). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine.
+The `.app` is **unsigned** (no Apple Developer cert in v0.2 yet). On macOS 15 (Sequoia) and 26 (Tahoe), browser-downloaded DMGs carry a `com.apple.quarantine` xattr that triggers a misleading **"flatus.app is damaged and can't be opened"** dialog — even though the bundle is fine.
 
 **One-liner (recommended).** Paste this into Terminal — it downloads the latest DMG, installs `flatus.app` into `/Applications`, and clears the quarantine xattr in one shot:
 
@@ -166,7 +166,7 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ## Status
 
-**v0.1.1** — current release, still unsigned on macOS Apple Silicon. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS. The synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS 15+ may still need a one-shot `xattr -cr /Applications/flatus.app` to clear the browser-quarantine xattr (see [First launch](#first-launch)). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.1.1).
+**v0.2.0** — current release, still unsigned on macOS Apple Silicon. First user-facing release of the desktop shell: the menubar app opens, the first-launch help dismisses cleanly, the seed input plays audible previews, and `Fart now` from both the tray and the window stays responsive while audio renders off-thread. The `fart-synth` core and `fart` CLI build and test green on Linux and macOS, and the synthesis core also compiles to wasm32 and powers the in-browser preview at [flatus.vercel.app](https://flatus.vercel.app/). First launch on macOS 15+ may still need a one-shot `xattr -cr /Applications/flatus.app` to clear the browser-quarantine xattr (see [First launch](#first-launch)). See [`CHANGELOG.md`](CHANGELOG.md) and [release notes](https://github.com/p-to-q/flatus/releases/tag/v0.2.0).
 
 ## Docs
 

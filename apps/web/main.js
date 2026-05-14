@@ -564,9 +564,9 @@ function buildSpecimenGrid() {
 
 // Pinned to the current release so the landing page can point directly at the
 // DMG asset instead of the generic releases index.
-const LATEST_TAG = "v0.1.1";
+const LATEST_TAG = "v0.2.0";
 const RELEASE_BASE = `https://github.com/p-to-q/flatus/releases/tag/${LATEST_TAG}`;
-const DMG_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus_0.1.1_aarch64.dmg`;
+const DMG_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus_0.2.0_aarch64.dmg`;
 const APP_ZIP_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus-${LATEST_TAG}-aarch64.app.zip`;
 
 function detectArch() {

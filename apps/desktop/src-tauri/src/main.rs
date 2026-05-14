@@ -41,6 +41,13 @@ const SETTINGS_FILE: &str = "settings.json";
 const AUDIO_BASELINE: &str = "fixtures-v0.4 + web-instrument-reference";
 /// Matches `apps/web/main.js` — three short events with gaps so manual play
 /// feels like the in-browser instrument, not a single blink.
+///
+/// **Important:** `fart_now` and `render_preview_wav` use this path. The
+/// background **auto-play** loop (`spawn_pressure_loop`) uses
+/// `render_samples_for_settings` once per fire with live **pressure** — a
+/// different timbre and duration from the three fixed-pressure preview events.
+/// Playback is serialized with `AUDIO_OUTPUT_LOCK` so they never hit the DAC
+/// simultaneously (which used to read as two unrelated voices).
 const SESSION_EVENTS: usize = 3;
 const SESSION_GAP_MS: u32 = 280;
 const DEFAULT_PREVIEW_PRESSURE: f32 = 0.6;
@@ -408,7 +415,15 @@ fn get_app_snapshot(state: tauri::State<AppState>) -> AppSnapshot {
 
 #[tauri::command]
 fn set_settings(new_settings: Settings, state: tauri::State<AppState>) -> Result<Settings, String> {
-    let sanitized = sanitize_settings(new_settings);
+    let current = state.settings.lock().clone();
+    let mut sanitized = sanitize_settings(new_settings);
+    // A late `persist` from the webview can race after `complete_onboarding` and
+    // send `onboarding_completed: false` with an older settings snapshot. First
+    // launch is only cleared through `complete_onboarding`; it is re-opened only
+    // via `reset_onboarding`, which does not use this path.
+    if current.onboarding_completed && !sanitized.onboarding_completed {
+        sanitized.onboarding_completed = true;
+    }
     state
         .save_settings(&sanitized)
         .map_err(|err| format!("could not save settings: {err}"))?;
@@ -434,24 +449,54 @@ fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
         let _ = pressure.force_fire(personality);
     }
 
-    let (samples, plan) = render_manual_session(&settings, &chosen_name, settings.manual_seed)
-        .map_err(|e| format!("render failed: {e}"))?;
-    let sample_rate_hz = plan.sample_rate_hz;
+    // Render + playback + seed bump can take tens of ms; keep the IPC path
+    // (tray menu + webview button) responsive by doing that work off-thread.
+    let settings_for_play = settings.clone();
+    let chosen_for_play = chosen_name.clone();
+    let app_for_thread = app.clone();
     thread::spawn(move || {
-        let _ = play_blocking(samples, sample_rate_hz);
-    });
-
-    let next_seed = seed_now() % 1_000_000_000;
-    {
-        let mut g = app.settings.lock();
+        match render_manual_session(
+            &settings_for_play,
+            &chosen_for_play,
+            settings_for_play.manual_seed,
+        ) {
+            Ok((samples, plan)) => {
+                let sample_rate_hz = plan.sample_rate_hz;
+                let _ = play_output_exclusive(samples, sample_rate_hz);
+            }
+            Err(e) => eprintln!("fart_now render failed: {e}"),
+        }
+        let next_seed = seed_now() % 1_000_000_000;
+        let mut g = app_for_thread.settings.lock();
         g.manual_seed = next_seed;
         let to_save = g.clone();
         drop(g);
-        app.save_settings(&to_save)
-            .map_err(|e| format!("could not save settings: {e}"))?;
-    }
+        if let Err(e) = app_for_thread.save_settings(&to_save) {
+            eprintln!("fart_now could not save next seed: {e}");
+        }
+    });
 
     Ok(chosen_name)
+}
+
+/// Audible preview for the current (or explicit) seed — same three-event
+/// session as `fart_now`, without advancing `manual_seed`.
+#[tauri::command]
+fn play_manual_preview(seed: Option<u64>, state: tauri::State<AppState>) -> Result<(), String> {
+    let settings = state.settings.lock().clone();
+    let base_seed = seed.unwrap_or(settings.manual_seed);
+    let name = select_fire_voice(&settings, base_seed);
+    let settings_clone = settings;
+    let name_clone = name.clone();
+    thread::spawn(move || {
+        match render_manual_session(&settings_clone, &name_clone, base_seed) {
+            Ok((samples, plan)) => {
+                let _ = play_output_exclusive(samples, plan.sample_rate_hz);
+            }
+            Err(e) => eprintln!("play_manual_preview render failed: {e}"),
+        }
+    });
+    Ok(())
 }
 
 /// Real-time preview render. `seed` overrides the persisted `manual_seed` so
@@ -481,6 +526,9 @@ fn quit_app(app: AppHandle) {
 #[tauri::command]
 fn complete_onboarding(state: tauri::State<AppState>) -> Result<(), String> {
     let mut settings = state.settings.lock().clone();
+    if settings.onboarding_completed {
+        return Ok(());
+    }
     settings.onboarding_completed = true;
     settings = sanitize_settings(settings);
     state
@@ -501,6 +549,16 @@ fn reset_onboarding(state: tauri::State<AppState>, app: AppHandle) -> Result<(),
     *state.settings.lock() = settings;
     show_main_window(&app);
     Ok(())
+}
+
+/// One global lock for every `cpal` playback: manual `fart_now` runs in a
+/// spawned thread while auto-play runs in the pressure thread — without this,
+/// two streams overlap and the mix no longer matches the single-buffer website.
+static AUDIO_OUTPUT_LOCK: Mutex<()> = Mutex::new(());
+
+fn play_output_exclusive(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
+    let _hold = AUDIO_OUTPUT_LOCK.lock();
+    play_blocking(samples, sample_rate_hz)
 }
 
 fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
@@ -657,7 +715,7 @@ fn spawn_pressure_loop(app: AppHandle) {
                 if let Ok((samples, plan)) =
                     render_samples_for_settings(&render_settings, pressure, fire_seed)
                 {
-                    let _ = play_blocking(samples, plan.sample_rate_hz);
+                    let _ = play_output_exclusive(samples, plan.sample_rate_hz);
                 }
             }
         }
@@ -702,7 +760,15 @@ fn main() {
                         let state: tauri::State<AppState> = app.state();
                         let _ = fart_now(state);
                     }
-                    "open_main" => show_main_window(app),
+                    // Let the native menu finish closing before showing/focusing
+                    // the window — otherwise `show`/`set_focus` can be flaky.
+                    "open_main" => {
+                        let h = app.clone();
+                        thread::spawn(move || {
+                            thread::sleep(Duration::from_millis(50));
+                            show_main_window(&h);
+                        });
+                    }
                     "quit" => app.exit(0),
                     _ => {}
                 })
@@ -727,6 +793,7 @@ fn main() {
             set_settings,
             list_personality_profiles,
             fart_now,
+            play_manual_preview,
             render_preview_wav,
             main_window_hide,
             main_window_minimize,

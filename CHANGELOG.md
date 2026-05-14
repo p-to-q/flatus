@@ -1,5 +1,52 @@
 # Changelog
 
+## [v0.2.0] — 2026-05-14
+
+First user-facing release of the desktop shell. The goal of this version is
+that a new user can install the DMG, click through first launch, and reach a
+working **Fart now** without dead-ends. The synthesis core is unchanged.
+
+### Added
+- **Audible seed previews.** Editing the seed (or rolling a new one with the
+  reroll button), and switching to a different personality, now plays the same
+  three-event session you would hear from `Fart now` — without advancing the
+  persisted seed, so the waveform you see is what you just heard.
+- **`play_manual_preview` Tauri command.** A dedicated, side-effect-free
+  preview path so frontend interactions don't have to piggyback on `fart_now`.
+- **Global audio output mutex.** Manual fires from the window/tray and the
+  background pressure loop are now serialized through one cpal stream lock,
+  so they no longer overlap into "two voices" on the speakers.
+
+### Changed
+- **`Fart now` is non-blocking.** Synthesis, playback, and the post-fire seed
+  bump now run on a background thread; the IPC call returns immediately so
+  both the tray menu item and the in-window button feel snappy.
+- **Tray "Show window" hand-off is more reliable on macOS.** The window is
+  shown one frame after the menu has finished closing, which fixes the
+  occasional no-op when clicking the menubar icon.
+- **First-launch UX is simpler.** The intro card disappears the moment you
+  press **looks good** and only comes back when you explicitly press
+  **Show help again**. Late settings writes from earlier UI interactions can
+  no longer race in and re-open the card.
+- **Window scroll model.** The framed Tauri shell clips at the panel edge and
+  the inner content area scrolls, so the personality list, controls, and
+  preview waveform stay reachable on smaller window heights.
+- **Larger preview waveform.** The desktop preview canvas now sits in a tall
+  scope with the same two-pass glow/core stroke as the website instrument and
+  envelope-normalises quiet buffers to ~90% half-height.
+- **Menubar tray glyph fits the slot.** The italic `f` is sized for a 22 px
+  template image and gets three small grains underneath, matching the brand
+  monogram (the previous oversized glyph was clipping in the menu bar).
+- **Personality section title is "How to fart"** (final copy).
+
+### Fixed
+- **First-launch state can no longer be re-opened by stale persists.** A late
+  `set_settings` from a prior UI interaction can no longer overwrite a
+  freshly-saved `onboarding_completed: true`.
+- **Seed input doesn't fight the user.** The seed field only writes to the
+  DOM when the value actually changed, so live edits aren't reset by
+  unrelated re-renders.
+
 ## [v0.1.1] — 2026-05-14
 
 ### Fixed

@@ -30,3 +30,11 @@ apps/desktop/src-tauri/target/
 .env.local
 *.log
 .vercel
+
+# Local agent / tool scratch dirs
+.claude/
+.cursor/
+.preview/
+
+# Local release-staging artifacts (kept out of git; published via gh release)
+dist/

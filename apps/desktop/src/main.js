@@ -26,7 +26,7 @@ const mockSnapshot = {
     manual_seed: 17,
   },
   audio_baseline: "fixtures-v0.4 + web-instrument-reference",
-  version: "0.1.1",
+  version: "0.2.0",
   profiles: MOCK_PROFILES,
 };
 
@@ -71,9 +71,13 @@ async function mockInvoke(command, payload) {
       console.info("[preview] fart_now", state.settings.personality);
       state.settings.manual_seed = Math.floor(Math.random() * 1e9);
       return state.settings.personality;
+    case "play_manual_preview":
+      console.info("[preview] play_manual_preview", payload?.seed);
+      return null;
     case "render_preview_wav":
       return buildSilentWavBytes(SAMPLE_RATE, 1.2);
     case "complete_onboarding":
+      if (state.settings.onboarding_completed) return null;
       state.settings.onboarding_completed = true;
       return null;
     case "list_personality_profiles":
@@ -92,6 +96,26 @@ async function mockInvoke(command, payload) {
 
 const $ = (sel) => document.querySelector(sel);
 const $all = (sel) => Array.from(document.querySelectorAll(sel));
+
+/** `fart_now` advances seed on a background thread; re-fetch once it has landed. */
+async function refreshSnapshotAfterFart() {
+  await new Promise((r) => setTimeout(r, 180));
+  try {
+    state = await invoke("get_app_snapshot");
+    renderState();
+  } catch (err) {
+    console.warn("post-fart snapshot refresh failed", err);
+  }
+}
+
+async function playSeedPreview(seed) {
+  if (!tauriInvoke) return;
+  try {
+    await invoke("play_manual_preview", { seed });
+  } catch (err) {
+    console.error("play_manual_preview failed", err);
+  }
+}
 
 function quietSummary(s) {
   if (s.quiet_start == null || s.quiet_end == null) return "always live";
@@ -187,11 +211,14 @@ function computePeaks(samples, cssW) {
   return peaks;
 }
 
-function strokeWaveformPath(ctx, peaks, cssW, cssH) {
+function strokeWaveformPath(ctx, peaks, cssW, cssH, envelopeScale = 1) {
   const cy = cssH / 2;
+  const s = Math.max(0.25, Math.min(envelopeScale, 4));
   ctx.beginPath();
   for (let x = 0; x < peaks.length; x++) {
-    const { min, max } = peaks[x];
+    let { min, max } = peaks[x];
+    max = Math.max(-1, Math.min(1, max * s));
+    min = Math.max(-1, Math.min(1, min * s));
     const y1 = cy - max * cy;
     const y2 = cy - min * cy;
     if (x === 0) ctx.moveTo(x + 0.5, y1);
@@ -206,7 +233,7 @@ function drawPreviewFromSamples(samples) {
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const cssW = canvas.clientWidth || 560;
-  const cssH = canvas.clientHeight || 96;
+  const cssH = canvas.clientHeight || 200;
   canvas.width = Math.floor(cssW * dpr);
   canvas.height = Math.floor(cssH * dpr);
   const ctx = canvas.getContext("2d");
@@ -228,20 +255,38 @@ function drawPreviewFromSamples(samples) {
   ctx.setLineDash([]);
 
   const peaks = computePeaks(samples, cssW);
+  let env = 0;
+  for (const p of peaks) {
+    env = Math.max(env, Math.abs(p.min), Math.abs(p.max));
+  }
+  /** Fill ~90% of half-height when the buffer is quiet (closer to the web demo). */
+  const envelopeScale = env > 1e-5 ? Math.min(0.9 / env, 3.2) : 1;
+
   ctx.lineJoin = "round";
   ctx.shadowColor = c.glow;
   ctx.shadowBlur = 16;
   ctx.strokeStyle = c.glow;
-  ctx.lineWidth = 1.6;
-  strokeWaveformPath(ctx, peaks, cssW, cssH);
+  ctx.lineWidth = 1.8;
+  strokeWaveformPath(ctx, peaks, cssW, cssH, envelopeScale);
 
   ctx.shadowBlur = 0;
   ctx.strokeStyle = c.core;
-  ctx.lineWidth = 0.9;
-  strokeWaveformPath(ctx, peaks, cssW, cssH);
+  ctx.lineWidth = 1;
+  strokeWaveformPath(ctx, peaks, cssW, cssH, envelopeScale);
 }
 
 let previewTimer = null;
+let lastPreviewSettingsKey = null;
+
+function settingsPreviewKey(settings) {
+  return [
+    settings.output,
+    settings.personality,
+    settings.volume,
+    settings.manual_seed,
+    settings.play_mode ?? "single",
+  ].join("\0");
+}
 async function schedulePreview() {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(runPreview, 140);
@@ -303,7 +348,18 @@ function renderModes() {
 
 function renderState() {
   const onboarding = $("[data-onboarding]");
-  if (onboarding) onboarding.hidden = Boolean(state.settings.onboarding_completed);
+  if (onboarding) {
+    const done = Boolean(state.settings?.onboarding_completed);
+    const wasHidden = onboarding.hidden;
+    onboarding.hidden = done;
+    onboarding.classList.toggle("intro--dismissed", done);
+    if (done) onboarding.setAttribute("hidden", "");
+    else onboarding.removeAttribute("hidden");
+    if (wasHidden !== onboarding.hidden) {
+      const content = $(".content");
+      if (content) content.scrollTop = 0;
+    }
+  }
 
   for (const slider of $all('input[data-setting="volume"]')) {
     slider.value = String(state.settings.volume);
@@ -313,8 +369,9 @@ function renderState() {
   }
 
   const ms = Math.max(0, Math.floor(Number(state.settings.manual_seed) || 0));
+  const msStr = String(ms);
   for (const inp of $all('input[data-setting="manual_seed"]')) {
-    if (document.activeElement !== inp) inp.value = String(ms);
+    if (document.activeElement !== inp && inp.value !== msStr) inp.value = msStr;
   }
 
   for (const btn of $all("[data-output]")) {
@@ -351,7 +408,11 @@ function renderState() {
   }
   document.body.classList.toggle("is-shuffle", shuffle);
 
-  schedulePreview();
+  const previewKey = settingsPreviewKey(state.settings);
+  if (previewKey !== lastPreviewSettingsKey) {
+    lastPreviewSettingsKey = previewKey;
+    schedulePreview();
+  }
 }
 
 async function persist() {
@@ -418,6 +479,7 @@ function bind() {
       const v = Math.max(0, Math.floor(Number(inp.value) || 0));
       state.settings.manual_seed = v;
       await persist();
+      await playSeedPreview(v);
     });
   }
 
@@ -464,13 +526,15 @@ function bind() {
     const modeBtn = event.target.closest(".mode-item");
     if (modeBtn) {
       const nextVoice = modeBtn.dataset.voice;
-      if (nextVoice !== state.settings.personality) {
+      const voiceChanged = nextVoice !== state.settings.personality;
+      if (voiceChanged) {
         state.settings.manual_seed = referenceSeedFor(nextVoice);
       }
       state.settings.personality = nextVoice;
       state.settings.play_mode = "single";
       renderState();
       await persist();
+      if (voiceChanged) await playSeedPreview(state.settings.manual_seed);
       return;
     }
 
@@ -508,15 +572,13 @@ function bind() {
       return;
     }
     if (action === "replay-preview") {
-      // Roll a fresh seed so the waveform visibly changes; mirror the seed
-      // bookkeeping fart_now does on the Rust side (cap at 1e9 to stay in
-      // JS safe-integer range — sanitize_settings does the same).
       const newSeed = Math.floor(Math.random() * 1e9);
       state.settings.manual_seed = newSeed;
       const seedInp = $('input[data-setting="manual_seed"]');
       if (seedInp) seedInp.value = String(newSeed);
       void runPreview(newSeed);
       await persist();
+      await playSeedPreview(newSeed);
       return;
     }
     if (action === "fart-now") {
@@ -524,32 +586,53 @@ function bind() {
       try {
         await invoke("fart_now");
         state = await invoke("get_app_snapshot");
+        renderState();
+        void refreshSnapshotAfterFart();
       } catch (err) {
         console.error(err);
       } finally {
         renderState();
-        setTimeout(() => { actionEl.disabled = false; }, 400);
+        setTimeout(() => {
+          actionEl.disabled = false;
+        }, 500);
       }
       return;
     }
     if (action === "complete-onboarding") {
+      if (state.settings.onboarding_completed) return;
+      actionEl.disabled = true;
       try {
         await invoke("complete_onboarding");
         state = await invoke("get_app_snapshot");
-        renderState();
       } catch (err) {
-        console.error(err);
+        console.error("complete_onboarding failed", err);
+        try {
+          const saved = await invoke("set_settings", {
+            newSettings: { ...state.settings, onboarding_completed: true },
+          });
+          if (saved) state.settings = saved;
+        } catch (err2) {
+          console.error("set_settings fallback failed", err2);
+          state.settings = { ...state.settings, onboarding_completed: true };
+        }
+      } finally {
+        renderState();
+        actionEl.disabled = false;
       }
       return;
     }
     if (action === "reset-onboarding") {
+      actionEl.disabled = true;
       try {
         await invoke("reset_onboarding");
         state = await invoke("get_app_snapshot");
-        renderState();
       } catch (err) {
         console.error(err);
+      } finally {
+        actionEl.disabled = false;
+        renderState();
       }
+      return;
     }
   });
 }

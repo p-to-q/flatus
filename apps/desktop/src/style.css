@@ -172,6 +172,11 @@ html.is-tauri body {
   background: transparent;
 }
 
+/* Single-window shell: clip page scroll; only `.content` scrolls inside the panel. */
+html.is-tauri body {
+  overflow: hidden;
+}
+
 html.is-tauri .stage-wrap {
   min-height: 100%;
   height: 100%;
@@ -186,7 +191,10 @@ html.is-tauri .stage-wrap {
 html.is-tauri .window {
   flex: 1 1 auto;
   width: 100%;
-  min-height: 100%;
+  /* `min-height: 0` lets this flex child shrink so inner `.content` can scroll
+   * instead of growing past the webview and getting clipped by `overflow: hidden`. */
+  min-height: 0;
+  height: 100%;
   max-width: none;
   border: 1px solid var(--rule);
   border-radius: var(--radius-window);
@@ -196,6 +204,19 @@ html.is-tauri .window {
     0 24px 60px -28px rgba(26, 22, 18, 0.45),
     0 8px 20px -16px rgba(26, 22, 18, 0.25);
   overflow: hidden;
+}
+
+html.is-tauri .titlebar,
+html.is-tauri .footer {
+  flex-shrink: 0;
+}
+
+html.is-tauri .content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -252,6 +273,18 @@ html.is-tauri .titlebar {
 
 html.is-tauri .title-brand {
   max-width: 100%;
+  justify-content: center;
+}
+
+/* Title center column can shrink; keep tagline ellipsized instead of clipping mid-wordmark. */
+html.is-tauri .wordmark {
+  flex-shrink: 0;
+}
+
+html.is-tauri .tagline {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
 }
 
 .mark {
@@ -305,6 +338,10 @@ html.is-tauri .title-brand {
   border: 1px solid var(--rule);
   border-radius: var(--radius-card);
   background: var(--paper-2);
+}
+
+.intro.intro--dismissed {
+  display: none !important;
 }
 
 .intro-kicker {
@@ -552,7 +589,8 @@ body.is-shuffle .mode-item:hover .mode-name { color: var(--ink); }
 .preview-canvas {
   display: block;
   width: 100%;
-  height: 96px;
+  height: min(220px, 32vh);
+  min-height: 160px;
   vertical-align: middle;
 }
 
