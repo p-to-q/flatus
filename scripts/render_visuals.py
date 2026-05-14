@@ -165,7 +165,7 @@ def render_waveforms_all() -> None:
 
     W, H = 1600, 600
     margin_l, margin_r = 80, 60
-    margin_t, margin_b = 88, 88
+    margin_t, margin_b = 98, 94
     lane_h = (H - margin_t - margin_b) / len(PERSONALITIES)
     plot_w = W - margin_l - margin_r
 
@@ -183,7 +183,7 @@ def render_waveforms_all() -> None:
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#band)"/>')
 
     svg.append(
-        f'<text x="{margin_l}" y="58" font-family="{DISPLAY}" font-style="italic" '
+        f'<text x="{margin_l}" y="64" font-family="{DISPLAY}" font-style="italic" '
         f'font-size="36" fill="{INK}" letter-spacing="0.3">'
         f'canonical voices</text>'
     )
@@ -233,7 +233,7 @@ def render_waveforms_all() -> None:
         ms = int(round(dur_s * 1000))
         svg.append(
             f'<text x="{W - margin_r}" y="{label_y:.2f}" font-family="{MONO}" '
-            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
+            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.5" '
             f'text-anchor="end" text-transform="uppercase">{ms} MS</text>'
         )
 
@@ -249,7 +249,7 @@ def render_waveforms_all() -> None:
         )
         svg.append(
             f'<text x="{x:.2f}" y="{H - margin_b + 24}" font-family="{MONO}" '
-            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
+            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.6" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
     # vignette (very light on paper — just corner darkening to ground the figure)
@@ -289,6 +289,7 @@ def render_spectrogram_biblical() -> None:
     db_floor = -55.0
     db = np.clip(db, db_floor, 0.0)
     intensity = (db - db_floor) / (-db_floor)
+    intensity = np.power(intensity, 1.35)
 
     f_lo, f_hi = 50.0, 2500.0
     freqs = np.fft.rfftfreq(nfft, 1.0 / sr)
@@ -308,7 +309,7 @@ def render_spectrogram_biblical() -> None:
     intensity = intensity[t_idx, :]
 
     W, H = 1600, 520
-    margin_l, margin_r, margin_t, margin_b = 80, 70, 84, 84
+    margin_l, margin_r, margin_t, margin_b = 80, 70, 92, 88
     plot_w = W - margin_l - margin_r
     plot_h = H - margin_t - margin_b
     cell_w = plot_w / x_cols
@@ -327,12 +328,12 @@ def render_spectrogram_biblical() -> None:
     )
 
     svg.append(
-        f'<text x="{margin_l}" y="56" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="34" fill="{INK}" letter-spacing="0.4">biblical</text>'
+        f'<text x="{margin_l}" y="62" font-family="{DISPLAY}" font-style="italic" '
+        f'font-size="36" fill="{INK}" letter-spacing="0.35">biblical</text>'
     )
     svg.append(
-        f'<text x="{margin_l + 174}" y="56" font-family="{MONO}" font-size="12" '
-        f'fill="{INK_2}" letter-spacing="2.4" text-transform="uppercase">'
+        f'<text x="{margin_l + 180}" y="60" font-family="{MONO}" font-size="11" '
+        f'fill="{INK_2}" letter-spacing="2.1" text-transform="uppercase">'
         f'seed 3 · pressure 0.8 · 48 kHz mono</text>'
     )
 
@@ -343,7 +344,7 @@ def render_spectrogram_biblical() -> None:
         col = intensity[x]
         for y in range(y_bins):
             alpha = float(col[y])
-            if alpha < 0.04:
+            if alpha < 0.06:
                 continue
             if alpha > 0.78:
                 fill = DEEP  # darkest, most saturated peak
@@ -358,23 +359,23 @@ def render_spectrogram_biblical() -> None:
             svg.append(
                 f'<rect x="{rx:.2f}" y="{ry:.2f}" width="{cell_w + 0.5:.2f}" '
                 f'height="{cell_h + 0.5:.2f}" fill="{fill}" '
-                f'fill-opacity="{alpha:.2f}"/>'
+                f'fill-opacity="{alpha * 0.88:.2f}"/>'
             )
     svg.append("</g>")
     # Bloomed copy for warmth
-    svg.append('<g filter="url(#bloom)" opacity="0.45">')
+    svg.append('<g filter="url(#bloom)" opacity="0.26">')
     for x in range(0, x_cols, 2):
         col = intensity[x]
         for y in range(0, y_bins, 2):
             alpha = float(col[y])
-            if alpha < 0.35:
+            if alpha < 0.48:
                 continue
             rx = margin_l + x * cell_w
             ry = H - margin_b - (y + 2) * cell_h
             svg.append(
                 f'<rect x="{rx:.2f}" y="{ry:.2f}" width="{cell_w * 2.5:.2f}" '
                 f'height="{cell_h * 2.5:.2f}" fill="{GLOW}" '
-                f'fill-opacity="{alpha * 0.55:.2f}"/>'
+                f'fill-opacity="{alpha * 0.34:.2f}"/>'
             )
     svg.append("</g>")
 
@@ -389,12 +390,12 @@ def render_spectrogram_biblical() -> None:
             continue
         svg.append(
             f'<line x1="{margin_l}" y1="{y:.2f}" x2="{W - margin_r}" '
-            f'y2="{y:.2f}" stroke="{OXBLOOD}" stroke-opacity="0.85" stroke-width="1" '
+            f'y2="{y:.2f}" stroke="{OXBLOOD}" stroke-opacity="0.58" stroke-width="1" '
             f'stroke-dasharray="{dash}"/>'
         )
         svg.append(
             f'<text x="{W - margin_r}" y="{y - 6:.2f}" font-family="{MONO}" '
-            f'font-size="12" fill="{OXBLOOD}" fill-opacity="0.95" letter-spacing="2" '
+            f'font-size="11" fill="{OXBLOOD}" fill-opacity="0.78" letter-spacing="1.8" '
             f'text-anchor="end" text-transform="uppercase">— {label}</text>'
         )
 
@@ -405,7 +406,7 @@ def render_spectrogram_biblical() -> None:
             continue
         svg.append(
             f'<text x="{margin_l - 12}" y="{y + 4:.2f}" font-family="{MONO}" '
-            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.5" '
+            f'font-size="10" fill="{INK_MUTED}" letter-spacing="1.2" '
             f'text-anchor="end">{hz} Hz</text>'
         )
 
@@ -421,12 +422,12 @@ def render_spectrogram_biblical() -> None:
         )
         svg.append(
             f'<text x="{x:.2f}" y="{H - margin_b + 24}" font-family="{MONO}" '
-            f'font-size="12" fill="{INK_MUTED}" letter-spacing="2" '
+            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.6" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
     svg.append(
-        f'<text x="{W/2:.2f}" y="{H - 22}" font-family="{MONO}" font-size="12" '
-        f'fill="{INK_MUTED}" letter-spacing="4" text-anchor="middle" '
+        f'<text x="{W/2:.2f}" y="{H - 20}" font-family="{MONO}" font-size="11" '
+        f'fill="{INK_MUTED}" letter-spacing="3.2" text-anchor="middle" '
         f'text-transform="uppercase">seconds</text>'
     )
 
@@ -713,7 +714,7 @@ def render_og_card() -> None:
     # footer URL
     svg.append(
         f'<text x="600" y="600" font-family="{MONO}" font-size="18" '
-        f'fill="{INK_MUTED}" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>'
+        f'fill="{INK_MUTED}" fill-opacity="0.82" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>'
     )
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#ogVig)"/>')
     svg.append("</svg>")

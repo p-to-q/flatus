@@ -18,6 +18,6 @@
 <ellipse cx="870"  cy="500" rx="38" ry="50" fill="url(#ogG)" opacity="0.78"/>
 <ellipse cx="1010" cy="500" rx="22" ry="32" fill="url(#ogG)" opacity="0.54"/>
 </g>
-<text x="600" y="600" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="18" fill="#6b5e4f" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>
+<text x="600" y="600" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="18" fill="#6b5e4f" fill-opacity="0.82" letter-spacing="2" text-anchor="middle">flatus.vercel.app</text>
 <rect width="1200" height="630" fill="url(#ogVig)"/>
 </svg>

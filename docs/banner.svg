@@ -86,7 +86,7 @@
   <rect width="1200" height="320" fill="url(#grid)"/>
 
   <!-- frame inset -->
-  <rect x="60" y="36" width="1080" height="248" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.5" rx="2"/>
+  <rect x="60" y="36" width="1080" height="248" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="0.5" rx="2"/>
 
   <!-- bandpass corridor (80–400 Hz sweet spot) -->
   <rect x="60" y="172" width="1080" height="96" fill="url(#band)"/>
@@ -116,25 +116,21 @@
   </g>
 
   <!-- axis labels: frequency (left), low-key on dark -->
-  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" fill="#ffffff" fill-opacity="0.45">
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" fill="#ffffff" fill-opacity="0.42">
     <text x="22" y="60">2 kHz</text>
-    <text x="22" y="120">800</text>
     <text x="22" y="174">400</text>
-    <text x="22" y="234">200</text>
     <text x="22" y="272">60 Hz</text>
   </g>
 
   <!-- axis labels: time (bottom) -->
-  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="9.5" fill="#ffffff" fill-opacity="0.42">
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="9.5" fill="#ffffff" fill-opacity="0.38">
     <text x="70"   y="302">0</text>
-    <text x="330"  y="302">0.25</text>
     <text x="600"  y="302">0.5</text>
-    <text x="870"  y="302">0.75</text>
     <text x="1110" y="302">1.0 s</text>
   </g>
 
   <!-- HPF/LPF cutoff labels, right edge -->
-  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="9" fill="#f5a26b" fill-opacity="0.85">
+  <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="9" fill="#f5a26b" fill-opacity="0.72">
     <text x="1146" y="60">LPF 2 kHz</text>
     <text x="1146" y="272">HPF 60 Hz</text>
   </g>
