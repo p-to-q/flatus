@@ -6,6 +6,8 @@
 > expansion. This document records product, interaction, audio-quality, and
 > maintenance issues that should be resolved before we treat the app as ready
 > for broader distribution.
+>
+> For the post-`v0.2.2` execution order, see [`docs/NEXT_ROADMAP.md`](NEXT_ROADMAP.md).
 
 ## Phase judgement
 
