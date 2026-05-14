@@ -65,6 +65,7 @@ TMP=$(mktemp -d)
 scripts/rasterize-svg.sh "$DMG_RES/dmg-background.svg" "$TMP/dmg-1x.png"  540 380
 scripts/rasterize-svg.sh "$DMG_RES/dmg-background.svg" "$TMP/dmg-2x.png" 1080 760
 cp "$TMP/dmg-1x.png" "$DMG_RES/dmg-background.png"
+cp "$TMP/dmg-2x.png" "$DMG_RES/dmg-background@2x.png"
 
 sips -s format tiff "$TMP/dmg-1x.png" --out "$TMP/dmg-1x.tiff" >/dev/null
 sips -s format tiff "$TMP/dmg-2x.png" --out "$TMP/dmg-2x.tiff" >/dev/null

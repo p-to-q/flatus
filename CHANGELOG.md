@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.1.1] — 2026-05-14
+
+### Fixed
+- **DMG background assets now rebuild from the current SVG source all the way through to `@2x` and the bundled TIFF.** The visual pipeline now explicitly writes `apps/desktop/resources/dmg-background@2x.png` alongside the 1x PNG before assembling the multi-rep TIFF, so the packaged DMG matches the latest installer art.
+- **README install copy is tighter.** The macOS install path, tray behavior, and current release links were shortened and pointed at the latest patch release.
+
+### Changed
+- **Website download entry points now target `v0.1.1`.** The homepage CTA and release URLs follow the latest formal patch release instead of the previous `v0.1.0` tag.
+
 ## [v0.1.0] — 2026-05-14
 
 ### Changed

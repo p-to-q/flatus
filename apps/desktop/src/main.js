@@ -26,7 +26,7 @@ const mockSnapshot = {
     manual_seed: 17,
   },
   audio_baseline: "fixtures-v0.4 + web-instrument-reference",
-  version: "0.1.0",
+  version: "0.1.1",
   profiles: MOCK_PROFILES,
 };
 

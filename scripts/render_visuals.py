@@ -19,7 +19,7 @@ Visual language (mirrors apps/web/style.css light palette):
   - fingerprint paper grain  two-octave fractal noise, ink overlay
   - soft bloom on data layers
   - personality labels in Charter / Iowan italic
-  - small-caps mono frame: FLATUS · spec 01 · flatus 0.1.0
+  - small-caps mono frame: FLATUS · spec 01 · flatus 0.1.1
 
 Run from the repo root:
   python3 scripts/render_visuals.py
@@ -190,7 +190,7 @@ def render_waveforms_all() -> None:
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.1</text>'
     )
     svg.append(
         f'<text x="{margin_l}" y="70" font-family="{DISPLAY}" font-style="italic" '
@@ -349,7 +349,7 @@ def render_spectrogram_biblical() -> None:
     )
     svg.append(
         f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.0</text>'
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.1</text>'
     )
     svg.append(
         f'<text x="{margin_l}" y="74" font-family="{DISPLAY}" font-style="italic" '
@@ -723,7 +723,7 @@ def render_og_card() -> None:
     # spec mark top-right
     svg.append(
         f'<text x="1126" y="68" font-family="{MONO}" font-size="16" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.0</text>'
+        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.1</text>'
     )
     # wordmark
     svg.append(
