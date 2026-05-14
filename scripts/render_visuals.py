@@ -165,7 +165,7 @@ def render_waveforms_all() -> None:
 
     W, H = 1600, 600
     margin_l, margin_r = 80, 60
-    margin_t, margin_b = 72, 80
+    margin_t, margin_b = 88, 88
     lane_h = (H - margin_t - margin_b) / len(PERSONALITIES)
     plot_w = W - margin_l - margin_r
 
@@ -183,7 +183,7 @@ def render_waveforms_all() -> None:
     svg.append(f'<rect width="{W}" height="{H}" fill="url(#band)"/>')
 
     svg.append(
-        f'<text x="{margin_l}" y="52" font-family="{DISPLAY}" font-style="italic" '
+        f'<text x="{margin_l}" y="58" font-family="{DISPLAY}" font-style="italic" '
         f'font-size="36" fill="{INK}" letter-spacing="0.3">'
         f'canonical voices</text>'
     )
@@ -308,7 +308,7 @@ def render_spectrogram_biblical() -> None:
     intensity = intensity[t_idx, :]
 
     W, H = 1600, 520
-    margin_l, margin_r, margin_t, margin_b = 80, 70, 95, 80
+    margin_l, margin_r, margin_t, margin_b = 80, 70, 84, 84
     plot_w = W - margin_l - margin_r
     plot_h = H - margin_t - margin_b
     cell_w = plot_w / x_cols
@@ -326,23 +326,14 @@ def render_spectrogram_biblical() -> None:
         f'<rect width="{W}" height="{H}" filter="url(#fingerprint)" opacity="0.55"/>'
     )
 
-    # frame header
     svg.append(
-        f'<text x="{margin_l}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{OXBLOOD}" letter-spacing="3" text-transform="uppercase">FLATUS</text>'
+        f'<text x="{margin_l}" y="56" font-family="{DISPLAY}" font-style="italic" '
+        f'font-size="34" fill="{INK}" letter-spacing="0.4">biblical</text>'
     )
     svg.append(
-        f'<text x="{W - margin_r}" y="44" font-family="{MONO}" font-size="14" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">spec 01 · flatus 0.1.1</text>'
-    )
-    svg.append(
-        f'<text x="{margin_l}" y="74" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="30" fill="{INK}" letter-spacing="0.7">biblical.wav</text>'
-    )
-    svg.append(
-        f'<text x="{margin_l + 220}" y="74" font-family="{MONO}" font-size="13" '
-        f'fill="{INK_2}" letter-spacing="3" text-transform="uppercase">'
-        f'seed 3 · pressure 0.8 · 48 kHz mono · spectrogram</text>'
+        f'<text x="{margin_l + 174}" y="56" font-family="{MONO}" font-size="12" '
+        f'fill="{INK_2}" letter-spacing="2.4" text-transform="uppercase">'
+        f'seed 3 · pressure 0.8 · 48 kHz mono</text>'
     )
 
     # cells: low intensity = warm wash, high intensity = deep saturated oxblood
@@ -699,16 +690,6 @@ def render_og_card() -> None:
     svg.append("</defs>")
     svg.extend(_paper_canvas_rect(W, H))
 
-    # flatus mark top-left
-    svg.append(
-        f'<text x="74" y="68" font-family="{MONO}" font-size="22" '
-        f'fill="{OXBLOOD}" letter-spacing="3">FLATUS</text>'
-    )
-    # spec mark top-right
-    svg.append(
-        f'<text x="1126" y="68" font-family="{MONO}" font-size="16" '
-        f'fill="{INK_2}" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.1</text>'
-    )
     # wordmark
     svg.append(
         f'<text x="74" y="340" font-family="{DISPLAY}" font-size="220" '

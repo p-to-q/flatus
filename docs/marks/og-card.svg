@@ -8,8 +8,6 @@
 </defs>
 <rect width="1200" height="630" fill="url(#bg)"/>
 <rect width="1200" height="630" filter="url(#fingerprint)" opacity="0.6"/>
-<text x="74" y="68" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="22" fill="#8c2f1e" letter-spacing="3">FLATUS</text>
-<text x="1126" y="68" font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace" font-size="16" fill="#3a3128" letter-spacing="3" text-anchor="end">SPEC 01 · FLATUS 0.1.1</text>
 <text x="74" y="340" font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif" font-size="220" font-style="italic" font-weight="400" fill="#1a1612" letter-spacing="-3">flatus</text>
 <text x="78" y="388" font-family="Charter, 'Iowan Old Style', 'Source Serif Pro', 'Apple Garamond', Cambria, Georgia, serif" font-size="28" font-style="italic" fill="#3a3128">a small apparatus for moving air.</text>
 <g filter="url(#ogBloom)">
