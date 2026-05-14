@@ -8,9 +8,9 @@ A small thing that lives in your menubar and occasionally farts.
 
 It's also, by acoustic accident, the same waveform Apple uses in watchOS to push water out of the Apple Watch speaker. See [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) if you want receipts.
 
-→ **[Try it in your browser](https://flatus.vercel.app/)**
-
 **Desktop (macOS Apple Silicon):** [download the latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.1) or use the [one-line installer](https://flatus.vercel.app/install.sh).
+
+→ **[Or try it in your browser](https://flatus.vercel.app/)**
 
 ## Personality
 
