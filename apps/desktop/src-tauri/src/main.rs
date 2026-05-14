@@ -25,7 +25,7 @@ use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
     window::Color,
-    AppHandle, Manager,
+    AppHandle, Manager, RunEvent,
 };
 use time::OffsetDateTime;
 
@@ -141,6 +141,28 @@ struct RenderPlan {
     sample_rate_hz: u32,
     output_gain_dbfs: f32,
     volume: f32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct AudioOutputProbe {
+    device_name: String,
+    sample_format: String,
+    channels: usize,
+    device_sample_rate_hz: u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct AudioDebugBundle {
+    audio_baseline: &'static str,
+    version: &'static str,
+    chosen_personality: String,
+    manual_seed: u64,
+    pressure: f32,
+    source_sample_rate_hz: u32,
+    rendered_frames: usize,
+    device: AudioOutputProbe,
+    rendered_wav_path: String,
+    report_path: String,
 }
 
 fn sanitize_settings(mut settings: Settings) -> Settings {
@@ -339,13 +361,28 @@ fn current_local_hour() -> Option<u8> {
     OffsetDateTime::now_local().ok().map(OffsetDateTime::hour)
 }
 
+#[cfg(target_os = "macos")]
+fn set_window_entry_mode(app: &AppHandle, window_visible: bool) {
+    let policy = if window_visible {
+        tauri::ActivationPolicy::Regular
+    } else {
+        tauri::ActivationPolicy::Accessory
+    };
+    let _ = app.set_activation_policy(policy);
+}
+
+#[cfg(not(target_os = "macos"))]
+fn set_window_entry_mode(_app: &AppHandle, _window_visible: bool) {}
+
 #[tauri::command]
 #[allow(clippy::needless_pass_by_value)]
 fn main_window_hide(app: AppHandle) -> Result<(), String> {
     app.get_webview_window("main")
         .ok_or_else(|| "no main window".to_string())?
         .hide()
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    set_window_entry_mode(&app, false);
+    Ok(())
 }
 
 #[tauri::command]
@@ -371,6 +408,8 @@ fn main_window_toggle_maximize(app: AppHandle) -> Result<(), String> {
 }
 
 fn show_main_window(app: &AppHandle) {
+    let _ = ensure_tray_icon(app);
+    set_window_entry_mode(app, true);
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.show();
         let _ = window.unminimize();
@@ -503,6 +542,71 @@ fn open_github() -> Result<(), String> {
                 Err(format!("browser exited with status {status}"))
             }
         })
+}
+
+fn probe_default_output() -> Result<AudioOutputProbe> {
+    let host = cpal::default_host();
+    let device = host
+        .default_output_device()
+        .ok_or_else(|| anyhow::anyhow!("no default output device"))?;
+    let supported = device.default_output_config()?;
+    Ok(AudioOutputProbe {
+        device_name: device.name().unwrap_or_else(|_| "unknown output".to_string()),
+        sample_format: format!("{:?}", supported.sample_format()),
+        channels: supported.channels() as usize,
+        device_sample_rate_hz: supported.sample_rate().0,
+    })
+}
+
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
+fn export_audio_debug_bundle(
+    state: tauri::State<AppState>,
+    app: AppHandle,
+) -> Result<AudioDebugBundle, String> {
+    let settings = state.settings.lock().clone();
+    let chosen_name = select_fire_voice(&settings, settings.manual_seed);
+    let (samples, plan) = render_manual_event(&settings, &chosen_name, settings.manual_seed)
+        .map_err(|e| format!("could not render debug buffer: {e}"))?;
+    let probe = probe_default_output().map_err(|e| format!("could not inspect output: {e}"))?;
+
+    let dir = app
+        .path()
+        .app_cache_dir()
+        .map_err(|e| format!("could not resolve cache dir: {e}"))?
+        .join("audio-debug");
+    fs::create_dir_all(&dir).map_err(|e| format!("could not create {}: {e}", dir.display()))?;
+
+    let stem = format!(
+        "{}-seed-{}-{}",
+        chosen_name,
+        settings.manual_seed,
+        seed_now() % 1_000_000
+    );
+    let wav_path = dir.join(format!("{stem}.wav"));
+    let report_path = dir.join(format!("{stem}.json"));
+
+    let wav_bytes = write_wav_to_vec(&samples, plan.sample_rate_hz);
+    fs::write(&wav_path, wav_bytes)
+        .map_err(|e| format!("could not write {}: {e}", wav_path.display()))?;
+
+    let bundle = AudioDebugBundle {
+        audio_baseline: AUDIO_BASELINE,
+        version: VERSION,
+        chosen_personality: chosen_name,
+        manual_seed: settings.manual_seed,
+        pressure: DEFAULT_PREVIEW_PRESSURE,
+        source_sample_rate_hz: plan.sample_rate_hz,
+        rendered_frames: samples.len(),
+        device: probe,
+        rendered_wav_path: wav_path.display().to_string(),
+        report_path: report_path.display().to_string(),
+    };
+    let json = serde_json::to_string_pretty(&bundle)
+        .map_err(|e| format!("could not serialize debug report: {e}"))?;
+    fs::write(&report_path, json + "\n")
+        .map_err(|e| format!("could not write {}: {e}", report_path.display()))?;
+    Ok(bundle)
 }
 
 #[tauri::command]
@@ -711,15 +815,67 @@ fn build_tray_menu(app: &AppHandle) -> Result<Menu<tauri::Wry>> {
     let sep1 = PredefinedMenuItem::separator(app)?;
     let item_fart = MenuItem::with_id(app, "fart_now", "Fart now", true, None::<&str>)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
+    let item_debug = MenuItem::with_id(
+        app,
+        "export_audio_debug",
+        "Export audio debug",
+        true,
+        None::<&str>,
+    )?;
+    let sep3 = PredefinedMenuItem::separator(app)?;
     let item_quit = MenuItem::with_id(app, "quit", "Quit flatus", true, Some("Cmd+Q"))?;
     Ok(Menu::with_items(
         app,
-        &[&item_show, &sep1, &item_fart, &sep2, &item_quit],
+        &[&item_show, &sep1, &item_fart, &sep2, &item_debug, &sep3, &item_quit],
     )?)
 }
 
+fn wire_tray_menu_event(app: &AppHandle, event_id: &str) {
+    match event_id {
+        "fart_now" => {
+            let state: tauri::State<AppState> = app.state();
+            let _ = fart_now(state);
+        }
+        // Let the native menu finish closing before showing/focusing
+        // the window — otherwise `show`/`set_focus` can be flaky.
+        "open_main" => {
+            let h = app.clone();
+            thread::spawn(move || {
+                thread::sleep(Duration::from_millis(50));
+                show_main_window(&h);
+            });
+        }
+        "export_audio_debug" => {
+            let state: tauri::State<AppState> = app.state();
+            let _ = export_audio_debug_bundle(state, app.clone());
+        }
+        "quit" => app.exit(0),
+        _ => {}
+    }
+}
+
+fn ensure_tray_icon(app: &AppHandle) -> Result<()> {
+    let menu = build_tray_menu(app)?;
+    if let Some(tray) = app.tray_by_id("main") {
+        let _ = tray.set_visible(true);
+        let _ = tray.set_icon_as_template(true);
+        let _ = tray.set_show_menu_on_left_click(true);
+        let _ = tray.set_menu(Some(menu));
+        return Ok(());
+    }
+
+    let _tray = TrayIconBuilder::with_id("main")
+        .icon(tauri::include_image!("icons/tray-template@2x.png"))
+        .icon_as_template(true)
+        .menu(&menu)
+        .show_menu_on_left_click(true)
+        .on_menu_event(|app, event| wire_tray_menu_event(app, event.id.as_ref()))
+        .build(app)?;
+    Ok(())
+}
+
 fn main() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .setup(|app| {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
@@ -729,34 +885,8 @@ fn main() {
             save_settings(&settings_path, &settings)?;
             app.manage(AppState::new(settings.clone(), settings_path));
 
-            let menu = build_tray_menu(app.handle())?;
             let handle = app.handle().clone();
-            // Left-click drops the native menu (the "F · ⋯" feel the brand
-            // wants). The menu's "Show window" item is the only path to the
-            // big surface; there is no longer a webview popover.
-            let _tray = TrayIconBuilder::with_id("main")
-                .icon(tauri::include_image!("icons/tray-template@2x.png"))
-                .icon_as_template(true)
-                .menu(&menu)
-                .show_menu_on_left_click(true)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "fart_now" => {
-                        let state: tauri::State<AppState> = app.state();
-                        let _ = fart_now(state);
-                    }
-                    // Let the native menu finish closing before showing/focusing
-                    // the window — otherwise `show`/`set_focus` can be flaky.
-                    "open_main" => {
-                        let h = app.clone();
-                        thread::spawn(move || {
-                            thread::sleep(Duration::from_millis(50));
-                            show_main_window(&h);
-                        });
-                    }
-                    "quit" => app.exit(0),
-                    _ => {}
-                })
-                .build(app)?;
+            ensure_tray_icon(app.handle())?;
 
             if let Some(main) = handle.get_webview_window("main") {
                 let _ = main.set_shadow(true);
@@ -767,6 +897,7 @@ fn main() {
                 show_main_window(&handle);
             } else if let Some(main) = handle.get_webview_window("main") {
                 let _ = main.hide();
+                set_window_entry_mode(&handle, false);
             }
 
             spawn_pressure_loop(handle);
@@ -784,12 +915,29 @@ fn main() {
             main_window_toggle_maximize,
             show_main_window_command,
             open_github,
+            export_audio_debug_bundle,
             quit_app,
             complete_onboarding,
             reset_onboarding,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app, event| {
+        match event {
+            RunEvent::Reopen {
+                has_visible_windows: _,
+                ..
+            } => {
+                let _ = ensure_tray_icon(app);
+                show_main_window(app);
+            }
+            RunEvent::Resumed => {
+                let _ = ensure_tray_icon(app);
+            }
+            _ => {}
+        }
+    });
 }
 
 #[cfg(test)]

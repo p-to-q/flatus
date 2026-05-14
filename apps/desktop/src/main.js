@@ -27,7 +27,7 @@ const mockSnapshot = {
     manual_seed: 17,
   },
   audio_baseline: "fixtures-v0.4 + web-specimen-reference",
-  version: "0.2.1",
+  version: "0.2.2",
   profiles: MOCK_PROFILES,
 };
 
@@ -89,6 +89,24 @@ async function mockInvoke(command, payload) {
     case "main_window_minimize":
     case "main_window_toggle_maximize":
       return null;
+    case "export_audio_debug_bundle":
+      return {
+        audio_baseline: state.audio_baseline,
+        version: state.version,
+        chosen_personality: state.settings.personality,
+        manual_seed: state.settings.manual_seed,
+        pressure: 0.6,
+        source_sample_rate_hz: SAMPLE_RATE,
+        rendered_frames: Math.floor(SAMPLE_RATE * 1.2),
+        device: {
+          device_name: "browser preview",
+          sample_format: "mock",
+          channels: 2,
+          device_sample_rate_hz: SAMPLE_RATE,
+        },
+        rendered_wav_path: "/tmp/flatus-preview.wav",
+        report_path: "/tmp/flatus-preview.json",
+      };
     default:
       return null;
   }
@@ -481,6 +499,11 @@ function bindKeyboardShortcuts() {
   });
 }
 
+function setSupportCopy(text) {
+  const el = $("[data-support-copy]");
+  if (el) el.textContent = text;
+}
+
 function bind() {
   for (const slider of $all('input[data-setting="volume"]')) {
     slider.addEventListener("input", () => {
@@ -658,6 +681,25 @@ function bind() {
       } finally {
         actionEl.disabled = false;
         renderState();
+      }
+      return;
+    }
+    if (action === "export-audio-debug") {
+      actionEl.disabled = true;
+      try {
+        const bundle = await invoke("export_audio_debug_bundle");
+        if (bundle?.report_path) {
+          setSupportCopy(
+            `Audio debug written for ${bundle.chosen_personality} (seed ${bundle.manual_seed}) to ${bundle.report_path}. The paired WAV sits next to it and captures the exact desktop manual render path.`
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        setSupportCopy(
+          "Could not export the audio debug bundle. Please try again after the app has fully loaded."
+        );
+      } finally {
+        actionEl.disabled = false;
       }
       return;
     }

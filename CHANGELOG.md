@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+## [v0.2.2] — 2026-05-14
+
+### Added
+- **Desktop audio debug export.** The main window can now write the exact WAV used by desktop manual playback plus a JSON report describing the current output device, seed, pressure, and render reference. This gives us a reproducible path for comparing exported playback against live desktop playback on Apple hardware.
+- **Explicit test-note archive for unresolved findings.** `docs/test/` now records release-relevant investigation results that should survive past chat history, starting with the current desktop audio note.
+
+### Changed
+- **Menubar recovery is now much harder to lose permanently.** The desktop shell now reasserts or rebuilds the tray icon on app resume, reopen, and main-window show, instead of assuming the original menubar item always survives.
+- **Desktop window recovery path is clearer.** First-launch and support copy now explain that reopening `flatus` from Applications or Spotlight will bring the main window back even if the menubar icon has been dragged away.
+- **Desktop paper texture is scaled up again.** The window substrate now uses a larger, lower-frequency paper grain so the fingerprint-like texture reads at normal size instead of only when inspected closely.
+- **Desktop title row alignment is calmer.** `How to fart` now sits more cleanly against the `single / shuffle` control instead of riding a separate baseline.
+- **Homepage typography is more unified.** Section subheads, figure captions, specimen descriptions, and install recovery copy now use a more consistent hierarchy and a less mixed voice.
+- **Banner wordmark copy is sharper.** The hero text now prioritizes crisp legibility over soft glow.
+
+### Fixed
+- **Tray-first macOS builds now have a real fallback if the status item disappears.** Reopening the app no longer depends on the tray item still being visible before the user can recover the fuller desktop surface.
+
 ## [v0.2.1] — 2026-05-14
 
 ### Changed

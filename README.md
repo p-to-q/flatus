@@ -8,7 +8,7 @@ A small thing that lives in your menubar and occasionally farts.
 
 It's also, by acoustic accident, the same waveform Apple uses in watchOS to push water out of the Apple Watch speaker. See [`docs/ACOUSTICS.md`](docs/ACOUSTICS.md) if you want receipts.
 
-**Desktop (macOS Apple Silicon):** [download the latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.1) or use the [one-line installer](https://flatus.vercel.app/install.sh).
+**Desktop (macOS Apple Silicon):** [download the latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.2) or use the [one-line installer](https://flatus.vercel.app/install.sh).
 
 → **[Or try it in your browser](https://flatus.vercel.app/)**
 
@@ -33,11 +33,11 @@ For what makes a fart unwelcome is not its voice, but its odour; the ear, left t
 curl -fsSL https://flatus.vercel.app/install.sh | bash
 ```
 
-That puts `flatus.app` in `/Applications` and clears the quarantine xattr that can trigger the fake "app is damaged" dialog. If you prefer doing it manually, grab the **unsigned** `.dmg` or `.app.zip` from the [latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.1).
+That puts `flatus.app` in `/Applications` and clears the quarantine xattr that can trigger the fake "app is damaged" dialog. If you prefer doing it manually, grab the **unsigned** `.dmg` or `.app.zip` from the [latest release](https://github.com/p-to-q/flatus/releases/tag/v0.2.2).
 
 ## First launch
 
-`v0.2.1` is still **unsigned**. If macOS objects, run:
+`v0.2.2` is still **unsigned**. If macOS objects, run:
 
 ```sh
 xattr -cr /Applications/flatus.app
@@ -112,7 +112,7 @@ The [landing page](https://flatus.vercel.app/) runs the same synthesis core as t
 
 ## Roadmap
 
-- [x] First desktop release ([v0.2.1](https://github.com/p-to-q/flatus/releases/tag/v0.2.1))
+- [x] First desktop release ([v0.2.2](https://github.com/p-to-q/flatus/releases/tag/v0.2.2))
 - [x] Live synth in the browser
 - [ ] Cease-and-desist from Apple's lawyers (re: US 9,451,354 et seq.)
 - [ ] Speaker manufacturer warranty claims department

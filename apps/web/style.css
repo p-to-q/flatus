@@ -86,10 +86,10 @@ body::after {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='280' height='280' filter='url(%23n)'/></svg>");
-  background-size: 280px 280px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.48' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.48 0'/></filter><rect width='480' height='480' filter='url(%23n)'/></svg>");
+  background-size: 480px 480px;
   background-repeat: repeat;
-  opacity: 0.18;
+  opacity: 0.16;
   mix-blend-mode: multiply;
   z-index: 0;
 }
@@ -132,7 +132,8 @@ body::after {
   font-size: clamp(1.1rem, 2.2vw, 1.45rem);
   color: var(--ink-2);
   margin: 0.45rem 0 1.75rem;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.015em;
+  max-width: 32rem;
 }
 
 /* Entrance: wordmark settles in, tagline trails, banner fades up.
@@ -221,11 +222,11 @@ body::after {
 
 .elevator {
   font-family: var(--font-display);
-  font-size: 1.08rem;
-  line-height: 1.58;
+  font-size: 1.12rem;
+  line-height: 1.62;
   color: var(--ink-2);
-  max-width: 34rem;
-  margin: 0 0 1.7rem;
+  max-width: 36rem;
+  margin: 0 0 1.9rem;
 }
 
 .cta-row {
@@ -341,10 +342,11 @@ body::after {
 }
 .steps strong { color: var(--ink); font-weight: 600; }
 .install-foot {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
   color: var(--muted);
   margin: 1rem 0 0;
+  line-height: 1.55;
 }
 
 .install-lede {
@@ -407,19 +409,20 @@ body::after {
 .caption {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 1.9rem;
+  font-size: 1.82rem;
+  line-height: 1.08;
   letter-spacing: -0.01em;
   color: var(--ink);
   margin: 0 0 0.35rem;
   font-weight: 400;
 }
 .section-sub {
-  font-family: var(--font-display);
-  font-size: 1.02rem;
-  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 0.98rem;
+  color: color-mix(in srgb, var(--ink-2) 84%, var(--muted));
   margin: 0;
-  max-width: 34rem;
-  line-height: 1.58;
+  max-width: 38rem;
+  line-height: 1.68;
 }
 
 /* ---------- instrument (live synth) ---------- */
@@ -844,13 +847,12 @@ body::after {
 }
 
 .specimen .desc {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  font-size: 0.93rem;
   color: var(--ink-2);
   letter-spacing: 0;
   flex: 1;
-  line-height: 1.45;
+  line-height: 1.52;
 }
 
 .specimen-meta {
@@ -960,7 +962,7 @@ body::after {
   color: var(--muted);
   width: 14rem;
   text-transform: lowercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
 .spec-table td { color: var(--ink-2); }
 
@@ -1027,10 +1029,10 @@ body::after {
   border-radius: calc(var(--radius) - 2px);
 }
 .figure figcaption {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 0.88rem;
-  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--ink-2) 82%, var(--muted));
   margin: 0.75rem 0.25rem 0.15rem;
   text-align: center;
 }

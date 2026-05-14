@@ -38,3 +38,5 @@ apps/desktop/src-tauri/target/
 
 # Local release-staging artifacts (kept out of git; published via gh release)
 dist/
+.env*.local
+.vercel/

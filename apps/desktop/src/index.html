@@ -35,6 +35,10 @@
               Click the menubar icon for the native menu. Use <strong>Fart now</strong> for a quick test,
               then come back here through <strong>Show window</strong> whenever you want the fuller controls.
             </p>
+            <p class="intro-note">
+              If the menubar icon ever gets dragged away, reopen <strong>flatus</strong> from Applications or Spotlight.
+              The main window will come back, and the Dock icon will stay visible until you hide the window again.
+            </p>
           </div>
           <button type="button" class="intro-cta" data-action="complete-onboarding">looks good</button>
         </section>
@@ -146,16 +150,24 @@
           </div>
 
           <div class="support-row">
-            <p class="support-copy">
-              Manual playback mirrors the website specimens: one reference event, the current seed, and the same safe output caps.
+            <p class="support-copy" data-support-copy>
+              Manual playback mirrors the website specimens: one reference event, the current seed, and the same safe output caps. If the tray icon disappears, reopen flatus from Applications or Spotlight to recover the window.
             </p>
-            <button type="button" class="support-link" data-action="reset-onboarding">Show help again</button>
+            <div class="support-actions">
+              <button type="button" class="support-link" data-action="reset-onboarding">Show help again</button>
+            </div>
           </div>
         </section>
       </div>
 
       <footer class="footer">
-        <span data-version data-action="open-github" role="link" tabindex="0" aria-label="Open flatus on GitHub">v0.2.1</span>
+        <button
+          type="button"
+          class="footer-secret-hit"
+          data-action="export-audio-debug"
+          aria-label="Export audio debug"
+        ></button>
+        <span data-version data-action="open-github" role="link" tabindex="0" aria-label="Open flatus on GitHub">v0.2.2</span>
       </footer>
     </main>
   </div>

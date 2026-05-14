@@ -118,10 +118,10 @@ input { font: inherit; color: inherit; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='280' height='280' filter='url(%23n)'/></svg>");
-  background-size: 280px 280px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.34' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.45 0'/></filter><rect width='640' height='640' filter='url(%23n)'/></svg>");
+  background-size: 640px 640px;
   background-repeat: repeat;
-  opacity: 0.14;
+  opacity: 0.12;
   mix-blend-mode: multiply;
   z-index: 0;
 }
@@ -372,6 +372,14 @@ html.is-tauri .tagline {
   max-width: 44rem;
 }
 
+.intro-note {
+  margin: 10px 0 0;
+  max-width: 42rem;
+  font-size: var(--t-1);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .intro-cta,
 .support-link {
   display: inline-flex;
@@ -397,7 +405,7 @@ html.is-tauri .tagline {
 
 .section-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
@@ -834,7 +842,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .support-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-top: 4px;
@@ -852,6 +860,13 @@ input[type="range"]::-webkit-slider-thumb {
   flex: 0 0 auto;
   background: var(--paper-3);
   color: var(--ink-2);
+}
+
+.support-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .slider-inline {
@@ -880,13 +895,30 @@ input[type="range"]::-webkit-slider-thumb {
 .footer {
   padding: 12px var(--pad-x);
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   border-top: 1px solid var(--rule-soft);
   background: var(--paper-2);
   font-family: var(--font-mono);
   font-size: var(--t-1);
   letter-spacing: 0.04em;
   color: var(--muted);
+}
+
+.footer-secret-hit {
+  flex: 0 0 120px;
+  align-self: stretch;
+  margin: -12px 0;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.footer-secret-hit:focus-visible {
+  opacity: 0.12;
+  background: var(--paper-3);
+  outline: 1px solid var(--rule);
+  outline-offset: -1px;
 }
 
 [data-version][data-action="open-github"] {
@@ -917,4 +949,5 @@ input[type="range"]::-webkit-slider-thumb {
   .fart { justify-self: center; }
   .setting { grid-template-columns: 1fr; gap: 6px; }
   .support-row { flex-direction: column; align-items: flex-start; }
+  .support-actions { justify-content: flex-start; }
 }

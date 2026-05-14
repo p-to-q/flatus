@@ -84,16 +84,16 @@ DEFS = """\
       <feGaussianBlur stdDeviation="5"/>
     </filter>
     <filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="fine"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.44" numOctaves="2" seed="7" result="fine"/>
       <feColorMatrix in="fine" values="0 0 0 0 0.10
                                        0 0 0 0 0.085
                                        0 0 0 0 0.07
-                                       0 0 0 0.18 0" result="fineLit"/>
-      <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" seed="13" result="coarse"/>
+                                       0 0 0 0.16 0" result="fineLit"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="1" seed="13" result="coarse"/>
       <feColorMatrix in="coarse" values="0 0 0 0 0.10
                                          0 0 0 0 0.085
                                          0 0 0 0 0.07
-                                         0 0 0 0.08 0" result="coarseLit"/>
+                                         0 0 0 0.07 0" result="coarseLit"/>
       <feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>
     </filter>
     <radialGradient id="vignette" cx="50%" cy="50%" r="75%">
@@ -289,7 +289,7 @@ def render_spectrogram_biblical() -> None:
     db_floor = -55.0
     db = np.clip(db, db_floor, 0.0)
     intensity = (db - db_floor) / (-db_floor)
-    intensity = np.power(intensity, 1.35)
+    intensity = np.power(intensity, 1.55)
 
     f_lo, f_hi = 50.0, 2500.0
     freqs = np.fft.rfftfreq(nfft, 1.0 / sr)
@@ -309,7 +309,7 @@ def render_spectrogram_biblical() -> None:
     intensity = intensity[t_idx, :]
 
     W, H = 1600, 520
-    margin_l, margin_r, margin_t, margin_b = 80, 70, 92, 88
+    margin_l, margin_r, margin_t, margin_b = 84, 76, 96, 88
     plot_w = W - margin_l - margin_r
     plot_h = H - margin_t - margin_b
     cell_w = plot_w / x_cols
@@ -328,12 +328,13 @@ def render_spectrogram_biblical() -> None:
     )
 
     svg.append(
-        f'<text x="{margin_l}" y="62" font-family="{DISPLAY}" font-style="italic" '
-        f'font-size="36" fill="{INK}" letter-spacing="0.35">biblical</text>'
+        f'<text x="{margin_l}" y="64" font-family="{DISPLAY}" font-style="italic" '
+        f'font-size="38" fill="{INK}" letter-spacing="0.32">biblical</text>'
     )
     svg.append(
-        f'<text x="{margin_l + 180}" y="60" font-family="{MONO}" font-size="11" '
-        f'fill="{INK_2}" letter-spacing="2.1" text-transform="uppercase">'
+        f'<text x="{W - margin_r}" y="60" font-family="{MONO}" font-size="10" '
+        f'fill="{INK_MUTED}" fill-opacity="0.84" letter-spacing="1.8" '
+        f'text-anchor="end" text-transform="uppercase">'
         f'seed 3 · pressure 0.8 · 48 kHz mono</text>'
     )
 
@@ -344,7 +345,7 @@ def render_spectrogram_biblical() -> None:
         col = intensity[x]
         for y in range(y_bins):
             alpha = float(col[y])
-            if alpha < 0.06:
+            if alpha < 0.08:
                 continue
             if alpha > 0.78:
                 fill = DEEP  # darkest, most saturated peak
@@ -359,23 +360,23 @@ def render_spectrogram_biblical() -> None:
             svg.append(
                 f'<rect x="{rx:.2f}" y="{ry:.2f}" width="{cell_w + 0.5:.2f}" '
                 f'height="{cell_h + 0.5:.2f}" fill="{fill}" '
-                f'fill-opacity="{alpha * 0.88:.2f}"/>'
+                f'fill-opacity="{alpha * 0.82:.2f}"/>'
             )
     svg.append("</g>")
     # Bloomed copy for warmth
-    svg.append('<g filter="url(#bloom)" opacity="0.26">')
+    svg.append('<g filter="url(#bloom)" opacity="0.18">')
     for x in range(0, x_cols, 2):
         col = intensity[x]
         for y in range(0, y_bins, 2):
             alpha = float(col[y])
-            if alpha < 0.48:
+            if alpha < 0.58:
                 continue
             rx = margin_l + x * cell_w
             ry = H - margin_b - (y + 2) * cell_h
             svg.append(
                 f'<rect x="{rx:.2f}" y="{ry:.2f}" width="{cell_w * 2.5:.2f}" '
-                f'height="{cell_h * 2.5:.2f}" fill="{GLOW}" '
-                f'fill-opacity="{alpha * 0.34:.2f}"/>'
+                f'height="{cell_h * 2.3:.2f}" fill="{GLOW}" '
+                f'fill-opacity="{alpha * 0.24:.2f}"/>'
             )
     svg.append("</g>")
 
@@ -390,12 +391,12 @@ def render_spectrogram_biblical() -> None:
             continue
         svg.append(
             f'<line x1="{margin_l}" y1="{y:.2f}" x2="{W - margin_r}" '
-            f'y2="{y:.2f}" stroke="{OXBLOOD}" stroke-opacity="0.58" stroke-width="1" '
+            f'y2="{y:.2f}" stroke="{OXBLOOD}" stroke-opacity="0.46" stroke-width="1" '
             f'stroke-dasharray="{dash}"/>'
         )
         svg.append(
             f'<text x="{W - margin_r}" y="{y - 6:.2f}" font-family="{MONO}" '
-            f'font-size="11" fill="{OXBLOOD}" fill-opacity="0.78" letter-spacing="1.8" '
+            f'font-size="10" fill="{OXBLOOD}" fill-opacity="0.68" letter-spacing="1.7" '
             f'text-anchor="end" text-transform="uppercase">— {label}</text>'
         )
 
@@ -406,7 +407,7 @@ def render_spectrogram_biblical() -> None:
             continue
         svg.append(
             f'<text x="{margin_l - 12}" y="{y + 4:.2f}" font-family="{MONO}" '
-            f'font-size="10" fill="{INK_MUTED}" letter-spacing="1.2" '
+            f'font-size="9.5" fill="{INK_MUTED}" fill-opacity="0.9" letter-spacing="1.1" '
             f'text-anchor="end">{hz} Hz</text>'
         )
 
@@ -422,12 +423,12 @@ def render_spectrogram_biblical() -> None:
         )
         svg.append(
             f'<text x="{x:.2f}" y="{H - margin_b + 24}" font-family="{MONO}" '
-            f'font-size="11" fill="{INK_MUTED}" letter-spacing="1.6" '
+            f'font-size="10.5" fill="{INK_MUTED}" fill-opacity="0.88" letter-spacing="1.4" '
             f'text-anchor="middle">{t:.2f}</text>'
         )
     svg.append(
-        f'<text x="{W/2:.2f}" y="{H - 20}" font-family="{MONO}" font-size="11" '
-        f'fill="{INK_MUTED}" letter-spacing="3.2" text-anchor="middle" '
+        f'<text x="{W/2:.2f}" y="{H - 20}" font-family="{MONO}" font-size="10.5" '
+        f'fill="{INK_MUTED}" fill-opacity="0.88" letter-spacing="2.8" text-anchor="middle" '
         f'text-transform="uppercase">seconds</text>'
     )
 
@@ -500,11 +501,11 @@ def render_wordmark() -> None:
     )
     svg.append(
         '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
-        '<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" '
+        '<feTurbulence type="fractalNoise" baseFrequency="0.44" numOctaves="2" '
         'seed="7" result="fine"/>'
         '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
-        '0 0 0 0 0.07  0 0 0 0.18 0" result="fineLit"/>'
-        '<feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" '
+        '0 0 0 0 0.07  0 0 0 0.16 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="1" '
         'seed="13" result="coarse"/>'
         '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
         '0 0 0 0 0.07  0 0 0 0.08 0" result="coarseLit"/>'
@@ -561,11 +562,11 @@ def render_signature() -> None:
     )
     svg.append(
         '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
-        '<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" '
+        '<feTurbulence type="fractalNoise" baseFrequency="0.44" numOctaves="2" '
         'seed="7" result="fine"/>'
         '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
-        '0 0 0 0 0.07  0 0 0 0.18 0" result="fineLit"/>'
-        '<feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="1" '
+        '0 0 0 0 0.07  0 0 0 0.16 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="1" '
         'seed="13" result="coarse"/>'
         '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
         '0 0 0 0 0.07  0 0 0 0.08 0" result="coarseLit"/>'
@@ -617,10 +618,10 @@ def render_monogram() -> None:
     )
     svg.append(
         '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
-        '<feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" '
+        '<feTurbulence type="fractalNoise" baseFrequency="0.50" numOctaves="2" '
         'seed="7" result="fine"/>'
         '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
-        '0 0 0 0 0.07  0 0 0 0.20 0" result="fineLit"/>'
+        '0 0 0 0 0.07  0 0 0 0.18 0" result="fineLit"/>'
         '<feMerge><feMergeNode in="fineLit"/></feMerge>'
         "</filter>"
     )
@@ -671,14 +672,14 @@ def render_og_card() -> None:
     )
     svg.append(
         '<filter id="fingerprint" x="0%" y="0%" width="100%" height="100%">'
-        '<feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" '
+        '<feTurbulence type="fractalNoise" baseFrequency="0.40" numOctaves="2" '
         'seed="7" result="fine"/>'
         '<feColorMatrix in="fine" values="0 0 0 0 0.10  0 0 0 0 0.085  '
-        '0 0 0 0 0.07  0 0 0 0.16 0" result="fineLit"/>'
-        '<feTurbulence type="fractalNoise" baseFrequency="0.30" numOctaves="1" '
+        '0 0 0 0 0.07  0 0 0 0.15 0" result="fineLit"/>'
+        '<feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="1" '
         'seed="13" result="coarse"/>'
         '<feColorMatrix in="coarse" values="0 0 0 0 0.10  0 0 0 0 0.085  '
-        '0 0 0 0 0.07  0 0 0 0.07 0" result="coarseLit"/>'
+        '0 0 0 0 0.07  0 0 0 0.06 0" result="coarseLit"/>'
         '<feMerge><feMergeNode in="coarseLit"/><feMergeNode in="fineLit"/></feMerge>'
         "</filter>"
     )
