@@ -91,12 +91,6 @@
   <!-- bandpass corridor (80–400 Hz sweet spot) -->
   <rect x="60" y="172" width="1080" height="96" fill="url(#band)"/>
 
-  <!-- HPF / LPF rails -->
-  <g>
-    <line x1="60" y1="56"  x2="1140" y2="56"  stroke="#ce552a" stroke-opacity="0.45" stroke-dasharray="2 6" stroke-width="0.75"/>
-    <line x1="60" y1="268" x2="1140" y2="268" stroke="#ce552a" stroke-opacity="0.45" stroke-dasharray="2 6" stroke-width="0.75"/>
-  </g>
-
   <!-- grains, with bloom -->
   <g filter="url(#bloom)">
     <ellipse cx="180" cy="234" rx="34" ry="44" fill="url(#grain)" opacity="0.85"/>
@@ -110,6 +104,16 @@
   <!-- waveform envelope traced over the spectrogram, very thin -->
   <use href="#wave" stroke="#fff3d6" stroke-opacity="0.42" stroke-width="1.1" fill="none"/>
   <use href="#wave" stroke="#fff3d6" stroke-opacity="0.18" stroke-width="3.0" fill="none"/>
+
+  <!-- noise overlay lives below labels and axis copy so the paper texture
+       grounds the background without softening the typography -->
+  <rect width="1200" height="320" filter="url(#grain-noise)" opacity="0.6"/>
+
+  <!-- HPF / LPF rails -->
+  <g>
+    <line x1="60" y1="56"  x2="1140" y2="56"  stroke="#ce552a" stroke-opacity="0.45" stroke-dasharray="2 6" stroke-width="0.75"/>
+    <line x1="60" y1="268" x2="1140" y2="268" stroke="#ce552a" stroke-opacity="0.45" stroke-dasharray="2 6" stroke-width="0.75"/>
+  </g>
 
   <!-- axis labels: frequency (left), low-key on dark -->
   <g font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="10" fill="#ffffff" fill-opacity="0.45">
@@ -145,9 +149,6 @@
   <g font-family="'Berkeley Mono', 'JetBrains Mono', 'SF Mono', Menlo, monospace">
     <text x="74" y="176" font-size="13" fill="#ffffff" fill-opacity="0.7" letter-spacing="0.5">a small apparatus for moving air.</text>
   </g>
-
-  <!-- noise overlay, very low alpha so it reads as paper texture not visual noise -->
-  <rect width="1200" height="320" filter="url(#grain-noise)" opacity="0.6"/>
 
   <!-- vignette -->
   <rect width="1200" height="320" fill="url(#vignette)"/>
