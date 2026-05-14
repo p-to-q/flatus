@@ -184,17 +184,34 @@ wasm-bindgen --target web --no-typescript --out-dir apps/web/wasm \
 
 ### Brand kit
 
-<p align="center">
-  <img src="docs/marks/wordmark.png" alt="flatus wordmark — italic Charter serif with a small-caps mono tagline" width="48%" />
-  &nbsp;
-  <img src="docs/marks/signature.png" alt="flatus signature — six warm grains across a time strip, abstract spectrogram mark" width="48%" />
-  <br/>
-  <img src="docs/marks/monogram.png" alt="flatus monogram — italic f with three small grains, rounded square paper backdrop" width="22%" />
-  &nbsp;
-  <img src="docs/marks/og-card.svg" alt="flatus Open Graph card — wordmark + signature on dark canvas with brand frame" width="60%" />
-</p>
+Raster previews of the vector sources in [`docs/marks/`](docs/marks/) (each asset has an SVG sibling there). The OG card is also wired on the live site as `og:image` / `twitter:image`.
 
-SVG sources under [`docs/marks/`](docs/marks/) along with their README. The OG card above is also wired into the live site at [`flatus.vercel.app`](https://flatus.vercel.app/) as the `og:image` / `twitter:image` for social unfurls.
+<table>
+  <thead>
+    <tr>
+      <th align="center" width="50%">Wordmark</th>
+      <th align="center" width="50%">Signature</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle"><img src="docs/marks/wordmark.png" alt="flatus wordmark — italic Charter serif with a small-caps mono tagline" width="400" /></td>
+      <td align="center" valign="middle"><img src="docs/marks/signature.png" alt="flatus signature — six warm grains across a time strip" width="400" /></td>
+    </tr>
+    <tr>
+      <th align="center" colspan="2">Monogram</th>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="2"><img src="docs/marks/monogram.png" alt="flatus monogram — italic f with three small grains on a rounded paper square" width="200" /></td>
+    </tr>
+    <tr>
+      <th align="center" colspan="2">Open Graph card</th>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="2"><img src="docs/marks/og-card.svg" alt="flatus Open Graph card — wordmark and signature on a dark canvas with brand frame" width="640" /></td>
+    </tr>
+  </tbody>
+</table>
 
 ## License
 

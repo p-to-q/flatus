@@ -25,7 +25,7 @@ const mockSnapshot = {
     auto_play_enabled: true,
     manual_seed: 17,
   },
-  audio_baseline: "fixtures-v0.4 + web-instrument-reference",
+  audio_baseline: "fixtures-v0.4 + web-specimen-reference",
   version: "0.2.0",
   profiles: MOCK_PROFILES,
 };
@@ -479,7 +479,6 @@ function bind() {
       const v = Math.max(0, Math.floor(Number(inp.value) || 0));
       state.settings.manual_seed = v;
       await persist();
-      await playSeedPreview(v);
     });
   }
 
@@ -534,7 +533,6 @@ function bind() {
       state.settings.play_mode = "single";
       renderState();
       await persist();
-      if (voiceChanged) await playSeedPreview(state.settings.manual_seed);
       return;
     }
 
@@ -578,7 +576,6 @@ function bind() {
       if (seedInp) seedInp.value = String(newSeed);
       void runPreview(newSeed);
       await persist();
-      await playSeedPreview(newSeed);
       return;
     }
     if (action === "fart-now") {

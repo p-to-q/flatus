@@ -60,8 +60,6 @@ const ctaBtn = $("#download-cta");
 const ctaMeta = $("#cta-meta");
 const ctaHint = $("#cta-hint");
 const installSection = $("#install");
-const liveDot = $("#live-dot");
-const liveLabel = $("#live-label");
 const bannerTrigger = $("#banner-trigger");
 const overlayWave = $("#overlay-wave");
 const overlayWaveCore = $("#overlay-wave-core");
@@ -799,12 +797,6 @@ async function boot() {
       pressureReadout.value = DEFAULT_PRESSURE.toFixed(2);
       renderAndPlay();
     });
-  }
-
-  // Live-dot: green warm pulse while wasm is loading, steady when ready.
-  if (liveDot && liveLabel) {
-    liveDot.classList.add("ready");
-    liveLabel.textContent = "live";
   }
 }
 

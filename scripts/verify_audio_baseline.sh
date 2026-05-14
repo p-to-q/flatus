@@ -6,8 +6,8 @@
 #   2. The fixture manifest and the web manifest are identical.
 #   3. The CLI re-renders the canonical `(personality, seed, pressure)` tuples to the
 #      same WAV bytes listed in `fixtures/golden/manifest.json`.
-#   4. The interactive web reference in `apps/web/main.js` still points at the
-#      expected preview seeds / pressure / session shape used for release signoff.
+#   4. The website specimen reference in `apps/web/main.js` still points at the
+#      expected preview seeds / pressure used for desktop manual playback.
 #
 # Run from the repo root:
 #   bash scripts/verify_audio_baseline.sh
@@ -61,7 +61,7 @@ while IFS=$'\t' read -r personality seed pressure expected_hash; do
 done
 
 echo
-echo "== interactive web reference =="
+echo "== website specimen reference =="
 python3 - <<'PY'
 import pathlib
 import re
@@ -82,18 +82,14 @@ for name, seed in expected.items():
         print(f"missing or changed preview seed for {name}: expected {seed}", file=sys.stderr)
         sys.exit(1)
 
-checks = {
-    "DEFAULT_PRESSURE": r"const DEFAULT_PRESSURE = 0\.6;",
-    "SESSION_EVENTS": r"const SESSION_EVENTS = 3;",
-    "SESSION_GAP_MS": r"const SESSION_GAP_MS = 280;",
-}
+checks = {"DEFAULT_PRESSURE": r"const DEFAULT_PRESSURE = 0\.6;"}
 
 for label, pattern in checks.items():
     if not re.search(pattern, text):
         print(f"missing or changed web preview constant {label}", file=sys.stderr)
         sys.exit(1)
 
-print("  web preview constants match release reference")
+print("  web specimen constants match desktop manual reference")
 PY
 
 echo

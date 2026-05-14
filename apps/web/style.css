@@ -132,35 +132,6 @@ body::after {
 }
 .masthead .brand:hover { color: var(--accent); }
 
-.masthead .catalog {
-  font-variant-numeric: tabular-nums;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-}
-
-.live-dot {
-  width: 0.55em;
-  height: 0.55em;
-  border-radius: 50%;
-  background: var(--muted);
-  display: inline-block;
-  box-shadow: 0 0 0 0 rgba(239, 126, 87, 0);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-.live-dot.ready {
-  background: var(--warm);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .live-dot.ready {
-    animation: live-pulse 2.6s ease-in-out infinite;
-  }
-}
-@keyframes live-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 126, 87, 0.6); }
-  50%      { box-shadow: 0 0 0 6px rgba(239, 126, 87, 0); }
-}
-
 /* ---------- hero ---------- */
 
 .hero {

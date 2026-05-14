@@ -21,15 +21,17 @@ For now, the release baseline has two layers:
 - **Fixture reference**
   `fixtures/golden/*.wav` and `apps/web/samples/v0.4/*.wav` are the locked
   single-event regression fixtures.
-- **Interactive web reference**
-  The website instrument and desktop manual preview both use:
-  - three short events with silent gaps;
-  - fixed preview pressure `0.6`;
-  - per-personality default seeds:
-    - `polite-cough` → `7`
-    - `default` → `17`
-    - `biblical` → `31`
-    - `silent-but-deadly` → `9`
+- **Website specimen reference**
+  The website specimen cards are the user-facing listening reference for the
+  desktop app. They play one event, at fixed preview pressure `0.6`, using
+  per-personality default seeds:
+  - `polite-cough` -> `7`
+  - `default` -> `17`
+  - `biblical` -> `31`
+  - `silent-but-deadly` -> `9`
+- **Website instrument**
+  The web instrument can still concatenate three events for exploration. That
+  is a browser demo behavior, not the desktop manual playback target.
 - CLI must still re-render the canonical fixture tuples to the same WAV bytes.
 - Desktop playback must render from the same synth logic, even if the final
   device path still resamples through `cpal`.
@@ -70,7 +72,7 @@ Before freezing a new release baseline, compare the following in order:
 
 1. Web sample playback for each canonical fixture voice.
 2. CLI-rendered WAV playback for the same `(personality, seed, pressure)`.
-3. Website instrument playback for the same selected voice and preview seed.
+3. Website specimen playback for the same selected voice and preview seed.
 4. Desktop manual playback for the same selected voice, seed, and output mode.
 5. Desktop automatic playback with the same voice, after confirming quiet-hours
    and volume behavior are not altering the outcome unexpectedly.
@@ -94,19 +96,16 @@ The current canonical tuples are:
 
 These come from `crates/fart-synth/src/bin/generate_goldens.rs`.
 
-## Interactive preview reference
+## Desktop manual reference
 
-The website instrument and the desktop manual preview share this release
-reference:
+The website specimens and desktop manual playback share this release reference:
 
 - `pressure = 0.6`
-- `session_events = 3`
-- `session_gap_ms = 280`
 - default preview seeds:
-  - `polite-cough` → `7`
-  - `default` → `17`
-  - `biblical` → `31`
-  - `silent-but-deadly` → `9`
+  - `polite-cough` -> `7`
+  - `default` -> `17`
+  - `biblical` -> `31`
+  - `silent-but-deadly` -> `9`
 
 ## When to change the baseline
 

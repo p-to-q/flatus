@@ -38,18 +38,7 @@ use fart_synth::{
 
 const SETTINGS_VERSION: u32 = 1;
 const SETTINGS_FILE: &str = "settings.json";
-const AUDIO_BASELINE: &str = "fixtures-v0.4 + web-instrument-reference";
-/// Matches `apps/web/main.js` — three short events with gaps so manual play
-/// feels like the in-browser instrument, not a single blink.
-///
-/// **Important:** `fart_now` and `render_preview_wav` use this path. The
-/// background **auto-play** loop (`spawn_pressure_loop`) uses
-/// `render_samples_for_settings` once per fire with live **pressure** — a
-/// different timbre and duration from the three fixed-pressure preview events.
-/// Playback is serialized with `AUDIO_OUTPUT_LOCK` so they never hit the DAC
-/// simultaneously (which used to read as two unrelated voices).
-const SESSION_EVENTS: usize = 3;
-const SESSION_GAP_MS: u32 = 280;
+const AUDIO_BASELINE: &str = "fixtures-v0.4 + web-specimen-reference";
 const DEFAULT_PREVIEW_PRESSURE: f32 = 0.6;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,8 +61,8 @@ struct Settings {
     /// When false, automatic ticks still run but no sound plays on `TickResult::Fart`.
     #[serde(default = "default_auto_play_enabled")]
     auto_play_enabled: bool,
-    /// PRNG seed for the next manual `fart_now` / preview session (`seed`,
-    /// `seed+1`, `seed+2` across the three events). Rolled after each manual fire.
+    /// PRNG seed for the next manual `fart_now` / preview render.
+    /// Rolled after each manual fire.
     #[serde(default = "default_manual_seed")]
     manual_seed: u64,
 }
@@ -316,37 +305,19 @@ fn render_samples_for_settings(
     Ok((samples, plan))
 }
 
-/// Three-event session with silent gaps — mirrors `apps/web/main.js` `renderSession`.
+/// One reference event for desktop manual playback.
 ///
-/// `base_seed` overrides `base_settings.manual_seed`, so the preview/play paths
-/// can render any seed in real time without first persisting it. The three
-/// events use `base_seed`, `base_seed+1`, `base_seed+2`.
-fn render_manual_session(
+/// This intentionally mirrors the website specimen cards, not the website's
+/// multi-event instrument preview. The user-facing desktop control should play
+/// one clean line, so it cannot read as a second "instrument" layered on top.
+fn render_manual_event(
     base_settings: &Settings,
     personality_name: &str,
-    base_seed: u64,
+    seed: u64,
 ) -> Result<(Vec<f32>, RenderPlan)> {
-    let sr = safety::SAMPLE_RATE_HZ;
-    let gap_samples =
-        usize::try_from(u64::from(SESSION_GAP_MS) * u64::from(sr) / 1000).unwrap_or(0);
-
-    let mut merged: Vec<f32> = Vec::new();
-    let mut last_plan: Option<RenderPlan> = None;
-
-    for i in 0..SESSION_EVENTS {
-        let mut s = base_settings.clone();
-        s.personality = personality_name.to_string();
-        let seed = base_seed.wrapping_add(i as u64);
-        let (mut block, plan) = render_samples_for_settings(&s, DEFAULT_PREVIEW_PRESSURE, seed)?;
-        last_plan = Some(plan);
-        if i > 0 {
-            merged.resize(merged.len().saturating_add(gap_samples), 0.0);
-        }
-        merged.append(&mut block);
-    }
-
-    let plan = last_plan.ok_or_else(|| anyhow::anyhow!("empty session"))?;
-    Ok((merged, plan))
+    let mut settings = base_settings.clone();
+    settings.personality = personality_name.to_string();
+    render_samples_for_settings(&settings, DEFAULT_PREVIEW_PRESSURE, seed)
 }
 
 fn quiet_hours_active(settings: &Settings, now_hour: u8) -> bool {
@@ -455,7 +426,7 @@ fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
     let chosen_for_play = chosen_name.clone();
     let app_for_thread = app.clone();
     thread::spawn(move || {
-        match render_manual_session(
+        match render_manual_event(
             &settings_for_play,
             &chosen_for_play,
             settings_for_play.manual_seed,
@@ -479,8 +450,8 @@ fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
     Ok(chosen_name)
 }
 
-/// Audible preview for the current (or explicit) seed — same three-event
-/// session as `fart_now`, without advancing `manual_seed`.
+/// Audible preview for the current (or explicit) seed — same single reference
+/// event as `fart_now`, without advancing `manual_seed`.
 #[tauri::command]
 fn play_manual_preview(seed: Option<u64>, state: tauri::State<AppState>) -> Result<(), String> {
     let settings = state.settings.lock().clone();
@@ -489,7 +460,7 @@ fn play_manual_preview(seed: Option<u64>, state: tauri::State<AppState>) -> Resu
     let settings_clone = settings;
     let name_clone = name.clone();
     thread::spawn(move || {
-        match render_manual_session(&settings_clone, &name_clone, base_seed) {
+        match render_manual_event(&settings_clone, &name_clone, base_seed) {
             Ok((samples, plan)) => {
                 let _ = play_output_exclusive(samples, plan.sample_rate_hz);
             }
@@ -509,7 +480,7 @@ fn render_preview_wav(seed: Option<u64>, state: tauri::State<AppState>) -> Resul
     let base_seed = seed.unwrap_or(settings.manual_seed);
     let name = select_fire_voice(&settings, base_seed);
     let (merged, plan) =
-        render_manual_session(&settings, &name, base_seed).map_err(|e| e.to_string())?;
+        render_manual_event(&settings, &name, base_seed).map_err(|e| e.to_string())?;
     Ok(write_wav_to_vec(&merged, plan.sample_rate_hz))
 }
 
