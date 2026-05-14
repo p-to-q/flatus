@@ -170,11 +170,13 @@ html.is-tauri body {
   height: 100%;
   margin: 0;
   background: transparent;
+  border-radius: var(--radius-window);
+  overflow: hidden;
 }
 
 /* Single-window shell: clip page scroll; only `.content` scrolls inside the panel. */
 html.is-tauri body {
-  overflow: hidden;
+  position: relative;
 }
 
 html.is-tauri .stage-wrap {
@@ -186,6 +188,8 @@ html.is-tauri .stage-wrap {
   align-items: stretch;
   justify-content: stretch;
   background: transparent;
+  border-radius: inherit;
+  overflow: hidden;
 }
 
 html.is-tauri .window {
@@ -204,6 +208,7 @@ html.is-tauri .window {
     0 24px 60px -28px rgba(26, 22, 18, 0.45),
     0 8px 20px -16px rgba(26, 22, 18, 0.25);
   overflow: hidden;
+  isolation: isolate;
 }
 
 html.is-tauri .titlebar,
@@ -882,6 +887,20 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: var(--t-1);
   letter-spacing: 0.04em;
   color: var(--muted);
+}
+
+[data-version][data-action="open-github"] {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color 160ms ease;
+}
+
+[data-version][data-action="open-github"]:hover,
+[data-version][data-action="open-github"]:focus-visible {
+  color: var(--ink-1);
+  outline: none;
 }
 
 /* ---------- responsive ---------- */

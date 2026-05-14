@@ -11,6 +11,7 @@ mod idle;
 
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -36,7 +37,7 @@ use fart_synth::{
     render, safety, RenderConfig, VERSION,
 };
 
-const SETTINGS_VERSION: u32 = 1;
+const SETTINGS_VERSION: u32 = 2;
 const SETTINGS_FILE: &str = "settings.json";
 const AUDIO_BASELINE: &str = "fixtures-v0.4 + web-specimen-reference";
 const DEFAULT_PREVIEW_PRESSURE: f32 = 0.6;
@@ -72,7 +73,7 @@ fn default_manual_seed() -> u64 {
 }
 
 fn default_auto_play_enabled() -> bool {
-    true
+    false
 }
 
 fn default_play_mode() -> String {
@@ -143,7 +144,14 @@ struct RenderPlan {
 }
 
 fn sanitize_settings(mut settings: Settings) -> Settings {
+    let previous_version = settings.version;
     settings.version = SETTINGS_VERSION;
+    if previous_version < 2 {
+        // Older builds shipped with background auto-play enabled by default.
+        // That made manual reference checks sound like two unrelated voices
+        // when the pressure loop fired during UI testing.
+        settings.auto_play_enabled = false;
+    }
     if lookup_personality(&settings.personality).is_none() {
         settings.personality = Settings::default().personality;
     }
@@ -237,7 +245,6 @@ fn personality_profiles() -> Vec<PersonalityProfile> {
 fn reference_seed_for_personality(personality_name: &str) -> u64 {
     match personality_name {
         "polite-cough" => 7,
-        "default" => 17,
         "biblical" => 31,
         "silent-but-deadly" => 9,
         _ => 17,
@@ -256,7 +263,6 @@ const CANONICAL_PERSONALITIES: &[&str] =
 ///
 /// - `single` — always the personality the user picked.
 /// - `shuffle` — uniform-random choice across the four canonical personalities.
-
 fn select_fire_voice(settings: &Settings, rng_seed: u64) -> String {
     if settings.play_mode == "shuffle" {
         let mut rng = Mulberry32::new(rng_seed);
@@ -330,10 +336,11 @@ fn quiet_hours_active(settings: &Settings, now_hour: u8) -> bool {
 }
 
 fn current_local_hour() -> Option<u8> {
-    OffsetDateTime::now_local().ok().map(|dt| dt.hour())
+    OffsetDateTime::now_local().ok().map(OffsetDateTime::hour)
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn main_window_hide(app: AppHandle) -> Result<(), String> {
     app.get_webview_window("main")
         .ok_or_else(|| "no main window".to_string())?
@@ -342,6 +349,7 @@ fn main_window_hide(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn main_window_minimize(app: AppHandle) -> Result<(), String> {
     app.get_webview_window("main")
         .ok_or_else(|| "no main window".to_string())?
@@ -350,6 +358,7 @@ fn main_window_minimize(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn main_window_toggle_maximize(app: AppHandle) -> Result<(), String> {
     let w = app
         .get_webview_window("main")
@@ -370,11 +379,13 @@ fn show_main_window(app: &AppHandle) {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn get_settings(state: tauri::State<AppState>) -> Settings {
     state.settings.lock().clone()
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn get_app_snapshot(state: tauri::State<AppState>) -> AppSnapshot {
     AppSnapshot {
         settings: state.settings.lock().clone(),
@@ -385,6 +396,7 @@ fn get_app_snapshot(state: tauri::State<AppState>) -> AppSnapshot {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn set_settings(new_settings: Settings, state: tauri::State<AppState>) -> Result<Settings, String> {
     let current = state.settings.lock().clone();
     let mut sanitized = sanitize_settings(new_settings);
@@ -408,6 +420,7 @@ fn list_personality_profiles() -> Vec<PersonalityProfile> {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
     let app = state.inner().clone();
     let settings = app.settings.lock().clone();
@@ -450,31 +463,12 @@ fn fart_now(state: tauri::State<AppState>) -> Result<String, String> {
     Ok(chosen_name)
 }
 
-/// Audible preview for the current (or explicit) seed — same single reference
-/// event as `fart_now`, without advancing `manual_seed`.
-#[tauri::command]
-fn play_manual_preview(seed: Option<u64>, state: tauri::State<AppState>) -> Result<(), String> {
-    let settings = state.settings.lock().clone();
-    let base_seed = seed.unwrap_or(settings.manual_seed);
-    let name = select_fire_voice(&settings, base_seed);
-    let settings_clone = settings;
-    let name_clone = name.clone();
-    thread::spawn(move || {
-        match render_manual_event(&settings_clone, &name_clone, base_seed) {
-            Ok((samples, plan)) => {
-                let _ = play_output_exclusive(samples, plan.sample_rate_hz);
-            }
-            Err(e) => eprintln!("play_manual_preview render failed: {e}"),
-        }
-    });
-    Ok(())
-}
-
 /// Real-time preview render. `seed` overrides the persisted `manual_seed` so
 /// the frontend can show the waveform for the seed currently in the input
 /// field without first writing it to disk. When `seed` is `None`, the
 /// persisted `manual_seed` is used (matches what `fart_now` would play).
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn render_preview_wav(seed: Option<u64>, state: tauri::State<AppState>) -> Result<Vec<u8>, String> {
     let settings = state.settings.lock().clone();
     let base_seed = seed.unwrap_or(settings.manual_seed);
@@ -485,16 +479,34 @@ fn render_preview_wav(seed: Option<u64>, state: tauri::State<AppState>) -> Resul
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn show_main_window_command(app: AppHandle) {
     show_main_window(&app);
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn quit_app(app: AppHandle) {
     app.exit(0);
 }
 
 #[tauri::command]
+fn open_github() -> Result<(), String> {
+    Command::new("open")
+        .arg("https://github.com/p-to-q/flatus")
+        .status()
+        .map_err(|err| format!("failed to launch browser: {err}"))
+        .and_then(|status| {
+            if status.success() {
+                Ok(())
+            } else {
+                Err(format!("browser exited with status {status}"))
+            }
+        })
+}
+
+#[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn complete_onboarding(state: tauri::State<AppState>) -> Result<(), String> {
     let mut settings = state.settings.lock().clone();
     if settings.onboarding_completed {
@@ -510,6 +522,7 @@ fn complete_onboarding(state: tauri::State<AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
+#[allow(clippy::needless_pass_by_value)]
 fn reset_onboarding(state: tauri::State<AppState>, app: AppHandle) -> Result<(), String> {
     let mut settings = state.settings.lock().clone();
     settings.onboarding_completed = false;
@@ -571,7 +584,7 @@ fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
                     let mut tmp = vec![0.0_f32; out.len()];
                     feed(&mono, &mut cursor, device_channels, &mut tmp);
                     for (o, s) in out.iter_mut().zip(tmp.iter()) {
-                        *o = (s.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+                        *o = (s.clamp(-1.0, 1.0) * f32::from(i16::MAX)) as i16;
                     }
                 },
                 err_fn,
@@ -586,7 +599,7 @@ fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
                     let mut tmp = vec![0.0_f32; out.len()];
                     feed(&mono, &mut cursor, device_channels, &mut tmp);
                     for (o, s) in out.iter_mut().zip(tmp.iter()) {
-                        let v = (s.clamp(-1.0, 1.0) * 0.5 + 0.5) * u16::MAX as f32;
+                        let v = (s.clamp(-1.0, 1.0) * 0.5 + 0.5) * f32::from(u16::MAX);
                         *o = v as u16;
                     }
                 },
@@ -594,7 +607,7 @@ fn play_blocking(samples: Vec<f32>, sample_rate_hz: u32) -> Result<()> {
                 None,
             )?
         }
-        other => return Err(anyhow::anyhow!("unsupported sample format: {:?}", other)),
+        other => return Err(anyhow::anyhow!("unsupported sample format: {other:?}")),
     };
     stream.play()?;
     thread::sleep(Duration::from_secs_f32(
@@ -623,7 +636,7 @@ fn resample_linear(samples: &[f32], from_hz: u32, to_hz: u32) -> Vec<f32> {
     if from_hz == to_hz {
         return samples.to_vec();
     }
-    let ratio = from_hz as f64 / to_hz as f64;
+    let ratio = f64::from(from_hz) / f64::from(to_hz);
     let out_len = ((samples.len() as f64) / ratio) as usize;
     let mut out = Vec::with_capacity(out_len);
     for i in 0..out_len {
@@ -642,10 +655,10 @@ fn seed_now() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_nanos() as u64)
-        .unwrap_or(0xc0ff_eeee_c0ff_eeee)
+        .map_or(0xc0ff_eeee_c0ff_eeee, |d| d.as_nanos() as u64)
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn spawn_pressure_loop(app: AppHandle) {
     let state = app.state::<AppState>().inner().clone();
     thread::spawn(move || {
@@ -711,12 +724,12 @@ fn main() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let settings_path = settings_path(&app.handle())?;
+            let settings_path = settings_path(app.handle())?;
             let settings = load_settings(&settings_path);
             save_settings(&settings_path, &settings)?;
             app.manage(AppState::new(settings.clone(), settings_path));
 
-            let menu = build_tray_menu(&app.handle())?;
+            let menu = build_tray_menu(app.handle())?;
             let handle = app.handle().clone();
             // Left-click drops the native menu (the "F · ⋯" feel the brand
             // wants). The menu's "Show window" item is the only path to the
@@ -748,11 +761,12 @@ fn main() {
             if let Some(main) = handle.get_webview_window("main") {
                 let _ = main.set_shadow(true);
                 let _ = main.set_background_color(Some(Color(0, 0, 0, 0)));
-                let _ = main.hide();
             }
 
             if !settings.onboarding_completed {
                 show_main_window(&handle);
+            } else if let Some(main) = handle.get_webview_window("main") {
+                let _ = main.hide();
             }
 
             spawn_pressure_loop(handle);
@@ -764,12 +778,12 @@ fn main() {
             set_settings,
             list_personality_profiles,
             fart_now,
-            play_manual_preview,
             render_preview_wav,
             main_window_hide,
             main_window_minimize,
             main_window_toggle_maximize,
             show_main_window_command,
+            open_github,
             quit_app,
             complete_onboarding,
             reset_onboarding,
@@ -802,7 +816,7 @@ mod tests {
             ..Settings::default()
         };
         let plan = build_render_plan(&settings, 0.8);
-        assert_eq!(plan.output_gain_dbfs, safety::MAX_OUTPUT_DBFS);
+        assert!((plan.output_gain_dbfs - safety::MAX_OUTPUT_DBFS).abs() < f32::EPSILON);
         assert!((plan.volume - 0.35).abs() < 1e-6);
     }
 
@@ -822,20 +836,47 @@ mod tests {
         // default), not "headphones" — that earlier behaviour silently
         // halved the volume on legacy / corrupted settings files.
         assert_eq!(sanitized.output, "speakers");
-        assert_eq!(sanitized.volume, 1.0);
+        assert!((sanitized.volume - 1.0).abs() < f32::EPSILON);
         assert_eq!(sanitized.quiet_start, Some(23));
         assert_eq!(sanitized.quiet_end, Some(23));
     }
 
     #[test]
     fn sanitize_settings_normalises_play_mode() {
-        let mut s = Settings::default();
-        s.play_mode = "garbage".to_string();
+        let s = Settings {
+            play_mode: "garbage".to_string(),
+            ..Settings::default()
+        };
         assert_eq!(sanitize_settings(s).play_mode, "single");
 
-        let mut s = Settings::default();
-        s.play_mode = "shuffle".to_string();
+        let s = Settings {
+            play_mode: "shuffle".to_string(),
+            ..Settings::default()
+        };
         assert_eq!(sanitize_settings(s).play_mode, "shuffle");
+    }
+
+    #[test]
+    fn sanitize_settings_migrates_legacy_auto_play_off() {
+        let s = Settings {
+            version: 1,
+            auto_play_enabled: true,
+            ..Settings::default()
+        };
+        let sanitized = sanitize_settings(s);
+        assert_eq!(sanitized.version, SETTINGS_VERSION);
+        assert!(!sanitized.auto_play_enabled);
+    }
+
+    #[test]
+    fn sanitize_settings_preserves_current_auto_play_choice() {
+        let s = Settings {
+            version: SETTINGS_VERSION,
+            auto_play_enabled: true,
+            ..Settings::default()
+        };
+        let sanitized = sanitize_settings(s);
+        assert!(sanitized.auto_play_enabled);
     }
 
     #[test]

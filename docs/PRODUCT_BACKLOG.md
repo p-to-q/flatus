@@ -16,12 +16,12 @@ buildable. `cargo test` and `cargo check --workspace` passed locally on
 
 The remaining work is mostly product closure:
 
-- make desktop settings real and durable;
-- make menubar behavior understandable;
-- reconcile local audio output with the web version;
+- keep desktop audio aligned with the website specimen reference;
+- make menubar behavior more discoverable than the current native-menu shell;
 - remove organization-specific branding from public-facing surfaces;
 - improve first-run and recovery paths;
-- align documentation with the current implementation.
+- keep documentation and release metadata aligned with the current implementation;
+- reduce maintenance friction in release scripts and desktop/web runtime fallbacks.
 
 ## P0: Audio quality and parity
 
@@ -71,11 +71,12 @@ Acceptance criteria:
 
 ## P0: Desktop settings must be real
 
-### Settings are memory-only
+### Settings persistence is present, but still needs hardening
 
-The app exposes settings, but they are not persisted across launches. This
-contradicts the engineering note that settings should live in one
-`settings.json`.
+The app now persists settings to one `settings.json`, including migration and
+default recovery. The remaining work is around failure handling, explicit path
+documentation, and keeping the desktop webview from drifting too far from the
+saved snapshot if a late write fails.
 
 Relevant surfaces:
 
@@ -88,12 +89,14 @@ Acceptance criteria:
 - Settings load from disk at startup.
 - Settings save after changes.
 - Corrupt settings recover to defaults without crashing.
+- Save failures reconcile the UI back to the last persisted snapshot.
 - The settings path is documented.
 
-### Volume slider does not affect playback
+### Volume and playback controls need ongoing validation
 
-The UI has a volume slider and sends `volume` to Rust, but the render and
-playback path currently only uses the output cap.
+The volume slider now affects desktop playback after the safety cap. What
+remains is making sure manual preview, `Fart now`, and auto-play stay aligned
+as the desktop shell evolves.
 
 Relevant surfaces:
 
@@ -106,12 +109,13 @@ Acceptance criteria:
 - `volume` scales output after the safety cap.
 - `0%` is silent.
 - `100%` preserves the existing cap.
-- Manual "fart now" and automatic pressure-triggered playback behave the same.
+- Manual "fart now" follows the website specimen reference. Automatic
+  pressure-triggered playback stays opt-in and may vary with live pressure.
 
-### Quiet hours are not enforced
+### Quiet hours enforcement
 
-The UI collects quiet-hours values, but automatic playback does not currently
-check them.
+Quiet hours are enforced for automatic playback. Manual "fart now" remains
+available so users can always test their current settings.
 
 Acceptance criteria:
 
@@ -123,11 +127,11 @@ Acceptance criteria:
 
 ## P0: Menubar interaction
 
-### Tray behavior is not self-explanatory enough
+### Tray behavior is still not self-explanatory enough
 
-The app lives in the menu bar, but the current interaction depends on the user
-learning left-click versus right-click behavior. We need a more discoverable
-popover.
+The app now uses the native menu on left click, which is better than the older
+split left/right-click behavior, but it still depends on the user discovering a
+small menu-bar affordance. A purpose-built popover remains the cleaner target.
 
 Desired behavior:
 

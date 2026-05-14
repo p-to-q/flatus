@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased]
+
+## [v0.2.1] — 2026-05-14
+
+### Changed
+- **Desktop manual playback now follows the website specimen reference, not the old three-event session preview.** `Fart now`, waveform preview rendering, and the audio-baseline docs now all point at the same single-event listening target.
+- **Legacy desktop settings migrate more safely.** Older settings files are upgraded to `version = 2` and background auto-play is switched off during migration, so manual listening checks no longer get an unexpected second voice from the pressure loop.
+- **Website specimen semantics are clearer.** The card copy now distinguishes the desktop-aligned preview seed from the separately pinned canonical `.wav` download.
+- **README now leads with the product surface, not the plumbing.** Personality gets its own early section and current desktop imagery, while install and behavior stay short.
+
+### Fixed
+- **Desktop seed and settings edits are quiet again.** Seed typing, rerolls, and personality switching no longer trigger surprise audio playback.
+- **Desktop preview rendering is race-safe.** Late waveform preview responses are ignored instead of repainting the canvas with stale audio after a newer edit.
+- **Desktop settings persistence has a real fallback.** If `set_settings` fails, the webview now re-fetches the last saved snapshot instead of leaving the UI in a silently diverged optimistic state.
+- **Website download CTA now keeps the correct target.** Platform detection no longer gets overwritten by a final unconditional `href` reset, so Apple Silicon users keep the DMG path while other platforms fall back cleanly.
+- **Transparent desktop windows clip correctly on macOS.** The Tauri shell now uses the private transparency API path required for rounded edges without the white rectangular gap.
+
 ## [v0.2.0] — 2026-05-14
 
 First user-facing release of the desktop shell. The goal of this version is

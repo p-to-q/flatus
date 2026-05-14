@@ -60,8 +60,10 @@ This verifies:
 Desktop parity is checked in two layers:
 
 1. **Render path parity**
-   Desktop manual and automatic playback must call the same Rust render helper,
-   so differences cannot hide in duplicated parameter code.
+   Desktop manual playback must call the same Rust render helper as the CLI
+   and web specimen path, so differences cannot hide in duplicated parameter
+   code. Automatic playback is an opt-in dynamic-pressure path and is not used
+   as the website/specimen comparison target.
 2. **Playback path parity**
    Any remaining listening difference is treated as a playback issue:
    device sample-rate conversion, output routing, cap mode, or volume scaling.
@@ -74,8 +76,8 @@ Before freezing a new release baseline, compare the following in order:
 2. CLI-rendered WAV playback for the same `(personality, seed, pressure)`.
 3. Website specimen playback for the same selected voice and preview seed.
 4. Desktop manual playback for the same selected voice, seed, and output mode.
-5. Desktop automatic playback with the same voice, after confirming quiet-hours
-   and volume behavior are not altering the outcome unexpectedly.
+5. Desktop automatic playback only after manual parity passes, with auto play
+   explicitly enabled and quiet-hours / volume behavior verified separately.
 
 Listen for:
 

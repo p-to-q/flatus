@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "flatus",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "identifier": "io.ptoq.flatus",
   "build": {
     "frontendDist": "../src"
   },
   "app": {
-    "macOSPrivateApi": false,
+    "macOSPrivateApi": true,
     "withGlobalTauri": true,
     "windows": [
       {

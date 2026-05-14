@@ -517,7 +517,7 @@ function buildSpecimenGrid() {
       <canvas class="specimen-wave" width="560" height="120" aria-hidden="true"></canvas>
       <div class="desc">${desc}</div>
       <div class="specimen-meta">
-        <span>seed ${seed} · pressure 0.60</span>
+        <span>preview seed ${seed} · pressure 0.60</span>
         <a class="specimen-dl" href="./samples/v0.4/${name}.wav" download aria-label="Download canonical ${name}.wav">↓ .wav</a>
       </div>
     `;
@@ -562,10 +562,9 @@ function buildSpecimenGrid() {
 
 // Pinned to the current release so the landing page can point directly at the
 // DMG asset instead of the generic releases index.
-const LATEST_TAG = "v0.2.0";
+const LATEST_TAG = "v0.2.1";
 const RELEASE_BASE = `https://github.com/p-to-q/flatus/releases/tag/${LATEST_TAG}`;
-const DMG_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus_0.2.0_aarch64.dmg`;
-const APP_ZIP_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus-${LATEST_TAG}-aarch64.app.zip`;
+const DMG_URL = `https://github.com/p-to-q/flatus/releases/download/${LATEST_TAG}/flatus_0.2.1_aarch64.dmg`;
 
 function detectArch() {
   const ua = navigator.userAgent || "";
@@ -613,6 +612,8 @@ function applyArchToCta(detected) {
     ctaBtn.href = "#cli";
     ctaBtn.dataset.state = "redirect-cli";
   } else {
+    ctaBtn.href = RELEASE_BASE;
+    ctaBtn.dataset.state = "release-page";
     ctaHint.textContent = "Couldn't detect your platform — head to the releases page.";
   }
 }
@@ -695,10 +696,9 @@ function wireInstallCopy() {
 function wireDownloadCta() {
   const detected = detectArch();
   applyArchToCta(detected);
-  ctaBtn.href = RELEASE_BASE;
-  ctaBtn.addEventListener("click", (e) => {
+  ctaBtn.addEventListener("click", () => {
     if (ctaBtn.dataset.state === "ready") {
-      // Reveal install steps; let the link navigate to the release page in a new tab.
+      // Reveal install steps without overriding the OS/arch-specific target.
       installSection.hidden = false;
       installSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }

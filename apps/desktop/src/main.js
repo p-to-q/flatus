@@ -4,6 +4,7 @@ const tauriInvoke = window.__TAURI__?.core?.invoke;
 if (tauriInvoke) document.documentElement.classList.add("is-tauri");
 
 const SAMPLE_RATE = 48000;
+const GITHUB_URL = "https://github.com/p-to-q/flatus";
 
 const MOCK_PROFILES = [
   { name: "polite-cough", headline: "short, dry, plausibly deniable.", reference_seed: 7 },
@@ -14,7 +15,7 @@ const MOCK_PROFILES = [
 
 const mockSnapshot = {
   settings: {
-    version: 1,
+    version: 2,
     personality: "default",
     play_mode: "single",
     volume: 1,
@@ -22,15 +23,16 @@ const mockSnapshot = {
     quiet_start: null,
     quiet_end: null,
     onboarding_completed: true,
-    auto_play_enabled: true,
+    auto_play_enabled: false,
     manual_seed: 17,
   },
   audio_baseline: "fixtures-v0.4 + web-specimen-reference",
-  version: "0.2.0",
+  version: "0.2.1",
   profiles: MOCK_PROFILES,
 };
 
 let state = structuredClone(mockSnapshot);
+let previewRequestSerial = 0;
 
 function invoke(command, payload) {
   if (!tauriInvoke) return mockInvoke(command, payload);
@@ -71,9 +73,6 @@ async function mockInvoke(command, payload) {
       console.info("[preview] fart_now", state.settings.personality);
       state.settings.manual_seed = Math.floor(Math.random() * 1e9);
       return state.settings.personality;
-    case "play_manual_preview":
-      console.info("[preview] play_manual_preview", payload?.seed);
-      return null;
     case "render_preview_wav":
       return buildSilentWavBytes(SAMPLE_RATE, 1.2);
     case "complete_onboarding":
@@ -83,6 +82,7 @@ async function mockInvoke(command, payload) {
     case "list_personality_profiles":
       return structuredClone(state.profiles);
     case "show_main_window_command":
+    case "open_github":
     case "quit_app":
     case "reset_onboarding":
     case "main_window_hide":
@@ -105,15 +105,6 @@ async function refreshSnapshotAfterFart() {
     renderState();
   } catch (err) {
     console.warn("post-fart snapshot refresh failed", err);
-  }
-}
-
-async function playSeedPreview(seed) {
-  if (!tauriInvoke) return;
-  try {
-    await invoke("play_manual_preview", { seed });
-  } catch (err) {
-    console.error("play_manual_preview failed", err);
   }
 }
 
@@ -287,7 +278,7 @@ function settingsPreviewKey(settings) {
     settings.play_mode ?? "single",
   ].join("\0");
 }
-async function schedulePreview() {
+function schedulePreview() {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(runPreview, 140);
 }
@@ -312,13 +303,16 @@ function previewSeedValue(overrideSeed) {
 /** Real-time waveform preview — always forwards an explicit `seed` so Rust
  *  matches the UI (including in-flight edits before persist). */
 async function runPreview(overrideSeed) {
+  const requestId = ++previewRequestSerial;
   try {
     const seed = previewSeedValue(overrideSeed);
     const bytes = await invoke("render_preview_wav", { seed });
+    if (requestId !== previewRequestSerial) return;
     const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
     const samples = decodeWavSamplesSync(u8);
     drawPreviewFromSamples(samples);
   } catch (e) {
+    if (requestId !== previewRequestSerial) return;
     console.warn("preview failed", e);
   }
 }
@@ -416,16 +410,45 @@ function renderState() {
 }
 
 async function persist() {
-  const saved = await invoke("set_settings", { newSettings: state.settings });
-  if (saved) state.settings = saved;
-  renderState();
+  try {
+    const saved = await invoke("set_settings", { newSettings: state.settings });
+    if (saved) state.settings = saved;
+  } catch (err) {
+    console.error("persist failed", err);
+    try {
+      state = await invoke("get_app_snapshot");
+    } catch (snapshotErr) {
+      console.error("snapshot fallback failed", snapshotErr);
+    }
+  } finally {
+    renderState();
+  }
+}
+
+async function openGithub() {
+  if (tauriInvoke) {
+    try {
+      await invoke("open_github");
+      return;
+    } catch (err) {
+      console.error("open_github failed", err);
+    }
+  }
+  window.open(GITHUB_URL, "_blank", "noopener,noreferrer");
 }
 
 function bindKeyboardShortcuts() {
-  if (!tauriInvoke) return;
-  // When the main webview has focus (no global menu in Accessory mode).
-  // Cmd+Q / Cmd+W / Cmd+M — not registered globally to avoid hijacking other apps.
   window.addEventListener("keydown", async (e) => {
+    const githubLink = e.target?.closest?.('[data-action="open-github"]');
+    if (githubLink && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      await openGithub();
+      return;
+    }
+
+    if (!tauriInvoke) return;
+    // When the main webview has focus (no global menu in Accessory mode).
+    // Cmd+Q / Cmd+W / Cmd+M — not registered globally to avoid hijacking other apps.
     const cmd = e.metaKey || e.ctrlKey;
     if (!cmd) return;
     const k = e.key;
@@ -460,9 +483,12 @@ function bindKeyboardShortcuts() {
 
 function bind() {
   for (const slider of $all('input[data-setting="volume"]')) {
-    slider.addEventListener("input", async () => {
+    slider.addEventListener("input", () => {
       state.settings.volume = Number(slider.value);
       renderState();
+    });
+    slider.addEventListener("change", async () => {
+      state.settings.volume = Number(slider.value);
       await persist();
     });
   }
@@ -593,6 +619,10 @@ function bind() {
           actionEl.disabled = false;
         }, 500);
       }
+      return;
+    }
+    if (action === "open-github") {
+      await openGithub();
       return;
     }
     if (action === "complete-onboarding") {
